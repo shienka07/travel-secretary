@@ -158,7 +158,12 @@ document.addEventListener("DOMContentLoaded", function () {
   controllerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     box.innerHTML = `<span id="spinner2" class="spinner-border spinner-border-sm"></span>`;
-
+    box.innerHTML = `<div class="map-frame">
+    <h1>add google Map</h1>
+    <div class="map-content"> 
+      
+    </div>
+  </div>`;
     const formData = new FormData(controllerForm);
     const [
       destination,
@@ -381,7 +386,7 @@ document.addEventListener("DOMContentLoaded", function () {
 - ✨ 여행지별 유용한 팁  
 - ✨ 현지 문화 & 에티켓  
 - ✨ 와이파이 & 데이터 로밍 옵션  
-  
+
           `;
       return await callModel000(prompt);
     };
@@ -415,3 +420,7 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("array", JSON.stringify(fifthResponse));
   });
 });
+
+function openPlanWindow() {
+  window.open("trip-planner.html", "_blank", "width=800,height=600");
+}

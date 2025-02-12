@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>구글 맵 최단 경로 찾기</title>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
+    <style>
+      #map {
+        height: 500px;
+        width: 100%;
+        margin-top: 10px;
+      }
+      .input-container {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>구글 맵 최단 경로 찾기</h2>
+
+    <div class="input-container">
+      <label>출발지:</label>
+      <input type="text" id="start" placeholder="출발지 입력" />
+    </div>
+
+    <div class="input-container">
+      <label>목적지:</label>
+      <input type="text" id="end" placeholder="목적지 입력" />
+    </div>
+
+    <div id="waypoints-container">
+      <label>경유지:</label>
+      <div class="waypoint-input">
+        <input type="text" class="waypoint" placeholder="경유지 입력" />
+      </div>
+    </div>
+
+    <button onclick="addWaypoint()">경유지 추가</button>
+    <button onclick="calculateRoute()">경로 계산</button>
+
+    <div id="map"></div>
+
+    <script>
+      let map, directionsService, directionsRenderer;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 37.5665, lng: 126.978 }, // 서울 시청을 기본 중심으로 설정
+          zoom: 12,
+        });
+
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+      }
+
+      function addWaypoint() {
+        const waypointsContainer = document.getElementById(
+          "waypoints-container"
+        );
+        const newInput = document.createElement("div");
+        newInput.classList.add("waypoint-input");
+        newInput.innerHTML =
+          '<input type="text" class="waypoint" placeholder="경유지 입력">';
+        waypointsContainer.appendChild(newInput);
+      }
+
+      function calculateRoute() {
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+        const waypoints = [];
+
+        // 경유지 입력값 가져오기
+        document.querySelectorAll(".waypoint").forEach((input) => {
+          if (input.value.trim() !== "") {
+            waypoints.push({
+              location: input.value.trim(),
+              stopover: true,
+            });
+          }
+        });
+
+        if (!start || !end) {
+          alert("출발지와 목적지를 입력해주세요.");
+          return;
+        }
+
+        const request = {
+          origin: start,
+          destination: end,
+          waypoints: waypoints,
+          travelMode: google.maps.TravelMode.DRIVING,
+          optimizeWaypoints: true,
+        };
+
+        directionsService.route(request, function (result, status) {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+          } else {
+            alert("경로를 찾을 수 없습니다: " + status);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

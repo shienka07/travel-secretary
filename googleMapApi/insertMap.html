@@ -94,9 +94,6 @@
       선택 날짜 경로 그리기
     </button>
     <div id="map"></div>
-    <div>
-      <button onclick="saveMarkers()">등록하기</button>
-    </div>
 
     <script>
       let map;
@@ -273,12 +270,6 @@
       function getDayColor(dayIndex) {
         const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
         return colors[dayIndex % colors.length];
-      }
-
-      function saveMarkers() {
-        // 마커와 경로 정보를 부모 창에 전달
-        window.opener.postMessage({ markers: markers }, "*");
-        window.close(); // 창을 닫습니다.
       }
     </script>
   </body>

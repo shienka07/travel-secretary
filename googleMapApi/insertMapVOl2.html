@@ -33,7 +33,6 @@
       let geocoder;
       let markers = [];
       let linePath = []; // 마커 간의 경로를 그리기 위한 배열
-      let currentPolyline = null; // 현재 그려진 경로를 저장할 변수
 
       // 구글 맵 초기화
       function initMap() {
@@ -66,65 +65,45 @@
           markers = [];
           linePath = []; // 경로를 그리기 위한 배열 초기화
 
-          // 기존 경로 초기화
-          if (currentPolyline) {
-            currentPolyline.setMap(null); // 이전 경로 삭제
-          }
-
-          let geocodePromises = [];
-
           // 입력된 장소를 좌표로 변환
+          let geocodeCount = 0; // 비동기 요청 처리 카운트
+          let totalPlaces = inputs.length; // 총 입력된 장소 수
+
           inputs.forEach((input, index) => {
             const placeName = input.value.trim();
             if (placeName) {
-              const geocodePromise = new Promise((resolve, reject) => {
-                geocoder.geocode(
-                  { address: placeName },
-                  function (results, status) {
-                    if (status === "OK") {
-                      const location = results[0].geometry.location;
-                      resolve({ location, index }); // 좌표와 인덱스 반환
-                    } else {
-                      reject("장소를 찾을 수 없습니다: " + placeName);
+              geocoder.geocode(
+                { address: placeName },
+                function (results, status) {
+                  geocodeCount++; // 비동기 요청 카운트 증가
+
+                  if (status === "OK") {
+                    const location = results[0].geometry.location;
+                    const marker = new google.maps.Marker({
+                      map: map,
+                      position: location,
+                      label: `${index + 1}`, // 마커에 번호 표시
+                    });
+                    markers.push(marker);
+                    places.push(location);
+                    linePath.push(location); // 경로에 추가
+
+                    // 지도 중심을 첫 번째 장소로 이동
+                    if (linePath.length === 1) {
+                      map.setCenter(location);
                     }
+                  } else {
+                    alert("장소를 찾을 수 없습니다: " + placeName);
                   }
-                );
-              });
-              geocodePromises.push(geocodePromise);
+
+                  // 모든 geocode 요청이 완료된 후 경로 그리기
+                  if (geocodeCount === totalPlaces && places.length >= 2) {
+                    drawRoute(places);
+                  }
+                }
+              );
             }
           });
-
-          // 모든 geocode 요청이 완료된 후 마커와 경로 그리기
-          Promise.all(geocodePromises)
-            .then((results) => {
-              // 인덱스 순서대로 정렬
-              results.sort((a, b) => a.index - b.index);
-
-              // 정렬된 순서대로 마커와 경로 추가
-              results.forEach((result, i) => {
-                const location = result.location;
-                const marker = new google.maps.Marker({
-                  map: map,
-                  position: location,
-                  label: `${i + 1}`, // 마커에 번호 표시
-                });
-                markers.push(marker);
-                linePath.push(location); // 경로에 추가
-
-                // 지도 중심을 첫 번째 장소로 이동
-                if (i === 0) {
-                  map.setCenter(location);
-                }
-              });
-
-              // 경로 그리기
-              if (linePath.length >= 2) {
-                drawRoute(linePath);
-              }
-            })
-            .catch((error) => {
-              alert(error);
-            });
         });
 
       // 경로 그리기
@@ -135,14 +114,14 @@
         }
 
         // 경로를 선으로 그리기
-        currentPolyline = new google.maps.Polyline({
-          path: places, // 모든 장소 연결
+        const polyline = new google.maps.Polyline({
+          path: places,
           geodesic: true,
           strokeColor: "#FF0000", // 경로 색상
           strokeOpacity: 1.0,
           strokeWeight: 2,
         });
-        currentPolyline.setMap(map);
+        polyline.setMap(map);
       }
     </script>
   </body>

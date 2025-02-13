@@ -309,6 +309,9 @@ function filterPosting(postings, filters) {
     if (!isOpenStatusChecked && !isClosedStatusChecked) {
       return true; //  모집 상태 필터 무시 (둘 다 체크 X)
     }
+    if (isOpenStatusChecked && isClosedStatusChecked) {
+      return true; // 둘 다 체크됨: 필터 무시하고 모든 게시글 표시
+    }
     if (isOpenStatusChecked && !posting.state) {
       return false;
     }

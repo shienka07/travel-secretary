@@ -7,65 +7,52 @@ import {
   folderName,
 } from "./config.js";
 
-// const { userInfo, error: authError } = await supabase.auth.getUser();
-// console.log("userInfo", userInfo);
-
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");
-const listBtn = document.querySelector("#list-btn");
 
-document.addEventListener("DOMContentLoaded", async () => {
-  // 1. 현재 페이지 URL 가져오기
-  const currentURL = window.location.href;
-  console.log("현재 URL:", currentURL); // URL 확인 (디버깅 용)
-
-  // 2. URLSearchParams 객체 생성 (URL 파라미터 추출 도구)
-  const urlParams = new URLSearchParams(window.location.search);
-  console.log("URL 파라미터:", urlParams); // URLSearchParams 객체 확인 (디버깅 용)
-
-  // 3. 'id' 파라미터 값 추출
-  const postingId = urlParams.get("id");
-  console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
-
-  if (postingId) {
-    console.log(
-      `postingId ${postingId} 에 해당하는 게시글 상세 정보 로딩 시작...`
-    );
-    fetchPostingDetail(postingId);
-  } else {
-    console.warn("URL에 postingId가 없습니다.");
-    alert("잘못된 접근입니다.");
-    window.location.href = "/";
+async function getUserInfo() {
+  const { data: userInfo, error } = await supabase.auth.getUser();
+  if (error) {
+    console.log("유저 정보 가져오기 실패: ", error);
+    return null;
   }
+  return userInfo.user;
+}
 
-  listBtn.addEventListener(
-    "click",
-    () => (window.location.href = "./index.html")
-
+function setupEventListeners(postingId) {
+  document
+    .querySelector("#list-btn")
+    .addEventListener("click", () => redirectToPage("./index.html"));
+  editBtn.addEventListener("click", () =>
+    redirectToPage(`./edit.html?id=${postingId}`)
   );
-  editBtn.addEventListener("click", () => {
-    // 수정페이지
+  deleteBtn.addEventListener("click", () => {
+    if (confirm("게시글을 삭제하시겠습니까?")) handleDelete(postingId);
   });
-  deleteBtn.addEventListener("click", async () => {
-    try {
-      const { error: deleteError } = await supabase
-        .from(mateTable)
-        .delete()
-        .eq("id", postingId);
-      if (deleteError) {
-        console.error("Error deleting data:", deleteError);
-        return;
-      }
-      console.log("Successfully deleted row ", postingId);
-      window.location.href = "./index.html";
+}
 
-    } catch (error) {
-      console.error("Unexpected error during delete operation:", error);
+async function handleDelete(postingId) {
+  try {
+    const { error: deleteError } = await supabase
+      .from(mateTable)
+      .delete()
+      .eq("id", postingId);
+    if (deleteError) {
+      console.error("게시글 삭제 실패: ", deleteError);
+      return;
     }
-  });
-});
+    console.log("게시글 삭제 성공: ", postingId);
+    redirectToPage("./index.html");
+  } catch (error) {
+    console.error("게시글 삭제 중 오류: ", error);
+  }
+}
 
-async function fetchPostingDetail(postingId) {
+function redirectToPage(url) {
+  window.location.href = url;
+}
+
+async function fetchPostingDetail(postingId, userId) {
   try {
     const { data: posting, error } = await supabase
       .from(mateTable)
@@ -100,30 +87,21 @@ async function fetchPostingDetail(postingId) {
       .single();
     if (error) {
       console.error("게시글 상세 정보 조회 실패:", error);
-      return null; // 에러 발생 시 null 반환 또는 에러 처리
+      return null;
     }
-    console.log(posting);
-    // return posting;
+    // console.log(posting);
     displayDetails(posting);
 
-    // ✅ 작성자 확인부분 - 수정
-    if (isPostAuthor(posting.user_id)) {
+    if (posting.user_id === userId) {
       editBtn.removeAttribute("hidden");
       deleteBtn.removeAttribute("hidden");
     }
   } catch (error) {
     console.error("게시글 상세 정보 조회 중 오류:", error);
-    return null; // 예외 발생 시 null 반환 또는 에러 처리
   }
-}
-// ✅ 수정필요!!
-function isPostAuthor(post_user_id) {
-  return post_user_id == localStorage.getItem("user1");
-  // return post_user_id == userInfo.id;
 }
 
 function displayDetails(posting) {
-  console.log(posting);
   const state = posting.state ? "모집중" : "모집완료";
   document.querySelector(
     "#detail-title"
@@ -131,7 +109,7 @@ function displayDetails(posting) {
 
   document.querySelector("#detail-author-username").textContent =
     posting.userInfo.username;
-  // ✅ user profile 이미지 넣을 예정
+  // TODO
   console.log("image_url", posting.userInfo.image_url);
 
   const genderText =
@@ -139,7 +117,7 @@ function displayDetails(posting) {
       ? "남성"
       : posting.userInfo?.gender === 2
       ? "여성"
-      : "미제공"; // 삼항 연산자
+      : "미제공";
   document.querySelector("#detail-author-gender").textContent = genderText;
 
   const imageArea = document.querySelector("#detail-image-area");
@@ -188,9 +166,6 @@ function displayDetails(posting) {
   document.querySelector("#detail-content").textContent = posting.content;
 
   const styleTags = document.querySelector("#detail-styles-tags");
-
-  //   console.log(posting.styles);
-
   if (posting.styles && posting.styles.length > 0) {
     posting.styles.forEach((style) => {
       const styleTag = document.createElement("span");
@@ -200,20 +175,42 @@ function displayDetails(posting) {
     });
   }
 
-  const dateObject = new Date(`${posting.created_at}`);
-  // 날짜 형식 (YYYY. MM. DD.)
-  const formattedDatePart = dateObject.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long", // 'short', 'narrow' 도 가능
-    day: "numeric",
-  });
-  // 시간 형식 (오전/오후 HH:mm:ss)
-  const formattedTimePart = dateObject.toLocaleTimeString("ko-KR", {
-    hour12: true, // 12시간 형식 (true: 오전/오후, false: 24시간)
-    hour: "numeric", // 시간
-    minute: "numeric", // 분
-    second: "numeric", // 초
-  });
-  const formattedDateTime = `${formattedDatePart} ${formattedTimePart}`;
-  document.querySelector("#detail-created-at").textContent = formattedDateTime;
+  document.querySelector("#detail-created-at").textContent =
+    getFormattedDateTime(posting.created_at);
 }
+
+function getFormattedDateTime(dateString) {
+  const date = new Date(dateString);
+  return (
+    `${date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })} ` +
+    `${date.toLocaleTimeString("ko-KR", {
+      hour12: true,
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    })}`
+  );
+}
+
+async function initializePage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const postingId = urlParams.get("id");
+
+  if (!postingId) {
+    alert("잘못된 접근입니다.");
+    redirectToPage("/");
+    return;
+  }
+  console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
+
+  const user = await getUserInfo();
+  if (!user) return;
+  setupEventListeners(postingId);
+  fetchPostingDetail(postingId, user.id);
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);

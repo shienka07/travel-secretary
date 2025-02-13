@@ -109,8 +109,25 @@ function displayDetails(posting) {
 
   document.querySelector("#detail-author-username").textContent =
     posting.userInfo.username;
-  // TODO
-  console.log("image_url", posting.userInfo.image_url);
+
+  // console.log("image_url", posting.userInfo.image_url);
+  const authorImageArea = document.querySelector("#detail-author-image-area");
+  if (posting.userInfo.image_url) {
+    const profileImage = document.createElement("img");
+    const { data } = supabase.storage
+      .from(matebucketName)
+      .getPublicUrl(posting.userInfo.image_url);
+
+    profileImage.src = data.publicUrl;
+    profileImage.alt = "Profile Image";
+    profileImage.width = 32;
+    profileImage.height = 32;
+    profileImage.className = "rounded-circle";
+
+    authorImageArea.appendChild(profileImage);
+  } else {
+    authorImageArea.innerHTML = `<i class="bi bi-person-circle me-2" style="font-size: 1.5rem"></i> `;
+  }
 
   const genderText =
     posting.userInfo?.gender === 1

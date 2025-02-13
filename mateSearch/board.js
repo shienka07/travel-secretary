@@ -1,4 +1,12 @@
-import { _supabase, mateTable, tsTable, ptsTable } from "./config.js";
+import {
+  supabase,
+  mateTable,
+  tsTable,
+  ptsTable,
+  matebucketName,
+  folderName,
+} from "./config.js";
+import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 /*
 mate_posting
@@ -21,13 +29,19 @@ posting_travel_styles
    style_id
 */
 
+const { userInfo, error: authError } = await supabase.auth.getUser();
+console.log("userInfo", userInfo);
+
+fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");
+
 const mateForm = document.querySelector("#mateForm");
 mateForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const formData = new FormData(mateForm);
-  const data = {
-    user_id: "838dc8ff-5dbb-4318-9a26-4b4b5f667285", // ✅ 임시... 로그인아이디 받아오기
+  const writeData = {
+    // user_id: userInfo.id;
+    user_id: "e4b9ac83-a020-454a-9b75-5462937cf057", // ✅ 임시... 로그인아이디 받아오기
     title: formData.get("title"),
     content: formData.get("content"),
     start_date: formData.get("startDate"),
@@ -36,44 +50,42 @@ mateForm.addEventListener("submit", async (event) => {
     is_domestic: formData.get("isDomestic"),
     people: parseInt(formData.get("people")),
     budget: formData.get("budget"),
-    image_url: formData.get("imageUrl"),
+    image_url: formData.get("imageUrl"), // 수정
     state: true,
   };
-  console.log(data);
+  // console.log(writeData);
+
+  const { files } = document.querySelector("#imageUrl");
+  const file = files[0];
+  if (file) {
+    const timestamp = new Date().getTime();
+    const fileName = `post_image_${timestamp}_${file.name}`;
+    const filePath = `${folderName}/${fileName}`;
+
+    try {
+      const { data: image, error: uploadError } = await supabase.storage
+        .from(matebucketName)
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("이미지 업로드 실패: ", uploadError);
+        return;
+      } else {
+        // console.log(image.path);
+        writeData.image_url = image.path;
+      }
+    } catch (error) {
+      console.log("이미지 업로드 중 오류: ", error);
+      return;
+    }
+  }
 
   const styles = formData.getAll("styles");
-  console.log(styles);
-
-  //   let imageUrl = null;
-  //   if (imageUrlFile) {
-  //     const timestamp = new Date().getTime();
-  //     const imageName = `post_image_${timestamp}_${imageUrlFile.name}`;
-
-  //     try {
-  //       const { data, error: uploadError } = await supabase.storage
-  //         .from('travel-mate-post-images') // 스토리지 버킷 이름 (본인 버킷에 맞게 수정)
-  //         .upload(imageName, imageUrlFile);
-
-  //       if (uploadError) {
-  //         console.error('이미지 업로드 실패:', uploadError);
-  //         alert('이미지 업로드에 실패했습니다.');
-  //         return; // 이미지 업로드 실패 시 게시글 작성 중단
-  //       }
-
-  //       imageUrl = `https://${supabaseUrl.split('://')[1]}/storage/v1/object/public/travel-mate-post-images/${data.path}`; // 이미지 URL 생성 (공개 URL)
-  //       console.log('이미지 URL:', imageUrl);
-
-  //     } catch (error) {
-  //       console.error('이미지 업로드 중 오류:', error);
-  //       alert('이미지 업로드 중 오류가 발생했습니다.');
-  //       return;
-  //     }
-  //   }
 
   try {
     const { data: postingData, error: postingError } = await _supabase
       .from(mateTable)
-      .insert([data])
+      .insert([writeData])
       .select("id") // 작성된 게시글의 posting_id만 선택
       .single(); // 단일 결과 반환하도록 지정
 
@@ -88,8 +100,8 @@ mateForm.addEventListener("submit", async (event) => {
 
     // 여행 스타일 연결 테이블
     if (styles.length > 0) {
-      for (styleName of styles) {
-        const { data: styleData, error: styleError } = await _supabase
+      for (const styleName of styles) {
+        const { data: styleData, error: styleError } = await supabase
           .from(tsTable)
           .select("style_id")
           .eq("style_name", styleName)
@@ -102,7 +114,7 @@ mateForm.addEventListener("submit", async (event) => {
 
         if (styleData) {
           const styleId = styleData.style_id;
-          const { error: postingStyleError } = await _supabase
+          const { error: postingStyleError } = await supabase
             .from(ptsTable)
             .insert([
               {

@@ -2,8 +2,7 @@ import { supabase, cmtTable } from "./config.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  // const postingId = urlParams.get("id");
-  const postingId = 2;
+  const postingId = urlParams.get("id");
 
   if (!postingId) {
     console.warn("❌ 댓글 기능: postingId 없음. 댓글 기능을 비활성화합니다.");
@@ -26,30 +25,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // const { data: user } = await supabase.auth.getUser();
-      // if (!user || !user.id) {
-      //   alert("로그인이 필요합니다!");
-      //   return;
-      // }
+      const { data } = await supabase.auth.getUser();
+      if (!data.user || !data.user.id) {
+        alert("로그인이 필요합니다!");
+        return;
+      }
 
       console.log("✅ 댓글 저장 시도:", {
         post_id: postingId,
-        // user_id: user.id,
+        user_id: data.user.id,
         content: commentContent,
       });
 
-      await saveComment(postingId, commentContent);
-      // await saveComment(postingId, commentContent, user.id);
+      // await saveComment(postingId, commentContent);
+      await saveComment(postingId, commentContent, data.user.id);
       document.getElementById("comment-content").value = ""; // 입력창 초기화
     });
   }
 });
 
 // ✅ 댓글 저장 함수
-async function saveComment(postingId, content) {
-  // async function saveComment(postingId, content, userId) {
+async function saveComment(postingId, content, userId) {
   try {
-    const {data, error:authError} = await supabase.auth.getUser();
+    const { data, error: authError } = await supabase.auth.getUser();
 
     const { error } = await supabase.from(cmtTable).insert([
       {
@@ -95,8 +93,15 @@ async function updateComment(commentId, newContent, postingId) {
 async function loadComments(postingId) {
   const { data: comments, error } = await supabase
     .from(cmtTable)
-    .select("id, content, created_at")
-    // .select("content, created_at, user_id (username)")
+    .select(
+      `
+    id, 
+    content, 
+    created_at, 
+    user_id,
+    userinfo(username)
+  `
+    )
     .eq("post_id", postingId)
     .order("created_at", { ascending: true });
 
@@ -115,14 +120,14 @@ async function loadComments(postingId) {
 
   commentsContainer.innerHTML = ""; // 기존 댓글 삭제 후 다시 추가
 
-  comments.forEach((comment) => {
-    console.log("🔍 댓글 ID:", comment.id);
+  for (const comment of comments) {
     const commentElement = document.createElement("div");
     commentElement.classList.add("card", "mb-2", "p-2");
 
-    commentElement.innerHTML =
-      // `  <strong>${comment.user_id.username}</strong>
-      `
+    let username = comment.userinfo?.username || "알 수 없음";
+
+    commentElement.innerHTML = `
+      <strong>${username}</strong>
       <p>${comment.content}</p>
       <small class="text-muted">${new Date(
         comment.created_at
@@ -130,19 +135,28 @@ async function loadComments(postingId) {
     `;
 
     // ✅ 댓글 수정 버튼
-    const editButton = document.createElement("button");
-    editButton.textContent = "수정";
-    editButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "me-2");
-    editButton.addEventListener("click", () => {
-      console.log("🔍 수정 버튼 클릭됨! 댓글 ID:", comment.id);
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (currentUser?.user?.id === comment.user_id) {
+      const editButton = document.createElement("button");
+      editButton.textContent = "수정";
+      editButton.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-outline-secondary",
+        "me-2"
+      );
+      editButton.addEventListener("click", () => {
+        const newContent = prompt("댓글을 수정하세요:", comment.content);
+        if (newContent && newContent.trim() !== "") {
+          updateComment(comment.id, newContent.trim(), postingId);
+        }
+      });
 
-      const newContent = prompt("댓글을 수정하세요:", comment.content);
-      if (newContent && newContent.trim() !== "") {
-        updateComment(comment.id, newContent.trim(), postingId);
-      }
-    });
+      commentElement.appendChild(editButton);
+    }
 
-    commentElement.appendChild(editButton);
     commentsContainer.appendChild(commentElement);
-  });
+  }
 }
+
+export { loadComments };

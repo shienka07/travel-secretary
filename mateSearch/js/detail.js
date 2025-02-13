@@ -7,6 +7,8 @@ import {
   folderName,
 } from "./config.js";
 
+import { loadComments } from "./comment.js";
+
 // const { userInfo, error: authError } = await supabase.auth.getUser();
 // console.log("userInfo", userInfo);
 
@@ -31,7 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log(
       `postingId ${postingId} 에 해당하는 게시글 상세 정보 로딩 시작...`
     );
-    fetchPostingDetail(postingId);
+    await fetchPostingDetail(postingId);
+    await loadComments(postingId);
   } else {
     console.warn("URL에 postingId가 없습니다.");
     alert("잘못된 접근입니다.");
@@ -41,7 +44,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   listBtn.addEventListener(
     "click",
     () => (window.location.href = "./index.html")
-
   );
   editBtn.addEventListener("click", () => {
     // 수정페이지
@@ -58,7 +60,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       console.log("Successfully deleted row ", postingId);
       window.location.href = "./index.html";
-
     } catch (error) {
       console.error("Unexpected error during delete operation:", error);
     }

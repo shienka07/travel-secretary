@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 경로 추천</title>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&callback=initMap&libraries=places&v=weekly"
+      defer
+    ></script>
+    <style>
+      #map {
+        height: 500px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>여행 목적지 입력</h2>
+
+    <div id="destination-container">
+      <input
+        type="text"
+        id="destination-1"
+        class="destination-input"
+        placeholder="여행 목적지를 입력하세요"
+      />
+    </div>
+
+    <button onclick="addInputField()">입력칸 추가</button>
+    <button onclick="drawRouteOnMapFromInput()">지도에 경로 그리기</button>
+    <button id="askButton">AI 경로 추천</button>
+
+    <ul id="answerList"></ul>
+    <div id="map"></div>
+
+    <script>
+      const apiKey = "AIzaSyDuo3l4espB6BtINgYw7UMwMaTNp9DFBqE";
+
+      let map;
+      let directionsService;
+      let directionsRenderer;
+      let destinationInputs = [];
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 37.5665, lng: 126.978 },
+          zoom: 13,
+        });
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+      }
+
+      function addInputField() {
+        const container = document.getElementById("destination-container");
+        const inputCount =
+          container.getElementsByClassName("destination-input").length;
+        const newInput = document.createElement("input");
+        newInput.type = "text";
+        newInput.id = `destination-${inputCount + 1}`;
+        newInput.className = "destination-input";
+        newInput.placeholder = "여행 목적지를 입력하세요";
+        container.appendChild(newInput);
+      }
+
+      function drawRouteOnMapFromInput() {
+        const inputs = document.getElementsByClassName("destination-input");
+        destinationInputs = [];
+        for (let input of inputs) {
+          if (input.value.trim()) {
+            destinationInputs.push(input.value.trim());
+          }
+        }
+
+        if (destinationInputs.length < 2) {
+          alert("2개 이상의 목적지를 입력해주세요.");
+          return;
+        }
+
+        const waypoints = destinationInputs.slice(1, -1).map((address) => ({
+          location: address,
+          stopover: true,
+        }));
+
+        const request = {
+          origin: destinationInputs[0],
+          destination: destinationInputs[destinationInputs.length - 1],
+          waypoints: waypoints,
+          travelMode: google.maps.TravelMode.DRIVING,
+        };
+
+        directionsService.route(request, (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+            const route = result.routes[0].legs;
+            addMarkers(route); // 경로에 맞춰 마커 추가
+          } else {
+            alert("경로를 찾을 수 없습니다.");
+          }
+        });
+      }
+
+      async function getAiRoute() {
+        const inputs = document.getElementsByClassName("destination-input");
+        destinationInputs = [];
+
+        // 입력값이 비어있지 않고, 정확한 형식의 주소인지 확인
+        for (let input of inputs) {
+          const address = input.value.trim();
+          if (address) {
+            // 기본적인 주소 검증 (주소 형식이 맞는지 체크)
+            const addressPattern = /^[a-zA-Z0-9가-힣\s,]+$/; // 한글, 영어, 숫자, 공백, 쉼표만 허용
+            if (addressPattern.test(address)) {
+              destinationInputs.push(address);
+            } else {
+              alert(`주소를 올바르게 입력해주세요: ${address}`);
+              return;
+            }
+          }
+        }
+
+        if (destinationInputs.length < 2) {
+          alert("2개 이상의 목적지를 입력해주세요.");
+          return;
+        }
+
+        // AI 프롬프트 생성
+        const prompt = `markdown 없이
+  아래 여행지들을 순차적으로 방문할 수 있는 추천 경로를 작성해주세요.
+  여행지 목록: ${destinationInputs.join(", ")}
+  경로를 제시할 때, 각 여행지 간의 이동 순서와 함께 이동 방법도 제시해 주세요.
+  html list형식으로 작성하세요.`;
+
+        try {
+          const response = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=" +
+              apiKey,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const aiResponse =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "AI 경로 추천을 받을 수 없습니다.";
+
+          document.getElementById(
+            "answerList"
+          ).innerHTML = `<li class="list-group-item">${aiResponse}</li>`;
+
+          // AI 응답에서 추천 경로를 받아오기
+          const addresses = aiResponse
+            .split(", ")
+            .map((line) => line.replace("주소: ", "").trim());
+          drawRouteOnMap(addresses);
+        } catch (error) {
+          console.error("AI 요청 오류:", error);
+          document.getElementById(
+            "answerList"
+          ).innerHTML = `<li class="list-group-item list-group-item-danger">오류 발생: ${error}</li>`;
+        }
+      }
+
+      function drawRouteOnMap(addresses) {
+        const waypoints = addresses.slice(1, -1).map((address) => ({
+          location: address,
+          stopover: true,
+        }));
+
+        const request = {
+          origin: addresses[0],
+          destination: addresses[addresses.length - 1],
+          waypoints: waypoints,
+          travelMode: google.maps.TravelMode.DRIVING,
+        };
+
+        directionsService.route(request, (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+            const route = result.routes[0].legs;
+            addMarkers(route);
+          } else {
+            // alert("경로를 찾을 수 없습니다.");
+          }
+        });
+      }
+
+      function addMarkers(route) {
+        route.forEach((leg) => {
+          const startLocation = leg.start_location;
+          const endLocation = leg.end_location;
+          new google.maps.Marker({
+            position: startLocation,
+            map: map,
+            title: "출발지",
+          });
+          new google.maps.Marker({
+            position: endLocation,
+            map: map,
+            title: "도착지",
+          });
+        });
+      }
+
+      document
+        .getElementById("askButton")
+        .addEventListener("click", getAiRoute);
+    </script>
+  </body>
+</html>

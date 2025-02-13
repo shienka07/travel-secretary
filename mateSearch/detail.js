@@ -6,7 +6,14 @@ import {
   folderName,
 } from "./config.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+// const { userInfo, error: authError } = await supabase.auth.getUser();
+// console.log("userInfo", userInfo);
+
+const editBtn = document.querySelector("#edit-btn");
+const deleteBtn = document.querySelector("#delete-btn");
+const listBtn = document.querySelector("#list-btn");
+
+document.addEventListener("DOMContentLoaded", async () => {
   // 1. 현재 페이지 URL 가져오기
   const currentURL = window.location.href;
   console.log("현재 URL:", currentURL); // URL 확인 (디버깅 용)
@@ -29,6 +36,30 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("잘못된 접근입니다.");
     window.location.href = "/";
   }
+
+  listBtn.addEventListener(
+    "click",
+    () => (window.location.href = "/travel-secretary/mateSearch/index.html")
+  );
+  editBtn.addEventListener("click", () => {
+    // 수정페이지
+  });
+  deleteBtn.addEventListener("click", async () => {
+    try {
+      const { error: deleteError } = await supabase
+        .from(mateTable)
+        .delete()
+        .eq("id", postingId);
+      if (deleteError) {
+        console.error("Error deleting data:", deleteError);
+        return;
+      }
+      console.log("Successfully deleted row ", postingId);
+      window.location.href = "/travel-secretary/mateSearch/index.html";
+    } catch (error) {
+      console.error("Unexpected error during delete operation:", error);
+    }
+  });
 });
 
 async function fetchPostingDetail(postingId) {
@@ -67,13 +98,24 @@ async function fetchPostingDetail(postingId) {
       console.error("게시글 상세 정보 조회 실패:", error);
       return null; // 에러 발생 시 null 반환 또는 에러 처리
     }
-    // console.log(posting);
+    console.log(posting);
     // return posting;
     displayDetails(posting);
+
+    // ✅ 작성자 확인부분 - 수정
+    if (isPostAuthor(posting.user_id)) {
+      editBtn.removeAttribute("hidden");
+      deleteBtn.removeAttribute("hidden");
+    }
   } catch (error) {
     console.error("게시글 상세 정보 조회 중 오류:", error);
     return null; // 예외 발생 시 null 반환 또는 에러 처리
   }
+}
+// ✅ 수정필요!!
+function isPostAuthor(post_user_id) {
+  return post_user_id == localStorage.getItem("user1");
+  // return post_user_id == userInfo.id;
 }
 
 function displayDetails(posting) {

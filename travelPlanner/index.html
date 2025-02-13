@@ -35,26 +35,6 @@
       async
       defer
     ></script>
-
-    <script>
-      function initMap() {
-        // 기본 위치 (예시: 서울)
-        const location = { lat: 37.5665, lng: 126.9784 };
-
-        // 지도 생성
-        const map = new google.maps.Map(document.getElementById("mapIframe"), {
-          center: location,
-          zoom: 12,
-        });
-
-        // 마커 추가
-        const marker = new google.maps.Marker({
-          position: location,
-          map: map,
-          title: "여기 여행지입니다!",
-        });
-      }
-    </script>
   </head>
   <body>
     <div class="container mt-4">

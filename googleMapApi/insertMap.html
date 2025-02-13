@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>여러 장소 경로 그리기</title>
+    <style>
+      #map {
+        width: 100%;
+        height: 500px;
+      }
+      .place-input {
+        margin-bottom: 10px;
+      }
+    </style>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw &libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
+  </head>
+  <body>
+    <h2>여러 장소 입력 후 경로 그리기</h2>
+    <div id="inputsContainer">
+      <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+    </div>
+    <button id="addPlaceBtn">장소 추가</button>
+    <button id="getCoordinatesBtn">경로 그리기</button>
+    <div id="map"></div>
+
+    <script>
+      let map;
+      let geocoder;
+      let markers = [];
+      let directionsService;
+      let directionsRenderer;
+      let linePath = []; // 마커 간의 경로를 그리기 위한 배열
+
+      // 구글 맵 초기화
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 37.7749, lng: -122.4194 }, // 기본 위치
+          zoom: 13,
+        });
+        geocoder = new google.maps.Geocoder();
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+      }
+
+      // 장소 추가 버튼 클릭 시, 새로운 input 필드 생성
+      document
+        .getElementById("addPlaceBtn")
+        .addEventListener("click", function () {
+          const inputsContainer = document.getElementById("inputsContainer");
+          const newInput = document.createElement("input");
+          newInput.type = "text";
+          newInput.className = "place-input";
+          newInput.placeholder = "장소를 입력하세요";
+          inputsContainer.appendChild(newInput);
+        });
+
+      // 입력된 장소들에 대한 좌표를 가져오는 버튼 클릭 시
+      document
+        .getElementById("getCoordinatesBtn")
+        .addEventListener("click", function () {
+          const inputs = document.querySelectorAll(".place-input");
+          const places = [];
+          markers.forEach((marker) => marker.setMap(null)); // 기존 마커들 초기화
+          markers = [];
+          linePath = []; // 경로를 그리기 위한 배열 초기화
+
+          // 입력된 장소를 좌표로 변환
+          let geocodeCount = 0; // 비동기 요청 처리 카운트
+          let totalPlaces = inputs.length; // 총 입력된 장소 수
+
+          inputs.forEach((input) => {
+            const placeName = input.value.trim();
+            if (placeName) {
+              geocoder.geocode(
+                { address: placeName },
+                function (results, status) {
+                  geocodeCount++; // 비동기 요청 카운트 증가
+
+                  if (status === "OK") {
+                    const location = results[0].geometry.location;
+                    const marker = new google.maps.Marker({
+                      map: map,
+                      position: location,
+                    });
+                    markers.push(marker);
+                    places.push(location);
+                    linePath.push(location); // 경로에 추가
+
+                    // 경로를 그리기
+                    if (linePath.length > 1) {
+                      const polyline = new google.maps.Polyline({
+                        path: linePath,
+                        geodesic: true,
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2,
+                      });
+                      polyline.setMap(map);
+                    }
+                  } else {
+                    alert("장소를 찾을 수 없습니다: " + placeName);
+                  }
+
+                  // 모든 geocode 요청이 완료된 후 경로 그리기
+                  if (geocodeCount === totalPlaces && places.length >= 2) {
+                    drawRoute(places);
+                  }
+                }
+              );
+            }
+          });
+        });
+
+      // 경로 그리기
+      function drawRoute(places) {
+        if (places.length < 2) {
+          alert("최소 2개의 장소를 입력하세요.");
+          return;
+        }
+
+        // 대중교통 경로를 우선으로 시도
+        const transitRequest = {
+          origin: places[0],
+          destination: places[places.length - 1],
+          waypoints: places.slice(1, -1).map(function (location) {
+            return {
+              location: location,
+              stopover: true,
+            };
+          }),
+          travelMode: google.maps.TravelMode.TRANSIT, // 대중교통 경로 시도
+        };
+
+        directionsService.route(transitRequest, function (response, status) {
+          if (status === "OK") {
+            directionsRenderer.setDirections(response);
+          } else {
+            console.log("대중교통 경로 실패, 자동차 경로 시도 중...");
+            const drivingRequest = {
+              origin: places[0],
+              destination: places[places.length - 1],
+              waypoints: places.slice(1, -1).map(function (location) {
+                return {
+                  location: location,
+                  stopover: true,
+                };
+              }),
+              travelMode: google.maps.TravelMode.DRIVING, // 자동차 경로 시도
+            };
+
+            directionsService.route(
+              drivingRequest,
+              function (response, status) {
+                if (status === "OK") {
+                  directionsRenderer.setDirections(response);
+                } else {
+                  console.error("자동차 경로도 실패했습니다.");
+                  alert("경로를 찾을 수 없습니다.");
+                }
+              }
+            );
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { _supabase, mateTable, tsTable, ptsTable } from "./config.js";
+import { supabase, mateTable, tsTable, ptsTable } from "./config.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. 현재 페이지 URL 가져오기
@@ -10,7 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("URL 파라미터:", urlParams); // URLSearchParams 객체 확인 (디버깅 용)
 
   // 3. 'id' 파라미터 값 추출
-  const postingId = urlParams.get("id");
+  // const postingId = urlParams.get("id");
+  const postingId = 2;
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
 
   if (postingId) {
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchPostingDetail(postingId) {
   try {
-    const { data: posting, error } = await _supabase
+    const { data: posting, error } = await supabase
       .from(mateTable)
       .select(
         ` 

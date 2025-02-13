@@ -7,7 +7,6 @@ import {
   folderName,
 } from "./config.js";
 
-
 // const { userInfo, error: authError } = await supabase.auth.getUser();
 // console.log("userInfo", userInfo);
 
@@ -25,8 +24,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("URL 파라미터:", urlParams); // URLSearchParams 객체 확인 (디버깅 용)
 
   // 3. 'id' 파라미터 값 추출
-  // const postingId = urlParams.get("id");
-  const postingId = 2;
+  const postingId = urlParams.get("id");
+  // const postingId = 2;
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
 
   if (postingId) {
@@ -123,6 +122,7 @@ function isPostAuthor(post_user_id) {
 }
 
 function displayDetails(posting) {
+  console.log(posting);
   const state = posting.state ? "모집중" : "모집완료";
   document.querySelector(
     "#detail-title"
@@ -130,7 +130,7 @@ function displayDetails(posting) {
 
   document.querySelector("#detail-author-username").textContent =
     posting.userInfo.username;
-
+  // ✅ user profile 이미지 넣을 예정
   console.log("image_url", posting.userInfo.image_url);
 
   const genderText =
@@ -142,7 +142,9 @@ function displayDetails(posting) {
   document.querySelector("#detail-author-gender").textContent = genderText;
 
   const imageArea = document.querySelector("#detail-image-area");
+
   if (posting.image_url) {
+    console.log("posting.image_url", posting.image_url);
     const { data: imageUrlData } = supabase.storage
       .from(matebucketName)
       .getPublicUrl(posting.image_url);

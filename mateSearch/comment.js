@@ -93,7 +93,7 @@ async function updateComment(commentId, newContent, postingId) {
 async function loadComments(postingId) {
   const { data: comments, error } = await supabase
     .from(cmtTable)
-    .select("content, created_at")
+    .select("id, content, created_at")
     // .select("content, created_at, user_id (username)")
     .eq("post_id", postingId)
     .order("created_at", { ascending: true });
@@ -114,6 +114,7 @@ async function loadComments(postingId) {
   commentsContainer.innerHTML = ""; // 기존 댓글 삭제 후 다시 추가
 
   comments.forEach((comment) => {
+    console.log("🔍 댓글 ID:", comment.id);
     const commentElement = document.createElement("div");
     commentElement.classList.add("card", "mb-2", "p-2");
 
@@ -131,12 +132,15 @@ async function loadComments(postingId) {
     editButton.textContent = "수정";
     editButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "me-2");
     editButton.addEventListener("click", () => {
+      console.log("🔍 수정 버튼 클릭됨! 댓글 ID:", comment.id);
+
       const newContent = prompt("댓글을 수정하세요:", comment.content);
       if (newContent && newContent.trim() !== "") {
         updateComment(comment.id, newContent.trim(), postingId);
       }
     });
 
+    commentElement.appendChild(editButton);
     commentsContainer.appendChild(commentElement);
   });
 }

@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   listBtn.addEventListener(
     "click",
-    () => (window.location.href = "../index.html")
+    () => (window.location.href = "./index.html")
   );
   editBtn.addEventListener("click", () => {
     // 수정페이지

@@ -3,14 +3,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>여러 장소 경로 그리기</title>
+    <title>여러 장소 경로 그리기 (날짜별)</title>
     <style>
       #map {
         width: 100%;
         height: 500px;
       }
-      .place-input {
+      .day-section {
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .day-section h3 {
+        margin: 0;
+        padding: 10px;
+        background-color: #f0f0f0;
+        cursor: pointer;
+      }
+      .place-input-container {
+        display: flex;
+        align-items: center;
         margin-bottom: 10px;
+      }
+      .place-input {
+        flex: 1;
+        padding: 5px;
+      }
+      .delete-place-btn {
+        margin-left: 10px;
+        background-color: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .hidden {
+        display: none;
+      }
+      .add-place-btn {
+        margin-bottom: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .draw-route-btn {
+        background-color: #008cba;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        margin-right: 10px;
       }
     </style>
     <script
@@ -18,21 +63,47 @@
       async
       defer
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   </head>
   <body>
-    <h2>여러 장소 입력 후 경로 그리기</h2>
-    <div id="inputsContainer">
-      <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+    <h2>여러 장소 입력 후 경로 그리기 (날짜별)</h2>
+    <div id="daysContainer">
+      <div class="day-section">
+        <h3 onclick="toggleSection('day1')">Day 1</h3>
+        <div id="day1" class="day-inputs">
+          <div class="place-input-container">
+            <input
+              type="text"
+              class="place-input"
+              placeholder="장소를 입력하세요"
+            />
+            <button class="delete-place-btn" onclick="deletePlaceInput(this)">
+              삭제
+            </button>
+          </div>
+          <button class="add-place-btn" onclick="addPlaceInput('day1')">
+            장소 추가
+          </button>
+        </div>
+      </div>
     </div>
-    <button id="addPlaceBtn">장소 추가</button>
-    <button id="getCoordinatesBtn">경로 그리기</button>
+    <button id="addDayBtn">날짜 추가</button>
+    <button class="draw-route-btn" onclick="drawAllRoutes()">
+      전체 경로 그리기
+    </button>
+    <button class="draw-route-btn" onclick="drawDayRoutes()">
+      선택 날짜 경로 그리기
+    </button>
     <div id="map"></div>
+    <button id="saveRouteBtn">경로 저장</button>
+<div id="postContent">
 
     <script>
       let map;
       let geocoder;
       let markers = [];
-      let linePath = []; // 마커 간의 경로를 그리기 위한 배열
+      let polylines = []; // 각 날짜별 경로를 저장할 배열
+      let dayCount = 1; // 초기 날짜 수
 
       // 구글 맵 초기화
       function initMap() {
@@ -43,81 +114,299 @@
         geocoder = new google.maps.Geocoder();
       }
 
-      // 장소 추가 버튼 클릭 시, 새로운 input 필드 생성
+      // 날짜별 섹션 토글
+      function toggleSection(dayId) {
+        const section = document.getElementById(dayId);
+        section.classList.toggle("hidden");
+      }
+
+      // 날짜 추가 버튼 클릭 시, 새로운 날짜 섹션 생성
       document
-        .getElementById("addPlaceBtn")
+        .getElementById("addDayBtn")
         .addEventListener("click", function () {
-          const inputsContainer = document.getElementById("inputsContainer");
-          const newInput = document.createElement("input");
-          newInput.type = "text";
-          newInput.className = "place-input";
-          newInput.placeholder = "장소를 입력하세요";
-          inputsContainer.appendChild(newInput);
+          dayCount++;
+          const daysContainer = document.getElementById("daysContainer");
+          const newDaySection = document.createElement("div");
+          newDaySection.className = "day-section";
+          newDaySection.innerHTML = `
+          <h3 onclick="toggleSection('day${dayCount}')">Day ${dayCount}</h3>
+          <div id="day${dayCount}" class="day-inputs">
+            <div class="place-input-container">
+              <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+              <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+            </div>
+            <button class="add-place-btn" onclick="addPlaceInput('day${dayCount}')">장소 추가</button>
+          </div>
+        `;
+          daysContainer.appendChild(newDaySection);
         });
 
-      // 입력된 장소들에 대한 좌표를 가져오는 버튼 클릭 시
-      document
-        .getElementById("getCoordinatesBtn")
-        .addEventListener("click", function () {
-          const inputs = document.querySelectorAll(".place-input");
-          const places = [];
-          markers.forEach((marker) => marker.setMap(null)); // 기존 마커들 초기화
-          markers = [];
-          linePath = []; // 경로를 그리기 위한 배열 초기화
+      // 장소 추가 버튼 클릭 시, 해당 Day에 새로운 입력 필드 추가
+      function addPlaceInput(dayId) {
+        const dayInputs = document.getElementById(dayId);
+        const newInputContainer = document.createElement("div");
+        newInputContainer.className = "place-input-container";
+        newInputContainer.innerHTML = `
+          <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+          <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+        `;
+        dayInputs.insertBefore(newInputContainer, dayInputs.lastElementChild);
+      }
 
-          // 입력된 장소를 좌표로 변환
-          let geocodeCount = 0; // 비동기 요청 처리 카운트
-          let totalPlaces = inputs.length; // 총 입력된 장소 수
+      // 장소 삭제 버튼 클릭 시, 해당 입력 필드 삭제
+      function deletePlaceInput(button) {
+        const inputContainer = button.parentElement;
+        inputContainer.remove();
+      }
 
-          inputs.forEach((input, index) => {
-            const placeName = input.value.trim();
-            if (placeName) {
+      // 전체 경로 그리기
+      function drawAllRoutes() {
+        clearMap(); // 지도 초기화
+        const daySections = document.querySelectorAll(".day-inputs");
+        daySections.forEach((section, dayIndex) => {
+          drawRouteForDay(section, dayIndex);
+        });
+      }
+
+      // 선택 날짜 경로 그리기
+      function drawDayRoutes() {
+        clearMap(); // 지도 초기화
+        const daySections = document.querySelectorAll(".day-inputs");
+        daySections.forEach((section, dayIndex) => {
+          if (!section.classList.contains("hidden")) {
+            drawRouteForDay(section, dayIndex);
+          }
+        });
+      }
+
+      // 특정 Day의 경로 그리기
+      function drawRouteForDay(section, dayIndex) {
+        const inputs = section.querySelectorAll(".place-input");
+        const dayPlaces = [];
+
+        let geocodePromises = [];
+
+        // 입력된 장소를 좌표로 변환
+        inputs.forEach((input, placeIndex) => {
+          const placeName = input.value.trim();
+          if (placeName) {
+            const geocodePromise = new Promise((resolve, reject) => {
               geocoder.geocode(
                 { address: placeName },
                 function (results, status) {
-                  geocodeCount++; // 비동기 요청 카운트 증가
-
                   if (status === "OK") {
                     const location = results[0].geometry.location;
-                    const marker = new google.maps.Marker({
-                      map: map,
-                      position: location,
-                      label: `${index + 1}`, // 마커에 번호 표시
-                    });
-                    markers.push(marker);
-                    places.push(location);
-                    linePath.push(location); // 경로에 추가
-
-                    // 지도 중심을 첫 번째 장소로 이동
-                    if (linePath.length === 1) {
-                      map.setCenter(location);
-                    }
+                    resolve({ location, placeIndex });
                   } else {
-                    alert("장소를 찾을 수 없습니다: " + placeName);
-                  }
-
-                  // 모든 geocode 요청이 완료된 후 경로 그리기
-                  if (geocodeCount === totalPlaces && places.length >= 2) {
-                    drawRoute(places);
+                    reject("장소를 찾을 수 없습니다: " + placeName);
                   }
                 }
               );
-            }
-          });
+            });
+            geocodePromises.push(geocodePromise);
+          }
         });
 
-      // 경로 그리기
-      function drawRoute(places) {
-        if (places.length < 2) {
-          alert("최소 2개의 장소를 입력하세요.");
-          return;
-        }
+        // 모든 geocode 요청이 완료된 후 마커와 경로 그리기
+        Promise.all(geocodePromises)
+          .then((results) => {
+            // 인덱스 순서대로 정렬
+            results.sort((a, b) => a.placeIndex - b.placeIndex);
 
-        // 경로를 선으로 그리기
+            // 정렬된 순서대로 마커와 경로 추가
+            results.forEach((result, i) => {
+              const location = result.location;
+              const marker = new google.maps.Marker({
+                map: map,
+                position: location,
+                label: `Day ${dayIndex + 1}-${i + 1}`, // 마커에 날짜와 순서 표시
+                icon: getMarkerIcon(dayIndex), // 날짜별로 다른 마커 아이콘
+              });
+              markers.push(marker);
+              dayPlaces.push(location);
+
+              // 지도 중심을 첫 번째 장소로 이동
+              if (i === 0 && dayIndex === 0) {
+                map.setCenter(location);
+              }
+            });
+
+            // 경로 그리기
+            if (dayPlaces.length >= 2) {
+              const polyline = new google.maps.Polyline({
+                path: dayPlaces,
+                geodesic: true,
+                strokeColor: getDayColor(dayIndex), // 날짜별로 다른 색상
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+              });
+              polyline.setMap(map);
+              polylines.push(polyline);
+            }
+          })
+          .catch((error) => {
+            alert(error);
+          });
+      }
+
+      // 지도 초기화 (마커와 경로 제거)
+      function clearMap() {
+        markers.forEach((marker) => marker.setMap(null));
+        markers = [];
+        polylines.forEach((polyline) => polyline.setMap(null));
+        polylines = [];
+      }
+
+      // 날짜별 마커 아이콘 반환
+      function getMarkerIcon(dayIndex) {
+        const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
+        return {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: colors[dayIndex % colors.length],
+          fillOpacity: 1,
+          strokeWeight: 0,
+          scale: 8,
+        };
+      }
+
+      // 날짜별 경로 색상 반환
+      function getDayColor(dayIndex) {
+        const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
+        return colors[dayIndex % colors.length];
+      }
+
+      //superbase 설정
+      const supabase = createClient(
+        "https://frqevnyaghrnmtccnerc.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ"
+      );
+
+      async function saveRouteToSupabase(dayIndex, dayPlaces) {
+        try {
+          // 게시글 ID (임의로 설정, 실제 게시글 ID로 바꿔주세요)
+          const postId = 1;
+
+          // 마커 위치 저장
+          const markerPromises = dayPlaces.map((place, index) => {
+            return supabase.from("markers").insert([
+              {
+                latitude: place.lat(),
+                longitude: place.lng(),
+                post_id: postId,
+              },
+            ]);
+          });
+
+          const markerResults = await Promise.all(markerPromises);
+
+          // 마커 ID를 가져와 경로 저장
+          const routePromises = markerResults.map((result, index) => {
+            const markerId = result.data[0].id;
+            return supabase
+              .from("routes")
+              .insert([
+                { post_id: postId, marker_id: markerId, order: index + 1 },
+              ]);
+          });
+
+          await Promise.all(routePromises);
+          console.log("경로가 성공적으로 저장되었습니다.");
+        } catch (error) {
+          console.error("경로 저장 오류:", error);
+        }
+      }
+      //마커 정보 테이블에 저장
+      async function saveMarkerToSupabase(latitude, longitude, postId) {
+        try {
+          const { data, error } = await supabase.from("markers").insert([
+            {
+              latitude: latitude,
+              longitude: longitude,
+              post_id: postId,
+            },
+          ]);
+
+          if (error) throw error;
+          console.log("마커 저장 성공:", data);
+        } catch (error) {
+          console.error("마커 저장 오류:", error);
+        }
+      }
+      //route테이블에 경로 정보 저장
+      async function saveRouteToSupabase(postId, markerId, order) {
+        try {
+          const { data, error } = await supabase.from("routes").insert([
+            {
+              post_id: postId,
+              marker_id: markerId,
+              order: order,
+            },
+          ]);
+
+          if (error) throw error;
+          console.log("경로 저장 성공:", data);
+        } catch (error) {
+          console.error("경로 저장 오류:", error);
+        }
+      }
+
+      //마커 출력
+      async function saveRouteWithMarkers(postId, dayPlaces) {
+        try {
+          // 마커 저장
+          const markerPromises = dayPlaces.map((place, index) => {
+            return saveMarkerToSupabase(place.lat(), place.lng(), postId).then(
+              (result) => result.data[0].markers_id
+            );
+          });
+
+          const markerIds = await Promise.all(markerPromises);
+
+          // 경로 저장
+          markerIds.forEach((markerId, index) => {
+            saveRouteToSupabase(postId, markerId, index + 1);
+          });
+
+          console.log("마커 및 경로 저장 완료");
+        } catch (error) {
+          console.error("마커 및 경로 저장 오류:", error);
+        }
+      }
+
+      //게시글에 맞는 마커,마커경로 불러오기
+      async function loadRouteFromSupabase(postId) {
+        try {
+          // 게시글에 해당하는 마커를 불러옵니다.
+          const { data: markers } = await supabase
+            .from("markers")
+            .select("*")
+            .eq("post_id", postId);
+
+          // 경로 정보를 불러옵니다.
+          const { data: routes } = await supabase
+            .from("routes")
+            .select("*")
+            .eq("post_id", postId)
+            .order("order", { ascending: true });
+
+          // 마커 정보를 이용해 경로를 그립니다.
+          const dayPlaces = markers.map(
+            (marker) =>
+              new google.maps.LatLng(marker.latitude, marker.longitude)
+          );
+
+          // 경로를 지도에 표시합니다.
+          drawRouteOnMap(dayPlaces);
+        } catch (error) {
+          console.error("경로 불러오기 오류:", error);
+        }
+      }
+
+      function drawRouteOnMap(dayPlaces) {
         const polyline = new google.maps.Polyline({
-          path: places,
+          path: dayPlaces,
           geodesic: true,
-          strokeColor: "#FF0000", // 경로 색상
+          strokeColor: "#FF0000", // 경로 색상 설정
           strokeOpacity: 1.0,
           strokeWeight: 2,
         });

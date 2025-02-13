@@ -156,7 +156,7 @@ function displayPostings(postings) {
       card.appendChild(cardFooter);
       // ------------------------------------------------------------✅ 경로 확인 필요
       const titleLink = document.createElement("a");
-      titleLink.href = `/travel-secretary/mateSearch/detail.html?id=${posting.id}`;
+      titleLink.href = `./detail.html?id=${posting.id}`;
       titleLink.classList.add("card-title-link");
       titleLink.style.textDecoration = "none";
 

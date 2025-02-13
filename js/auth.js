@@ -1,13 +1,11 @@
 import { supabase } from "./supabase.js";
 
-
 async function login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
         alert("로그인 실패: " + error.message);
         return;
     }
-    window.location.href = "index.html";
 }
 
 async function checkProfile(){
@@ -62,7 +60,7 @@ async function signup(email, password, username) {
       }
     await supabase.auth.signOut();
     alert("회원가입 성공! 로그인 페이지로 이동합니다.");
-    window.location.href = "login/";
+    window.location.href = "login.html";
     
 }
 async function getNickname(){

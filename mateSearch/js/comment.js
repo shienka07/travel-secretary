@@ -46,12 +46,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ✅ 댓글 저장 함수
 async function saveComment(postingId, content, userId) {
   try {
-    const { data, error: authError } = await supabase.auth.getUser();
+    // const { data, error: authError } = await supabase.auth.getUser();
 
     const { error } = await supabase.from(cmtTable).insert([
       {
         post_id: postingId,
-        user_id: data.user.id,
+        user_id: userId,
         content: content,
       },
     ]);

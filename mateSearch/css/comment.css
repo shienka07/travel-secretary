@@ -44,14 +44,35 @@
 .button-container {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 10px;
   margin-top: 1rem;
+  margin-right: 40px; /* 기존 20px보다 더 넓은 오른쪽 여백 */
+  margin-left: 40px; /* 왼쪽도 동일한 여백 추가 */
 }
 
-/* 수정/삭제 버튼 */
+.text-end {
+  margin-right: 15px; /* 오른쪽에 20px 여백 추가 */
+  margin-bottom: 10px;
+}
+
+.comment-actions {
+  text-align: right; /* ✅ 버튼을 우측 정렬 */
+  margin-right: 20px; /* ✅ 버튼을 벽에서 떨어뜨리기 */
+}
+
+/* 버튼 컨테이너 */
+.button-container {
+  display: flex;
+  justify-content: flex-end; /* 버튼을 오른쪽 정렬 */
+  gap: 10px; /* 버튼 사이 간격 */
+  margin-top: 1rem;
+  margin-right: 20px; /* 오른쪽 여백 추가 */
+}
+
+/* 수정/삭제 버튼 공통 스타일 */
 .button-container .btn {
-  padding: 0.4rem 1.2rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 1.4rem;
+  font-size: 1rem;
   font-weight: 500;
   transition: all 0.2s ease;
   border-radius: 6px;
@@ -120,10 +141,12 @@
 .comment-submit-container {
   display: flex;
   justify-content: flex-end;
+  margin-top: 1rem; /* ✅ 버튼 위쪽에 여백 추가 */
 }
 
 #comment-submit-btn {
-  padding: 0.5rem 1.5rem;
-  font-weight: 500;
-  font-size: 0.95rem;
+  padding: 0.6rem 1.8rem; /* ✅ 버튼 패딩 증가 */
+  font-weight: 600;
+  font-size: 1rem; /* ✅ 폰트 크기 증가 */
+  border-radius: 8px; /* ✅ 둥근 버튼 */
 }

@@ -1,10 +1,12 @@
 import {
   supabase,
   mateTable,
+  tsTable,
   ptsTable,
   matebucketName,
   folderName,
 } from "./config.js";
+
 
 // const { userInfo, error: authError } = await supabase.auth.getUser();
 // console.log("userInfo", userInfo);
@@ -23,7 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("URL 파라미터:", urlParams); // URLSearchParams 객체 확인 (디버깅 용)
 
   // 3. 'id' 파라미터 값 추출
-  const postingId = urlParams.get("id");
+  // const postingId = urlParams.get("id");
+  const postingId = 2;
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
 
   if (postingId) {

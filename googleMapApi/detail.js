@@ -216,3 +216,5 @@ function displayDetails(posting) {
   const formattedDateTime = `${formattedDatePart} ${formattedTimePart}`;
   document.querySelector("#detail-created-at").textContent = formattedDateTime;
 }
+
+//``````````````````````자도``````````````````````````````````

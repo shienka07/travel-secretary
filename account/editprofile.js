@@ -1,5 +1,5 @@
 
-import { getProfile, setProfile_auth, logout, uploadImage_auth} from "../../js/auth.js"
+import { getProfile, setProfile_auth, logout, uploadImage_auth} from "../js/auth.js"
 
 async function setDefault() {
     const profile = await getProfile();

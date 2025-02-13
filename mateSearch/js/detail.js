@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   listBtn.addEventListener(
     "click",
-    () => (window.location.href = "./travel-secretary/mateSearch/index.html")
+    () => (window.location.href = "./index.html")
   );
   editBtn.addEventListener("click", () => {
     // 수정페이지
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
       console.log("Successfully deleted row ", postingId);
-      window.location.href = "./travel-secretary/mateSearch/index.html";
+      window.location.href = "./index.html";
     } catch (error) {
       console.error("Unexpected error during delete operation:", error);
     }

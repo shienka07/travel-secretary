@@ -16,11 +16,6 @@
     <div class="container mt-5">
       <div id="detail-box" class="card shadow-sm">
         <div id="detail-image-area">
-          <img
-            src="https://via.placeholder.com/800x400"
-            class="card-img-top detail-image"
-            alt="게시글 이미지"
-          />
           <div class="image-placeholder rounded"></div>
         </div>
         <div class="card-body p-4">
@@ -28,6 +23,34 @@
             <h5 id="detail-title" class="card-title fw-bold">
               <!-- [모집중] 게시글 제목 -->
             </h5>
+            <div
+              class="button-group"
+              style="position: absolute; top: 10px; right: 10px"
+            >
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                id="list-btn"
+              >
+                목록
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                id="edit-btn"
+                hidden
+              >
+                수정
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger btn-sm"
+                id="delete-btn"
+                hidden
+              >
+                삭제
+              </button>
+            </div>
           </div>
 
           <div class="d-flex align-items-center mb-3">

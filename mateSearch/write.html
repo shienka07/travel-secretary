@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>동행 구하기 게시글 작성</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <header class="text-center mb-4">
+        <!-- h2 바꿀거임 ㅎ -->
+        <h2>동행 구하기? 여행 메이트 구하기?</h2>
+        <p class="lead">함께 여행을 떠날 동료를 찾아보세요!</p>
+      </header>
+      <section class="write-form">
+        <div class="card shadow-sm p-4">
+          <form id="mateForm">
+            <input class="form-control" type="hidden" name="userId" />
+
+            <section class="mb-3">
+              <h5 class="mb-3 fw-bold">여행 기본 정보</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">국내/국외</label>
+                  <div class="d-flex gap-2">
+                    <div class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="isDomestic"
+                        id="isDomestic"
+                        value="true"
+                        checked
+                      />
+                      <label class="form-check-label" for="isDomestic"
+                        >국내</label
+                      >
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="isDomestic"
+                        id="isDomestic2"
+                        value="false"
+                      />
+                      <label class="form-check-label" for="isDomestic2"
+                        >국외</label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="title" class="form-label fw-bold">제목</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="title"
+                    id="title"
+                    placeholder="제목을 입력해주세요"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="destination" class="form-label fw-bold"
+                    >여행 지역</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="destination"
+                    id="destination"
+                    placeholder="예: 제주도, 파리"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="people" class="form-label fw-bold"
+                    >모집 인원</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="people"
+                    id="people"
+                    min="2"
+                    max="30"
+                    placeholder="2명 이상"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="startDate" class="form-label fw-bold"
+                    >여행 시작일</label
+                  >
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="startDate"
+                    name="startDate"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="endDate" class="form-label fw-bold"
+                    >여행 종료일</label
+                  >
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="endDate"
+                    name="endDate"
+                    required
+                  />
+                </div>
+                <div class="col-md-12">
+                  <label for="budget" class="form-label fw-bold"
+                    >예산 (선택 사항)</label
+                  >
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="budget"
+                      id="budget"
+                      placeholder="예산 (선택 사항)"
+                    />
+                    <span class="input-group-text">원</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="mb-3">
+              <h5 class="mb-3 fw-bold">선호하는 여행 스타일</h5>
+              <div class="d-flex flex-wrap gap-2" id="style-checkboxes">
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style휴양"
+                    name="styles"
+                    value="휴양"
+                  />
+                  <label class="form-check-label" for="style휴양">#휴양</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style액티비티"
+                    name="styles"
+                    value="액티비티"
+                  />
+                  <label class="form-check-label" for="style액티비티"
+                    >#액티비티</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style미식"
+                    name="styles"
+                    value="미식"
+                  />
+                  <label class="form-check-label" for="style미식">#미식</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style문화탐방"
+                    name="styles"
+                    value="문화탐방"
+                  />
+                  <label class="form-check-label" for="style문화탐방"
+                    >#문화탐방</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style호텔"
+                    name="styles"
+                    value="호텔"
+                  />
+                  <label class="form-check-label" for="style호텔">#호텔</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style에어비앤비"
+                    name="styles"
+                    value="에어비앤비"
+                  />
+                  <label class="form-check-label" for="style에어비앤비"
+                    >#에어비앤비</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style게스트하우스"
+                    name="styles"
+                    value="게스트하우스"
+                  />
+                  <label class="form-check-label" for="style게스트하우스"
+                    >#게스트하우스</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style택시"
+                    name="styles"
+                    value="택시"
+                  />
+                  <label class="form-check-label" for="style택시">#택시</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style대중교통"
+                    name="styles"
+                    value="대중교통"
+                  />
+                  <label class="form-check-label" for="style대중교통"
+                    >#대중교통</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="style렌터카"
+                    name="styles"
+                    value="렌터카"
+                  />
+                  <label class="form-check-label" for="style렌터카"
+                    >#렌터카</label
+                  >
+                </div>
+              </div>
+            </section>
+
+            <section class="mb-3">
+              <h5 class="mb-3 fw-bold">추가 내용</h5>
+              <div class="mb-3">
+                <textarea
+                  class="form-control"
+                  name="content"
+                  id="content"
+                  rows="10"
+                  placeholder="자유롭게 동행에 대한 내용을 작성해주세요.&#13;&#10;- 여행 계획, 준비 상황&#13;&#10;- 동행자에게 바라는 점&#13;&#10;- 기타 어필하고 싶은 내용 등"
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="imageUrl" class="form-label fw-bold"
+                  >이미지 첨부 (선택 사항)</label
+                >
+                <input type="file" class="form-control" id="imageUrl" />
+                <div class="form-text">
+                  함께 여행갈 장소나 분위기를 보여주는 이미지를 첨부해보세요.
+                </div>
+              </div>
+            </section>
+
+            <div class="d-flex justify-content-center mt-4">
+              <button
+                class="btn btn-primary btn-lg"
+                id="writeButton"
+                type="submit"
+              >
+                작성 완료
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="board.js"></script>
+  </body>
+</html>

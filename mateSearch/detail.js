@@ -188,3 +188,40 @@ async function saveComment(postingId, content, userId) {
     alert("댓글 저장에 실패했습니다.");
   }
 }
+
+// 댓글 불러오기 함수
+async function loadComments(postingId) {
+  const { data: comments, error } = await _supabase
+    .from("POSTING_COMMENTS")
+    .select("content, created_at, user_id (username)")
+    .eq("post_id", postingId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("댓글 불러오기 실패:", error);
+    return;
+  }
+
+  const commentsContainer = document.getElementById("comments-container");
+  if (!commentsContainer) {
+    console.warn("댓글 컨테이너를 찾을 수 없습니다.");
+    return;
+  }
+
+  commentsContainer.innerHTML = ""; // 기존 댓글 삭제 후 다시 추가
+
+  comments.forEach((comment) => {
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("card", "mb-2", "p-2");
+
+    commentElement.innerHTML = `
+      <strong>${comment.user_id.username}</strong> 
+      <p>${comment.content}</p>
+      <small class="text-muted">${new Date(
+        comment.created_at
+      ).toLocaleString()}</small>
+    `;
+
+    commentsContainer.appendChild(commentElement);
+  });
+}

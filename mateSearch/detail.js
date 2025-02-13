@@ -88,7 +88,8 @@ async function fetchPostingDetail(postingId) {
 		  userInfo: user_id ( 
 			username,
 			gender,
-			age
+			age,
+      image_url
 		  )
 		`
       )
@@ -126,6 +127,8 @@ function displayDetails(posting) {
 
   document.querySelector("#detail-author-username").textContent =
     posting.userInfo.username;
+
+  console.log("image_url", posting.userInfo.image_url);
 
   const genderText =
     posting.userInfo?.gender === 1

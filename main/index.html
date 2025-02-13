@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nav</title>
+    <style>
+      /* 기본 스타일 */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        font-family: "Open Sans", sans-serif;
+      }
+      /* 네비게이션 바 */
+      nav {
+        /* position: absolute; */
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.5);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+        border-bottom: 1px solid lightgray; /* 테두리 두께, 종류, 색상 */
+      }
+
+      nav .logo {
+        margin-left: 15px;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: rgb(0, 0, 0);
+      }
+
+      nav .menu {
+        display: flex;
+        gap: 20px;
+      }
+
+      nav .menu a {
+        color: rgb(0, 0, 0);
+        text-decoration: none;
+        font-size: 1rem;
+        transition: opacity 0.3s ease;
+      }
+
+      nav .menu a:hover {
+        opacity: 0.7;
+      }
+
+      /* 인증 버튼 공통 스타일 */
+      .auth-buttons div,
+      nav .login-button {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid black; /* 테두리 두께, 종류, 색상 */
+        transition: background-color 0.3s ease;
+      }
+
+      .openLoginModal {
+        color: black;
+        background-color: lightgray;
+      }
+
+      .openSignupModal {
+        color: rgb(255, 255, 255);
+        background-color: black;
+      }
+
+      .auth-buttons div:hover,
+      nav .login-button:hover {
+        background-color: rgba(255, 255, 255, 0.8);
+        color: black;
+      }
+      .auth-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #topLoginButton {
+        width: 180px;
+      }
+
+      .totalLogo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 180px;
+      }
+
+      .bottomBar {
+        bottom: 0; /* 하단에 위치 */
+        left: 0; /* 왼쪽 끝에 위치 */
+        width: 100%; /* 전체 너비 */
+        background-color: lightgray; /* 배경색 */
+        padding: 30px; /* 내부 여백 */
+        text-align: center; /* 텍스트 가운데 정렬 */
+      }
+
+      /* 슬라이더 컨테이너 */
+      .slider-container {
+        width: 100%;
+        height: 50vh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* 슬라이드 관련 스타일 */
+      .slides-wrapper {
+        display: flex;
+        height: 100%;
+        transition: transform 0.5s ease-in-out;
+      }
+
+      .slide {
+        min-width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+
+      .slide-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: white;
+      }
+
+      .slide-content h2 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .slide-content p {
+        font-size: 1.5rem;
+        opacity: 0.8;
+      }
+
+      .slideAuthButtons {
+        margin-top: 30px;
+      }
+
+      /* 도트 인디케이터 */
+      .dots-container {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+      }
+
+      .dot {
+        width: 18px;
+        height: 18px;
+        background-color: white;
+        border-radius: 50%;
+        opacity: 0.5;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+      }
+
+      .dot.active {
+        opacity: 1;
+      }
+
+      /* 동행 구하기 섹션 */
+      .companion-section {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 0 20px;
+      }
+
+      .companion-section h2 {
+        font-size: 2rem;
+        margin-bottom: 30px;
+        color: #333;
+        text-align: center;
+      }
+
+      .post-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        padding: 0 20px;
+      }
+
+      .post-item {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+      }
+
+      .post-item:hover {
+        transform: translateY(-5px);
+      }
+
+      .post-thumbnail {
+        width: 100%;
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+
+      .post-title {
+        padding: 15px;
+        font-size: 1.1rem;
+        color: #333;
+        text-align: center;
+        margin: 0;
+      }
+
+      /* 반응형 디자인 */
+      @media (max-width: 768px) {
+        .post-grid {
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          padding: 0;
+        }
+
+        .companion-section {
+          margin: 30px auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 네비게이션 바 -->
+    <nav>
+      <div class="totalLogo">
+        <img src="./logo.png" style="width: 40px; height: auto" />
+        <div class="logo">여행비서</div>
+      </div>
+      <div class="menu">
+        <a href="#">메인</a>
+        <a href="#">동행구하기</a>
+        <a href="#">AI 여행 일정</a>
+      </div>
+      <div class="auth-buttons" id="topLoginButton">
+        <div class="login-button openLoginModal">로그인</div>
+        <div class="signup-button openSignupModal">회원가입</div>
+      </div>
+    </nav>
+
+    <!-- 슬라이더 컨테이너 -->
+    <div class="slider-container">
+      <div class="slides-wrapper">
+        <!-- 슬라이드 1 -->
+        <div
+          class="slide"
+          style="
+            background-image: url('https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?ixlib=rb-4.0.3');
+          "
+        >
+          <div class="slide-content">
+            <h2>새로운 여행지의 발견</h2>
+            <p>당신의 취향에 맞는 여행지를 찾아보세요</p>
+            <div class="auth-buttons slideAuthButtons">
+              <div class="login-button openLoginModal">로그인</div>
+              <div class="signup-button openSignupModal">회원가입</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 슬라이드 2 -->
+        <div
+          class="slide"
+          style="
+            background-image: url('https://images.unsplash.com/photo-1467269204594-9661b134dd2b?ixlib=rb-4.0.3');
+          "
+        >
+          <div class="slide-content">
+            <h2>인기 여행지</h2>
+            <p>많은 여행자들이 선택한 명소를 확인하세요</p>
+            <div class="auth-buttons slideAuthButtons">
+              <div class="login-button openLoginModal">로그인</div>
+              <div class="signup-button openSignupModal">회원가입</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 슬라이드 3 -->
+        <div
+          class="slide"
+          style="
+            background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3');
+          "
+        >
+          <div class="slide-content">
+            <h2>여행 커뮤니티</h2>
+            <p>다른 여행자들과 경험을 공유하세요</p>
+            <div class="auth-buttons slideAuthButtons">
+              <div class="login-button openLoginModal">로그인</div>
+              <div class="signup-button openSignupModal">회원가입</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 도트 인디케이터 -->
+      <div class="dots-container">
+        <div class="dot active" data-slide="0"></div>
+        <div class="dot" data-slide="1"></div>
+        <div class="dot" data-slide="2"></div>
+      </div>
+    </div>
+
+    <div class="companion-section">
+      <!-- <h2>동행 구하기</h2> -->
+      <div class="post-grid">
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">서울에서 함께 여행하실 분 구해요!</h3>
+        </div>
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1467269204594-9661b134dd2b?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">제주도 렌트카 동행자 모집</h3>
+        </div>
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">부산 당일치기 동반 여행</h3>
+        </div>
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">속초 해수욕장 같이 가요</h3>
+        </div>
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">인천 공항 택시 동행</h3>
+        </div>
+        <div class="post-item">
+          <div
+            class="post-thumbnail"
+            style="
+              background-image: url('https://images.unsplash.com/photo-1467269204594-9661b134dd2b?ixlib=rb-4.0.3');
+            "
+          ></div>
+          <h3 class="post-title">경주 역사 탐방 동행 구함</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottomBar"></div>
+
+    <script>
+      // 슬라이드 제어 스크립트
+      let currentSlide = 0;
+      const slidesWrapper = document.querySelector(".slides-wrapper");
+      const slides = document.querySelectorAll(".slide");
+      const dots = document.querySelectorAll(".dot");
+      let autoSlide; // 인터벌 변수 전역으로 관리
+
+      // 자동 슬라이드 시작 함수
+      function startAutoSlide() {
+        clearInterval(autoSlide); // 기존 인터벌 정리
+        autoSlide = setInterval(() => {
+          currentSlide = (currentSlide + 1) % slides.length;
+          updateSlider();
+        }, 5000);
+      }
+
+      // 슬라이드 업데이트 함수
+      function updateSlider() {
+        slidesWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+        dots.forEach((dot, index) => {
+          dot.classList.toggle("active", index === currentSlide);
+        });
+      }
+
+      // 초기 자동 슬라이드 시작
+      startAutoSlide();
+
+      // 도트 클릭 이벤트
+      dots.forEach((dot, index) => {
+        dot.addEventListener("click", () => {
+          currentSlide = index;
+          updateSlider();
+          startAutoSlide(); // 클릭 시 인터벌 재시작
+        });
+      });
+
+      // 호버 이벤트
+      const slider = document.querySelector(".slider-container");
+      slider.addEventListener("mouseenter", () => clearInterval(autoSlide));
+      slider.addEventListener("mouseleave", startAutoSlide); // 함수 재사용
+    </script>
+  </body>
+</html>

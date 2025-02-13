@@ -75,6 +75,30 @@
         <div class="card-footer text-muted p-3">
           <p class="mb-0 text-end" id="detail-created-at"></p>
         </div>
+
+        <!-- ✅ 댓글 입력 폼 -->
+        <div class="container mt-4">
+          <h5>💬 댓글</h5>
+          <div id="comments-container" class="mb-3">
+            <!-- 댓글이 여기에 표시됨 -->
+          </div>
+
+          <form id="comment-form">
+            <textarea
+              id="comment-content"
+              class="form-control"
+              rows="3"
+              placeholder="댓글을 입력하세요"
+            ></textarea>
+            <button
+              id="comment-submit-btn"
+              type="button"
+              class="btn btn-primary mt-2"
+            >
+              댓글 작성
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 

@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         content: commentContent,
       });
 
-      // await saveComment(postingId, commentContent);
       await saveComment(postingId, commentContent, data.user.id);
       document.getElementById("comment-content").value = ""; // 입력창 초기화
     });
@@ -89,6 +88,31 @@ async function updateComment(commentId, newContent, postingId) {
   }
 }
 
+// ✅ 댓글 삭제 함수 추가
+async function deleteComment(commentId, postingId) {
+  try {
+    // 삭제 확인
+    if (!confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from(cmtTable)
+      .delete()
+      .eq("id", commentId);
+
+    if (error) {
+      console.error("❌ 댓글 삭제 실패:", error);
+      alert("댓글 삭제에 실패했습니다.");
+    } else {
+      console.log("✅ 댓글 삭제 성공!");
+      loadComments(postingId);
+    }
+  } catch (error) {
+    console.error("❌ 댓글 삭제 중 오류 발생:", error);
+  }
+}
+
 // ✅ 댓글 불러오기 함수
 async function loadComments(postingId) {
   const { data: comments, error } = await supabase
@@ -134,7 +158,7 @@ async function loadComments(postingId) {
       ).toLocaleString()}</small>
     `;
 
-    // ✅ 댓글 수정 버튼
+    // ✅ 댓글 수정 & 삭제 버튼
     const { data: currentUser } = await supabase.auth.getUser();
     if (currentUser?.user?.id === comment.user_id) {
       const editButton = document.createElement("button");
@@ -152,7 +176,15 @@ async function loadComments(postingId) {
         }
       });
 
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "삭제";
+      deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger", "me-2");
+      deleteButton.addEventListener("click", () => {
+        deleteComment(comment.id, postingId);
+      });
+
       commentElement.appendChild(editButton);
+      commentElement.appendChild(deleteButton);
     }
 
     commentsContainer.appendChild(commentElement);

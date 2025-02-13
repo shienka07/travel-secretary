@@ -1,4 +1,10 @@
-import { _supabase, mateTable, tsTable, ptsTable } from "./config.js";
+import {
+  supabase,
+  mateTable,
+  ptsTable,
+  matebucketName,
+  folderName,
+} from "./config.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. 현재 페이지 URL 가져오기
@@ -27,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchPostingDetail(postingId) {
   try {
-    const { data: posting, error } = await _supabase
+    const { data: posting, error } = await supabase
       .from(mateTable)
       .select(
         ` 
@@ -86,6 +92,32 @@ function displayDetails(posting) {
       ? "여성"
       : "미제공"; // 삼항 연산자
   document.querySelector("#detail-author-gender").textContent = genderText;
+
+  const imageArea = document.querySelector("#detail-image-area");
+  if (posting.image_url) {
+    const { data: imageUrlData } = supabase.storage
+      .from(matebucketName)
+      .getPublicUrl(posting.image_url);
+
+    const imageElement = document.createElement("img");
+    imageElement.src = imageUrlData.publicUrl;
+    imageElement.alt = "게시글 이미지";
+    imageElement.classList.add("card-img-top", "detail-image");
+    imageElement.style.width = "300px";
+    imageArea.appendChild(imageElement);
+  } else {
+    imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
+    const placeholder = imageArea.querySelector(".image-placeholder");
+    placeholder.classList.add(
+      "bg-light",
+      "d-flex",
+      "justify-content-center",
+      "align-items-center",
+      "p-4"
+    );
+    placeholder.style.height = "150px";
+    placeholder.textContent = "No Image";
+  }
 
   document.querySelector(
     "#detail-author-age"

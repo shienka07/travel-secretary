@@ -31,6 +31,12 @@ posting_travel_styles
 
 const { userInfo, error: authError } = await supabase.auth.getUser();
 console.log("userInfo", userInfo);
+const demoUser = {
+  user_id: "4b9ac83-a020-454a-9b75-5462937cf057",
+};
+const demoUser2 = {
+  user_id: "45d3f789-585b-44d7-9a84-03577b24f33a",
+};
 
 fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");
 
@@ -41,7 +47,7 @@ mateForm.addEventListener("submit", async (event) => {
   const formData = new FormData(mateForm);
   const writeData = {
     // user_id: userInfo.id;
-    user_id: "e4b9ac83-a020-454a-9b75-5462937cf057", // ✅ 임시... 로그인아이디 받아오기
+    user_id: demoUser.user_id, // ✅ 임시... 로그인아이디 받아오기
     title: formData.get("title"),
     content: formData.get("content"),
     start_date: formData.get("startDate"),

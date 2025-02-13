@@ -38,23 +38,85 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 댓글 저장 함수
 async function saveComment(postingId, content, userId, parentCommentId = null) {
   try {
-    const { error } = await supabase.from("POSTING_COMMENTS").insert([
-      {
-        post_id: postingId,
-        user_id: userId,
-        content: content,
-        parent_comment_id: parentCommentId, // 대댓글이면 부모 댓글 ID 저장
-      },
-    ]);
+    const { data: insertedData, error } = await supabase
+      .from("POSTING_COMMENTS")
+      .insert([
+        {
+          post_id: postingId,
+          user_id: userId,
+          content: content,
+          parent_comment_id: parentCommentId, // 대댓글이면 부모 댓글 ID 저장
+        },
+      ])
+      .select(); // 삽입된 데이터 반환
 
     if (error) {
       console.error("댓글 저장 실패:", error);
       alert("댓글 작성에 실패했습니다.");
-    } else {
-      loadComments(postingId); // 저장 후 댓글 새로 불러오기
+      return null;
     }
+
+    // 바로 다시 댓글을 불러오는 대신, 현재 상태에서 UI 업데이트
+    if (insertedData && insertedData.length > 0) {
+      const newComment = insertedData[0];
+      await updateCommentsUIAfterSave(newComment, parentCommentId);
+    }
+
+    return insertedData ? insertedData[0] : null;
   } catch (error) {
     console.error("댓글 저장 중 오류 발생:", error);
+    return null;
+  }
+}
+
+async function updateCommentsUIAfterSave(newComment, parentCommentId) {
+  const { data: currentUser } = await supabase.auth.getUser();
+  const { data: commentUserInfo } = await supabase
+    .from("userinfo")
+    .select("username")
+    .eq("user_id", newComment.user_id)
+    .single();
+
+  // 새 댓글 객체 생성
+  const commentToRender = {
+    ...newComment,
+    userinfo: { username: commentUserInfo?.username || "알 수 없음" },
+    replies: [],
+  };
+
+  // 부모 댓글 요소 찾기
+  const parentCommentElement = parentCommentId
+    ? document.querySelector(`[data-comment-id="${parentCommentId}"]`)
+    : null;
+
+  // 댓글 컨테이너
+  const commentsContainer = document.getElementById("comments-container");
+
+  if (parentCommentId && parentCommentElement) {
+    // 대댓글인 경우
+    let repliesContainer = parentCommentElement.querySelector(".replies");
+    if (!repliesContainer) {
+      repliesContainer = document.createElement("div");
+      repliesContainer.classList.add("replies", "ms-4");
+      parentCommentElement.appendChild(repliesContainer);
+    }
+
+    // 대댓글 렌더링 (부모 댓글 ID 전달)
+    renderComment(
+      commentToRender,
+      repliesContainer,
+      currentUser,
+      newComment.post_id,
+      parentCommentId // 부모 댓글 ID 전달
+    );
+  } else {
+    // 최상위 댓글인 경우
+    renderComment(
+      commentToRender,
+      commentsContainer,
+      currentUser,
+      newComment.post_id
+    );
   }
 }
 
@@ -94,54 +156,168 @@ async function deleteComment(commentId, postingId) {
       console.error("댓글 삭제 실패:", error);
       alert("댓글 삭제에 실패했습니다.");
     } else {
-      loadComments(postingId);
+      await loadComments(postingId);
     }
   } catch (error) {
     console.error("댓글 삭제 중 오류 발생:", error);
   }
 }
 
-function renderComment(comment, container, currentUser) {
+// 댓글 렌더링 함수 개선
+function renderComment(
+  comment,
+  container,
+  currentUser,
+  postingId,
+  parentCommentId = null
+) {
   const commentElement = document.createElement("div");
   commentElement.classList.add("card", "mb-2", "p-2");
   commentElement.setAttribute("data-comment-id", comment.id);
 
   const username = comment.userinfo?.username || "알 수 없음";
 
-  commentElement.innerHTML = `
-    <div class="comment-content">
-      <strong>${username}</strong> 
-      <small class="text-muted"> | ${new Date(
-        comment.created_at
-      ).toLocaleString()} |</small>
-      <p>${comment.content}</p>
-      <button class="btn btn-sm btn-outline-primary reply-btn">답글</button>
-    </div>
+  // 댓글 내용 렌더링
+  const commentContentDiv = document.createElement("div");
+  commentContentDiv.classList.add("comment-content");
+  commentContentDiv.innerHTML = `
+    <strong>${username}</strong> 
+    <small class="text-muted"> | ${new Date(
+      comment.created_at
+    ).toLocaleString()} |</small>
+    <p>${comment.content}</p>
   `;
 
-  const replyButton = commentElement.querySelector(".reply-btn");
-  replyButton.onclick = () => showReplyForm(comment.id, commentElement);
+  // 답글 버튼 추가 (오직 최상위 댓글에만)
+  if (!parentCommentId) {
+    const replyButton = document.createElement("button");
+    replyButton.textContent = "답글";
+    replyButton.classList.add(
+      "btn",
+      "btn-sm",
+      "btn-outline-primary",
+      "reply-btn",
+      "ms-2"
+    );
+    replyButton.onclick = () =>
+      showReplyForm(comment.id, commentElement, postingId);
+    commentContentDiv.appendChild(replyButton);
+  }
+
+  // 수정/삭제 버튼 (작성자인 경우에만)
+  if (currentUser?.user?.id === comment.user_id) {
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("text-end", "mt-2");
+
+    const editButton = document.createElement("button");
+    editButton.textContent = "수정";
+    editButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "me-2");
+    editButton.onclick = createEditHandler(commentContentDiv, comment);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "삭제";
+    deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+    deleteButton.onclick = () => deleteComment(comment.id, postingId);
+
+    buttonContainer.appendChild(editButton);
+    buttonContainer.appendChild(deleteButton);
+    commentContentDiv.appendChild(buttonContainer);
+  }
+
+  commentElement.appendChild(commentContentDiv);
+
+  // 대댓글 컨테이너 추가
+  if (Array.isArray(comment.replies) && comment.replies.length > 0) {
+    const repliesContainer = document.createElement("div");
+    repliesContainer.classList.add("replies", "ms-4"); // 들여쓰기 추가
+
+    comment.replies.forEach((reply) => {
+      renderComment(
+        reply,
+        repliesContainer,
+        currentUser,
+        postingId,
+        comment.id
+      );
+    });
+
+    commentElement.appendChild(repliesContainer);
+  }
 
   container.appendChild(commentElement);
-
-  // ✅ 대댓글이 있으면 재귀적으로 렌더링
-  if (comment.replies.length > 0) {
-    const replyContainer = document.createElement("div");
-    replyContainer.classList.add("replies");
-    comment.replies.forEach((reply) =>
-      renderComment(reply, replyContainer, currentUser)
-    );
-    container.appendChild(replyContainer);
-  }
+  return commentElement;
 }
 
-// ✅ 대댓글 입력 폼 표시
-function showReplyForm(parentCommentId, parentElement) {
+// 댓글 수정 핸들러 생성 함수
+function createEditHandler(commentContentDiv, comment) {
+  return async () => {
+    const commentText = commentContentDiv.querySelector("p");
+    const originalContent = commentText.textContent;
+
+    // 수정 모드 UI 생성
+    const textarea = document.createElement("textarea");
+    textarea.classList.add("form-control", "mb-2");
+    textarea.value = originalContent;
+
+    const buttonsDiv = document.createElement("div");
+    buttonsDiv.classList.add("text-end", "mt-2");
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "완료";
+    saveBtn.classList.add("btn", "btn-sm", "btn-primary", "me-2");
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "취소";
+    cancelBtn.classList.add("btn", "btn-sm", "btn-outline-secondary");
+
+    // 취소 버튼 클릭 시
+    cancelBtn.onclick = () => {
+      textarea.remove();
+      buttonsDiv.remove();
+      commentText.style.display = "block";
+      commentContentDiv.querySelector(".text-end").style.display = "block";
+    };
+
+    // 완료 버튼 클릭 시
+    saveBtn.onclick = async () => {
+      const newContent = textarea.value.trim();
+      if (newContent && newContent !== originalContent) {
+        const success = await updateComment(comment.id, newContent);
+        if (success) {
+          commentText.textContent = newContent;
+        }
+      }
+      textarea.remove();
+      buttonsDiv.remove();
+      commentText.style.display = "block";
+      commentContentDiv.querySelector(".text-end").style.display = "block";
+    };
+
+    buttonsDiv.appendChild(saveBtn);
+    buttonsDiv.appendChild(cancelBtn);
+
+    commentText.style.display = "none";
+    commentContentDiv.querySelector(".text-end").style.display = "none";
+    commentContentDiv.insertBefore(textarea, commentText);
+    commentContentDiv.appendChild(buttonsDiv);
+  };
+}
+
+// 대댓글 입력 폼 표시 함수
+function showReplyForm(parentCommentId, parentElement, postingId) {
+  if (!postingId) {
+    console.error("❌ showReplyForm 호출 시 postingId가 없습니다.");
+    return;
+  }
+
   const replyForm = document.createElement("div");
+  replyForm.classList.add("reply-form", "ms-4", "mt-2"); // 들여쓰기 및 위쪽 여백 추가
   replyForm.innerHTML = `
     <textarea class="form-control mb-2" placeholder="답글을 입력하세요"></textarea>
-    <button class="btn btn-sm btn-primary submit-reply">답글 작성</button>
-    <button class="btn btn-sm btn-outline-secondary cancel-reply">취소</button>
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-sm btn-primary submit-reply me-2">답글 작성</button>
+      <button class="btn btn-sm btn-outline-secondary cancel-reply">취소</button>
+    </div>
   `;
 
   const submitButton = replyForm.querySelector(".submit-reply");
@@ -156,6 +332,7 @@ function showReplyForm(parentCommentId, parentElement) {
         alert("로그인이 필요합니다!");
         return;
       }
+
       await saveComment(postingId, content, data.user.id, parentCommentId);
       replyForm.remove();
     }
@@ -163,7 +340,16 @@ function showReplyForm(parentCommentId, parentElement) {
 
   cancelButton.onclick = () => replyForm.remove();
 
-  parentElement.appendChild(replyForm);
+  // 대댓글 처리를 위한 로직 개선
+  let repliesContainer = parentElement.querySelector(".replies");
+  if (!repliesContainer) {
+    repliesContainer = document.createElement("div");
+    repliesContainer.classList.add("replies", "ms-4");
+    parentElement.appendChild(repliesContainer);
+  }
+
+  // 부모 요소의 replies 컨테이너에 답글 폼 추가
+  repliesContainer.appendChild(replyForm);
 }
 
 // 댓글 불러오기 함수
@@ -195,128 +381,47 @@ async function loadComments(postingId) {
       return;
     }
 
-    commentsContainer.innerHTML = "";
+    commentsContainer.innerHTML = ""; // 기존 댓글 초기화
 
     const { data: currentUser } = await supabase.auth.getUser();
 
-    const topLevelComments = comments.filter((c) => !c.parent_comment_id);
-
-    // ✅ 대댓글 매핑
-    const commentMap = {};
+    // 댓글을 ID 기준으로 매핑 (대댓글 처리)
+    const commentMap = new Map();
     comments.forEach((comment) => {
-      commentMap[comment.id] = comment;
-      comment.replies = [];
+      commentMap.set(comment.id, { ...comment, replies: [] });
     });
 
-    // ✅ 대댓글을 부모 댓글의 `replies` 배열에 추가
+    // 부모 댓글과 대댓글 분리 (심층 중첩 지원)
+    const topLevelComments = [];
+    const commentChildren = new Map();
+
     comments.forEach((comment) => {
+      const commentWithReplies = commentMap.get(comment.id);
+
       if (comment.parent_comment_id) {
-        commentMap[comment.parent_comment_id]?.replies.push(comment);
+        // 대댓글인 경우
+        const parentId = comment.parent_comment_id;
+        if (!commentChildren.has(parentId)) {
+          commentChildren.set(parentId, []);
+        }
+        commentChildren.get(parentId).push(commentWithReplies);
+      } else {
+        // 부모 댓글인 경우
+        topLevelComments.push(commentWithReplies);
       }
     });
 
-    // ✅ 일반 댓글을 렌더링하고, 그 아래에 대댓글 표시
+    // 대댓글 중첩 처리
+    topLevelComments.forEach((comment) => {
+      // 해당 댓글의 대댓글 추가
+      const childReplies = commentChildren.get(comment.id) || [];
+      comment.replies = childReplies;
+    });
+
+    // 부모 댓글을 컨테이너에 렌더링
     topLevelComments.forEach((comment) =>
-      renderComment(comment, commentsContainer, currentUser)
+      renderComment(comment, commentsContainer, currentUser, postingId)
     );
-
-    comments.forEach((comment) => {
-      const commentElement = document.createElement("div");
-      commentElement.classList.add("card", "mb-2", "p-2");
-      commentElement.setAttribute("data-comment-id", comment.id);
-
-      const username = comment.userinfo?.username || "알 수 없음";
-
-      commentElement.innerHTML = `
-      <div class="comment-content">
-        <strong>${username}</strong><small class="text-muted"> |  ${new Date(
-        comment.created_at
-      ).toLocaleString()} |</small>
-        <p>${comment.content}</p>
-      </div>
-    `;
-
-      // 수정/삭제 버튼 (작성자인 경우에만)
-      if (currentUser?.user?.id === comment.user_id) {
-        const buttonContainer = document.createElement("div");
-        buttonContainer.classList.add("text-end", "mt-2");
-
-        const editButton = document.createElement("button");
-        editButton.textContent = "수정";
-        editButton.classList.add(
-          "btn",
-          "btn-sm",
-          "btn-outline-secondary",
-          "me-2"
-        );
-
-        editButton.onclick = async () => {
-          const commentContent =
-            commentElement.querySelector(".comment-content");
-          const commentText =
-            commentElement.querySelector(".comment-content p");
-          const originalContent = commentText.textContent;
-
-          // 수정 모드 UI 생성
-          const textarea = document.createElement("textarea");
-          textarea.classList.add("form-control", "mb-2");
-          textarea.value = originalContent;
-
-          const buttonsDiv = document.createElement("div");
-          buttonsDiv.classList.add("text-end", "mt-2");
-
-          const saveBtn = document.createElement("button");
-          saveBtn.textContent = "완료";
-          saveBtn.classList.add("btn", "btn-sm", "btn-primary", "me-2");
-
-          const cancelBtn = document.createElement("button");
-          cancelBtn.textContent = "취소";
-          cancelBtn.classList.add("btn", "btn-sm", "btn-outline-secondary");
-
-          // 취소 버튼 클릭 시
-          cancelBtn.onclick = () => {
-            textarea.remove();
-            buttonsDiv.remove();
-            commentText.style.display = "block";
-            buttonContainer.style.display = "block";
-          };
-
-          // 완료 버튼 클릭 시
-          saveBtn.onclick = async () => {
-            const newContent = textarea.value.trim();
-            if (newContent && newContent !== originalContent) {
-              const success = await updateComment(comment.id, newContent);
-              if (success) {
-                commentText.textContent = newContent;
-              }
-            }
-            textarea.remove();
-            buttonsDiv.remove();
-            commentText.style.display = "block";
-            buttonContainer.style.display = "block";
-          };
-
-          buttonsDiv.appendChild(saveBtn);
-          buttonsDiv.appendChild(cancelBtn);
-
-          commentText.style.display = "none";
-          buttonContainer.style.display = "none";
-          commentContent.insertBefore(textarea, commentText);
-          commentElement.appendChild(buttonsDiv);
-        };
-
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "삭제";
-        deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
-        deleteButton.onclick = () => deleteComment(comment.id, postingId);
-
-        buttonContainer.appendChild(editButton);
-        buttonContainer.appendChild(deleteButton);
-        commentElement.appendChild(buttonContainer);
-      }
-
-      commentsContainer.appendChild(commentElement);
-    });
   } catch (error) {
     console.error("댓글 로딩 중 오류 발생:", error);
   }

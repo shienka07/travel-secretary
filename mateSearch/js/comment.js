@@ -69,7 +69,7 @@ async function saveComment(postingId, content, userId) {
 }
 
 // ✅ 댓글 수정 함수
-async function updateComment(commentId, newContent, postingId) {
+async function updateComment(commentId, newContent) {
   try {
     const { error } = await supabase
       .from(cmtTable)
@@ -79,19 +79,19 @@ async function updateComment(commentId, newContent, postingId) {
     if (error) {
       console.error("❌ 댓글 수정 실패:", error);
       alert("댓글 수정에 실패했습니다.");
-    } else {
-      console.log("✅ 댓글 수정 성공!");
-      loadComments(postingId);
+      return false;
     }
+    console.log("✅ 댓글 수정 성공!");
+    return true;
   } catch (error) {
     console.error("❌ 댓글 수정 중 오류 발생:", error);
+    return false;
   }
 }
 
-// ✅ 댓글 삭제 함수 추가
+// ✅ 댓글 삭제 함수
 async function deleteComment(commentId, postingId) {
   try {
-    // 삭제 확인
     if (!confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
       return;
     }
@@ -115,79 +115,135 @@ async function deleteComment(commentId, postingId) {
 
 // ✅ 댓글 불러오기 함수
 async function loadComments(postingId) {
-  const { data: comments, error } = await supabase
-    .from(cmtTable)
-    .select(
+  try {
+    const { data: comments, error } = await supabase
+      .from(cmtTable)
+      .select(
+        `
+        id, 
+        content, 
+        created_at, 
+        user_id,
+        userinfo(username)
       `
-    id, 
-    content, 
-    created_at, 
-    user_id,
-    userinfo(username)
-  `
-    )
-    .eq("post_id", postingId)
-    .order("created_at", { ascending: true });
+      )
+      .eq("post_id", postingId)
+      .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("❌ 댓글 불러오기 실패:", error);
-    return;
-  }
-
-  console.log("✅ 불러온 댓글 데이터:", comments);
-
-  const commentsContainer = document.getElementById("comments-container");
-  if (!commentsContainer) {
-    console.warn("⚠️ 댓글 컨테이너가 존재하지 않습니다.");
-    return;
-  }
-
-  commentsContainer.innerHTML = ""; // 기존 댓글 삭제 후 다시 추가
-
-  for (const comment of comments) {
-    const commentElement = document.createElement("div");
-    commentElement.classList.add("card", "mb-2", "p-2");
-
-    let username = comment.userinfo?.username || "알 수 없음";
-
-    commentElement.innerHTML = `
-      <strong>${username}</strong>
-      <p>${comment.content}</p>
-      <small class="text-muted">${new Date(
-        comment.created_at
-      ).toLocaleString()}</small>
-    `;
-
-    // ✅ 댓글 수정 & 삭제 버튼
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (currentUser?.user?.id === comment.user_id) {
-      const editButton = document.createElement("button");
-      editButton.textContent = "수정";
-      editButton.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-outline-secondary",
-        "me-2"
-      );
-      editButton.addEventListener("click", () => {
-        const newContent = prompt("댓글을 수정하세요:", comment.content);
-        if (newContent && newContent.trim() !== "") {
-          updateComment(comment.id, newContent.trim(), postingId);
-        }
-      });
-
-      const deleteButton = document.createElement("button");
-      deleteButton.textContent = "삭제";
-      deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger", "me-2");
-      deleteButton.addEventListener("click", () => {
-        deleteComment(comment.id, postingId);
-      });
-
-      commentElement.appendChild(editButton);
-      commentElement.appendChild(deleteButton);
+    if (error) {
+      console.error("❌ 댓글 불러오기 실패:", error);
+      return;
     }
 
-    commentsContainer.appendChild(commentElement);
+    const commentsContainer = document.getElementById("comments-container");
+    if (!commentsContainer) {
+      console.warn("⚠️ 댓글 컨테이너가 존재하지 않습니다.");
+      return;
+    }
+
+    commentsContainer.innerHTML = "";
+
+    const { data: currentUser } = await supabase.auth.getUser();
+
+    comments.forEach((comment) => {
+      const commentElement = document.createElement("div");
+      commentElement.classList.add("card", "mb-2", "p-2");
+      commentElement.setAttribute("data-comment-id", comment.id);
+
+      const username = comment.userinfo?.username || "알 수 없음";
+
+      commentElement.innerHTML = `
+        <div class="comment-content">
+          <strong>${username}</strong>
+          <p class="comment-text">${comment.content}</p>
+          <small class="text-muted">${new Date(
+            comment.created_at
+          ).toLocaleString()}</small>
+        </div>
+      `;
+
+      // 수정/삭제 버튼 (작성자인 경우에만)
+      if (currentUser?.user?.id === comment.user_id) {
+        const buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("text-end", "mt-2");
+
+        const editButton = document.createElement("button");
+        editButton.textContent = "수정";
+        editButton.classList.add(
+          "btn",
+          "btn-sm",
+          "btn-outline-secondary",
+          "me-2"
+        );
+
+        editButton.onclick = async () => {
+          const commentContent =
+            commentElement.querySelector(".comment-content");
+          const commentText = commentElement.querySelector(".comment-text");
+          const originalContent = commentText.textContent;
+
+          // 수정 모드 UI 생성
+          const textarea = document.createElement("textarea");
+          textarea.classList.add("form-control", "mb-2");
+          textarea.value = originalContent;
+
+          const buttonsDiv = document.createElement("div");
+          buttonsDiv.classList.add("text-end", "mt-2");
+
+          const saveBtn = document.createElement("button");
+          saveBtn.textContent = "완료";
+          saveBtn.classList.add("btn", "btn-sm", "btn-primary", "me-2");
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.textContent = "취소";
+          cancelBtn.classList.add("btn", "btn-sm", "btn-outline-secondary");
+
+          // 취소 버튼 클릭 시
+          cancelBtn.onclick = () => {
+            textarea.remove();
+            buttonsDiv.remove();
+            commentText.style.display = "block";
+            buttonContainer.style.display = "block";
+          };
+
+          // 완료 버튼 클릭 시
+          saveBtn.onclick = async () => {
+            const newContent = textarea.value.trim();
+            if (newContent && newContent !== originalContent) {
+              const success = await updateComment(comment.id, newContent);
+              if (success) {
+                commentText.textContent = newContent;
+              }
+            }
+            textarea.remove();
+            buttonsDiv.remove();
+            commentText.style.display = "block";
+            buttonContainer.style.display = "block";
+          };
+
+          buttonsDiv.appendChild(saveBtn);
+          buttonsDiv.appendChild(cancelBtn);
+
+          commentText.style.display = "none";
+          buttonContainer.style.display = "none";
+          commentContent.insertBefore(textarea, commentText);
+          commentElement.appendChild(buttonsDiv);
+        };
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "삭제";
+        deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+        deleteButton.onclick = () => deleteComment(comment.id, postingId);
+
+        buttonContainer.appendChild(editButton);
+        buttonContainer.appendChild(deleteButton);
+        commentElement.appendChild(buttonContainer);
+      }
+
+      commentsContainer.appendChild(commentElement);
+    });
+  } catch (error) {
+    console.error("댓글 로딩 중 오류 발생:", error);
   }
 }
 

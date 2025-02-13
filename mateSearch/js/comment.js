@@ -153,14 +153,13 @@ async function loadComments(postingId) {
       const username = comment.userinfo?.username || "알 수 없음";
 
       commentElement.innerHTML = `
-        <div class="comment-content">
-          <strong>${username}</strong>
-          <p class="comment-text">${comment.content}</p>
-          <small class="text-muted">${new Date(
-            comment.created_at
-          ).toLocaleString()}</small>
-        </div>
-      `;
+      <div class="comment-content">
+        <strong>${username}</strong><small class="text-muted"> |  ${new Date(
+        comment.created_at
+      ).toLocaleString()} |</small>
+        <p>${comment.content}</p>
+      </div>
+    `;
 
       // 수정/삭제 버튼 (작성자인 경우에만)
       if (currentUser?.user?.id === comment.user_id) {
@@ -179,7 +178,8 @@ async function loadComments(postingId) {
         editButton.onclick = async () => {
           const commentContent =
             commentElement.querySelector(".comment-content");
-          const commentText = commentElement.querySelector(".comment-text");
+          const commentText =
+            commentElement.querySelector(".comment-content p");
           const originalContent = commentText.textContent;
 
           // 수정 모드 UI 생성

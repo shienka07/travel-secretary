@@ -25,6 +25,21 @@ async function checkProfile(){
     return user[0].gender;
 }
 
+async function setProfile_auth(gender, phone_number, age, live = null){
+
+    const { data, error : auth } = await supabase.auth.getUser();
+
+    const {error} = await supabase
+        .from('userinfo')
+        .update({gender, phone_number, age, live})
+        .eq('id', data.user.id);
+
+    if(error){
+        alert(error.message);
+        return error;
+    }
+}
+
 
 async function signup(email, password, username) {
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -45,8 +60,10 @@ async function signup(email, password, username) {
       if (insertError) {
         alert("닉네임 등록 실패: " + insertError.message);
       }
+    await supabase.auth.signOut();
     alert("회원가입 성공! 로그인 페이지로 이동합니다.");
-    window.location.href = "login.html";
+    window.location.href = "login/";
+    
 }
 async function getNickname(){
     const { data } = await supabase.auth.getUser();
@@ -73,8 +90,7 @@ async function getProfile(){
     if(error){
         return error;
     }
-
-    const { id, ...profile} = user[0]
+    const { id, ...profile} = user[0];
     return profile;
 }
 
@@ -211,17 +227,25 @@ async function loadPosts_Recommend_auth() {
 }
 
 async function uploadImage_auth(filePath, imagefile){
-    const {error} = await supabase.storage.from('Recommend_Image').upload(filePath, imagefile);
+    const {error} = await supabase.storage.from('mate-bucket').upload(filePath, imagefile);
     if (error) {
         return error;
+    }
+    const {data, error:auth} = await supabase.auth.getUser();
+    const {error : insertError} = await supabase
+        .from("userinfo")
+        .update({image_url : filePath})
+        .eq('id', data.user.id);
+    if(error){
+        return insertError;
     }
 }
 
 function getImagePath(url){
-    const { data } = supabase.storage.from('Recommend_Image').getPublicUrl(url);
+    const { data } = supabase.storage.from('mate-bucket').getPublicUrl(url);
     return data.publicUrl;
 }
 
-export {loadPosts, createPost, signup, login, logout, checkLogin, checkNickname, editPost_auth, deletePost_auth, updatePost_auth, createPost_Recommend_auth, loadPosts_Recommend_auth,uploadImage_auth, getImagePath, checkProfile, getNickname, getProfile};
+export {loadPosts, createPost, signup, login, logout, checkLogin, checkNickname, editPost_auth, deletePost_auth, updatePost_auth, createPost_Recommend_auth, loadPosts_Recommend_auth,uploadImage_auth, getImagePath, checkProfile, getNickname, getProfile, setProfile_auth};
 
 

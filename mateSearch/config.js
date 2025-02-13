@@ -5,6 +5,7 @@ export const supabaseAnonKey =
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
+window._supabase = createClient(supabaseUrl, supabaseAnonKey);
 // export const { createClient } = supabase; // 이 줄 삭제!
 export const _supabase = createClient(supabaseUrl, supabaseAnonKey);
 

@@ -5,15 +5,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const postingId = urlParams.get("id");
 
   if (!postingId) {
-    console.warn("❌ 댓글 기능: postingId 없음. 댓글 기능을 비활성화합니다.");
+    console.warn("댓글 기능: postingId 없음. 댓글 기능을 비활성화합니다.");
     return;
   }
 
-  console.log("✅ 댓글 기능 활성화. 게시글 ID:", postingId);
-
   await loadComments(postingId);
 
-  // ✅ 댓글 작성 버튼 클릭 이벤트 추가
+  // 댓글 작성 버튼 클릭 이벤트 추가
   const commentButton = document.getElementById("comment-submit-btn");
   if (commentButton) {
     commentButton.addEventListener("click", async () => {
@@ -31,23 +29,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      console.log("✅ 댓글 저장 시도:", {
-        post_id: postingId,
-        user_id: data.user.id,
-        content: commentContent,
-      });
-
       await saveComment(postingId, commentContent, data.user.id);
       document.getElementById("comment-content").value = ""; // 입력창 초기화
     });
   }
 });
 
-// ✅ 댓글 저장 함수
+// 댓글 저장 함수
 async function saveComment(postingId, content, userId) {
   try {
-    // const { data, error: authError } = await supabase.auth.getUser();
-
     const { error } = await supabase.from(cmtTable).insert([
       {
         post_id: postingId,
@@ -57,18 +47,17 @@ async function saveComment(postingId, content, userId) {
     ]);
 
     if (error) {
-      console.error("❌ 댓글 저장 실패:", error);
+      console.error("댓글 저장 실패:", error);
       alert("댓글 작성에 실패했습니다.");
     } else {
-      console.log("✅ 댓글 저장 성공!");
       loadComments(postingId);
     }
   } catch (error) {
-    console.error("❌ 댓글 저장 중 오류 발생:", error);
+    console.error("댓글 저장 중 오류 발생:", error);
   }
 }
 
-// ✅ 댓글 수정 함수
+// 댓글 수정 함수
 async function updateComment(commentId, newContent) {
   try {
     const { error } = await supabase
@@ -77,19 +66,18 @@ async function updateComment(commentId, newContent) {
       .eq("id", commentId);
 
     if (error) {
-      console.error("❌ 댓글 수정 실패:", error);
+      console.error("댓글 수정 실패:", error);
       alert("댓글 수정에 실패했습니다.");
       return false;
     }
-    console.log("✅ 댓글 수정 성공!");
     return true;
   } catch (error) {
-    console.error("❌ 댓글 수정 중 오류 발생:", error);
+    console.error("댓글 수정 중 오류 발생:", error);
     return false;
   }
 }
 
-// ✅ 댓글 삭제 함수
+// 댓글 삭제 함수
 async function deleteComment(commentId, postingId) {
   try {
     if (!confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
@@ -102,18 +90,17 @@ async function deleteComment(commentId, postingId) {
       .eq("id", commentId);
 
     if (error) {
-      console.error("❌ 댓글 삭제 실패:", error);
+      console.error("댓글 삭제 실패:", error);
       alert("댓글 삭제에 실패했습니다.");
     } else {
-      console.log("✅ 댓글 삭제 성공!");
       loadComments(postingId);
     }
   } catch (error) {
-    console.error("❌ 댓글 삭제 중 오류 발생:", error);
+    console.error("댓글 삭제 중 오류 발생:", error);
   }
 }
 
-// ✅ 댓글 불러오기 함수
+// 댓글 불러오기 함수
 async function loadComments(postingId) {
   try {
     const { data: comments, error } = await supabase
@@ -131,13 +118,13 @@ async function loadComments(postingId) {
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("❌ 댓글 불러오기 실패:", error);
+      console.error("댓글 불러오기 실패:", error);
       return;
     }
 
     const commentsContainer = document.getElementById("comments-container");
     if (!commentsContainer) {
-      console.warn("⚠️ 댓글 컨테이너가 존재하지 않습니다.");
+      console.warn("댓글 컨테이너가 존재하지 않습니다.");
       return;
     }
 

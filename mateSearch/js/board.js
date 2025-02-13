@@ -34,6 +34,10 @@ console.log("userInfo", userInfo);
 
 fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");
 
+document
+  .querySelector("#cancelWriteBtn")
+  .addEventListener("click", () => window.history.back());
+
 const mateForm = document.querySelector("#mateForm");
 mateForm.addEventListener("submit", async (event) => {
   event.preventDefault();

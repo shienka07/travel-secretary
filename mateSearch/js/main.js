@@ -272,7 +272,7 @@ function filterPosting(postings, filters) {
       }
     }
 
-    // 여행 스타일 필터
+    // 여행 스타일 필터 (수정 후 - every() 로 변경)
     if (filters.styles && filters.styles.length > 0) {
       console.log(
         "styles 필터:",
@@ -283,7 +283,12 @@ function filterPosting(postings, filters) {
       const postingStyles = posting.styles.map(
         (style) => style.style_id.style_name
       );
-      if (!filters.styles.some((style) => postingStyles.includes(style))) {
+      if (
+        !filters.styles.every((filterStyle) =>
+          postingStyles.includes(filterStyle)
+        )
+      ) {
+        // every() 로 변경
         return false;
       }
     }

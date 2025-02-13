@@ -18,10 +18,41 @@ document.addEventListener("DOMContentLoaded", () => {
       `postingId ${postingId} 에 해당하는 게시글 상세 정보 로딩 시작...`
     );
     fetchPostingDetail(postingId);
+    loadComments(postingId); // 댓글 불러오기 추가
   } else {
     console.warn("URL에 postingId가 없습니다.");
     alert("잘못된 접근입니다.");
     window.location.href = "/";
+  }
+
+  // 댓글 입력 버튼 클릭 이벤트 추가
+  const commentButton = document.getElementById("comment-submit-btn");
+  if (commentButton) {
+    commentButton.addEventListener("click", async () => {
+      const commentContent = document
+        .getElementById("comment-content")
+        .value.trim();
+      if (!commentContent) {
+        alert("댓글 내용을 입력해주세요!");
+        return;
+      }
+
+      const { data: user } = await _supabase.auth.getUser();
+      if (!user || !user.id) {
+        alert("로그인이 필요합니다!");
+        return;
+      }
+
+      console.log("✅ 댓글 저장 시도:", {
+        post_id: postingId,
+        user_id: user.id,
+        content: commentContent,
+      });
+
+      // 댓글 저장
+      saveComment(postingId, commentContent, user.id);
+      document.getElementById("comment-content").value = ""; // 입력창 초기화
+    });
   }
 });
 
@@ -133,4 +164,27 @@ function displayDetails(posting) {
   });
   const formattedDateTime = `${formattedDatePart} ${formattedTimePart}`;
   document.querySelector("#detail-created-at").textContent = formattedDateTime;
+}
+
+// 댓글 저장 함수
+async function saveComment(postingId, content, userId) {
+  try {
+    const { error } = await _supabase.from("POSTING_COMMENTS").insert([
+      {
+        post_id: postingId,
+        user_id: userId,
+        content: content,
+      },
+    ]);
+
+    if (error) {
+      console.error("댓글 저장 실패:", error);
+      alert("댓글 작성에 실패했습니다.");
+    } else {
+      loadComments(postingId); // 댓글 다시 불러오기
+    }
+  } catch (error) {
+    console.error("댓글 저장 중 오류 발생:", error);
+    alert("댓글 저장에 실패했습니다.");
+  }
 }

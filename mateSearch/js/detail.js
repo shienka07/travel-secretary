@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 3. 'id' 파라미터 값 추출
   const postingId = urlParams.get("id");
-  // const postingId = 2;
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
 
   if (postingId) {
@@ -41,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   listBtn.addEventListener(
     "click",
-    () => (window.location.href = "/travel-secretary/mateSearch/index.html")
+    () => (window.location.href = "./travel-secretary/mateSearch/index.html")
   );
   editBtn.addEventListener("click", () => {
     // 수정페이지
@@ -57,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
       console.log("Successfully deleted row ", postingId);
-      window.location.href = "/travel-secretary/mateSearch/index.html";
+      window.location.href = "./travel-secretary/mateSearch/index.html";
     } catch (error) {
       console.error("Unexpected error during delete operation:", error);
     }

@@ -100,11 +100,11 @@ import { checkLogin, logout, getProfile, getNickname, getImagePath } from "./js/
         afterLoginDiv.appendChild(signupButton);
 
         loginButton.addEventListener("click", () => {
-          window.location.href = "account/login.html";
+          window.location.href = "./account/login.html";
         })
 
         signupButton.addEventListener("click", () => {
-          window.location.href = "account/register.html";
+          window.location.href = "./account/register.html";
         })
     }
 }

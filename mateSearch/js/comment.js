@@ -51,7 +51,9 @@ async function saveComment(postingId, content) {
   try {
     const {data, error:authError} = await supabase.auth.getUser();
 
-    const { error } = await supabase.from(cmtTable).insert([
+    const { error } = await supabase
+    .from(cmtTable)
+    .insert([
       {
         post_id: postingId,
         user_id: data.user.id,

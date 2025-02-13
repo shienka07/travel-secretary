@@ -69,6 +69,26 @@ async function saveComment(postingId, content) {
   }
 }
 
+// ✅ 댓글 수정 함수
+async function updateComment(commentId, newContent, postingId) {
+  try {
+    const { error } = await supabase
+      .from(cmtTable)
+      .update({ content: newContent })
+      .eq("id", commentId);
+
+    if (error) {
+      console.error("❌ 댓글 수정 실패:", error);
+      alert("댓글 수정에 실패했습니다.");
+    } else {
+      console.log("✅ 댓글 수정 성공!");
+      loadComments(postingId);
+    }
+  } catch (error) {
+    console.error("❌ 댓글 수정 중 오류 발생:", error);
+  }
+}
+
 // ✅ 댓글 불러오기 함수
 async function loadComments(postingId) {
   const { data: comments, error } = await supabase
@@ -105,6 +125,17 @@ async function loadComments(postingId) {
         comment.created_at
       ).toLocaleString()}</small>
     `;
+
+    // ✅ 댓글 수정 버튼
+    const editButton = document.createElement("button");
+    editButton.textContent = "수정";
+    editButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "me-2");
+    editButton.addEventListener("click", () => {
+      const newContent = prompt("댓글을 수정하세요:", comment.content);
+      if (newContent && newContent.trim() !== "") {
+        updateComment(comment.id, newContent.trim(), postingId);
+      }
+    });
 
     commentsContainer.appendChild(commentElement);
   });

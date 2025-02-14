@@ -166,7 +166,7 @@ async function updateMainPage(posts) {
               ${group
                 .map(
                   (post) => `
-                <div class="col-md-4" style="max-width: 400px;"> <!-- max-width 추가 -->
+                <div class="col-md-4" style="max-width: 400px;"> 
                   <div class="card h-100 shadow-sm border-0">
                     <div class="position-relative">
                       <img src="${post.processedImageUrl}" 
@@ -185,7 +185,7 @@ async function updateMainPage(posts) {
                           : "내용 없음"
                       }</p>
                       <div class="d-flex justify-content-between align-items-center">
-                        <a href="detail.html?id=${
+                        <a href="./mateSearch/detail.html?id=${
                           post.id
                         }" class="btn btn-outline-secondary btn-sm px-3">View</a>
                         <small class="text-muted">${new Date(

@@ -9,11 +9,6 @@ import {
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin } from "../../js/auth.js";
-const islogined = await checkLogin()
-if (!islogined){
-    window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-    alert("로그인이 필요합니다");
-}
 
 const mateForm = document.querySelector("#mateForm");
 const cancelBtn = document.querySelector("#cancelWriteBtn");
@@ -190,6 +185,13 @@ async function handleSubmit(event) {
 
 // 초기화
 async function initializePosting() {
+  const islogined = await checkLogin();
+  if (!islogined) {
+    window.location.href =
+      "https://aibe-chill-team.github.io/travel-secretary/";
+    alert("로그인이 필요합니다");
+  }
+
   try {
     await postingService.checkAuth();
     await fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");

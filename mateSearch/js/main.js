@@ -9,7 +9,6 @@ import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin } from "../../js/auth.js";
 
-
 let allPostings = []; // 모든 게시글 데이터를 저장할 변수 (필터링 위해)
 
 async function fetchMatePostingsWithStyles() {
@@ -130,7 +129,7 @@ function displayPostings(postings) {
           : posting.userInfo?.gender === 2
           ? "여성"
           : "미제공"; // 삼항 연산자
-      authorInfoElement.innerHTML = `성별: ${genderText}  | 나이: ${
+      authorInfoElement.innerHTML = `${genderText}  | 나이: ${
         posting.userInfo?.age || "미제공"
       }`;
       infoArea.appendChild(authorInfoElement);
@@ -143,16 +142,16 @@ function displayPostings(postings) {
       peopleElement.textContent = `모집인원수: ${posting.people} 명`;
       infoArea.appendChild(peopleElement);
 
-      const budgetElement = document.createElement("p");
-      const formattedBudget = posting.budget
-        ? parseInt(posting.budget).toLocaleString()
-        : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
-      budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
-      infoArea.appendChild(budgetElement);
+      // const budgetElement = document.createElement("p");
+      // const formattedBudget = posting.budget
+      //   ? parseInt(posting.budget).toLocaleString()
+      //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
+      // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
+      // infoArea.appendChild(budgetElement);
 
-      const dateElement = document.createElement("p");
-      dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
-      infoArea.appendChild(dateElement);
+      // const dateElement = document.createElement("p");
+      // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
+      // infoArea.appendChild(dateElement);
 
       const cardFooter = document.createElement("div");
       cardFooter.classList.add("card-footer", "p-3");
@@ -175,10 +174,10 @@ function displayPostings(postings) {
       titleLink.appendChild(titleFullElement);
       cardFooter.appendChild(titleLink);
 
-      const contentElement = document.createElement("p");
-      contentElement.classList.add("card-text");
-      contentElement.textContent = posting.content;
-      cardFooter.appendChild(contentElement);
+      // const contentElement = document.createElement("p");
+      // contentElement.classList.add("card-text");
+      // contentElement.textContent = posting.content;
+      // cardFooter.appendChild(contentElement);
 
       const stylesElement = document.createElement("div");
       stylesElement.classList.add("styles-tags", "mt-3");
@@ -313,6 +312,9 @@ function filterPosting(postings, filters) {
     if (isClosedStatusChecked && posting.state) {
       return false;
     }
+    if (isOpenStatusChecked && isClosedStatusChecked) {
+      return true; //
+    }
 
     return true; // 모든 필터 통과 시 true 유지
   });
@@ -320,13 +322,13 @@ function filterPosting(postings, filters) {
 
 // 페이지 로드 시 게시글 목록 불러오기
 document.addEventListener("DOMContentLoaded", async () => {
-  const islogined = await checkLogin()
-  if (!islogined){
-    
-      window.location.href = "https://aibe-chill-team.github.io/travel-secretary/";
-      alert("로그인이 필요합니다");
+  const islogined = await checkLogin();
+  if (!islogined) {
+    window.location.href =
+      "https://aibe-chill-team.github.io/travel-secretary/";
+    alert("로그인이 필요합니다");
   }
-  
+
   fetchMatePostingsWithStyles(); // 게시글 목록 및 스타일 정보 가져오는 함수 호출
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");
 
@@ -383,7 +385,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document
       .querySelectorAll('#styleFilters input[type="checkbox"]')
       .forEach((checkbox) => (checkbox.checked = false));
-    document.querySelector("#statusOpenFilter").checked = true;
+    document.querySelector("#statusOpenFilter").checked = false;
     document.querySelector("#statusClosedFilter").checked = false;
 
     displayPostings(allPostings);

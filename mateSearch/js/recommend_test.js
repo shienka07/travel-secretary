@@ -124,18 +124,16 @@ function createMatchingPrompt(data, userPrefer) {
   //   prompt += `- **필수적으로 사용자 선호 여행지와 게시글 여행지가 일치해야 합니다.**\n`;
   prompt += `- **선호 연령대, 성별, 예산 범위는** 사용자의 선호 사항이지만, **필수 조건은 아닙니다.**  선호 조건에 얼마나 부합하는지에 따라 추천 점수를 차등적으로 부여하여, 최종적으로 사용자에게 **가장 잘 맞을 것 같은 게시글 ID**를 추천해주세요.\n`;
   prompt += `- 만약 선호 여행지가 일치하지 않는다면, "여행지 불일치" 라고 명확하게 답변해주세요.\n`;
-  prompt += `- 답변은 **추천 게시글 ID**만 간결하게 숫자 형태로  표시해주세요.  만약 추천할 게시글 ID가 없다면, "매칭되는 게시글 없음" 이라고 답변해주세요.\n`; // 명확한 답변 형식 지시
+  prompt += `- 답변은 **추천 게시글 ID**만 간결하게 숫자 형태로  표시해주세요.  만약 추천할 게시글 ID가 없다면, "0" 이라고 답변해주세요.\n`; // 명확한 답변 형식 지시
   prompt += `\n`;
 
-  prompt += `## 답변:\n`; // LLM 답변 시작 지점 명시
-  prompt += `- 추천 게시글 ID: `; // 답변은 게시글 ID 형태로 요청
-  prompt += `\n`;
-  prompt += `- 추천 이유: `; //
+  prompt += `## 질문에 대해 JSON 형식으로 응답하세요\n {"answer" : "추천내용" , "ID" : "추천 게시글  ID"}`; // LLM 답변 시작 지점 명시
+
 
   return prompt;
 }
 
-const GEMINI_API_KEY = localStorage.getItem("GEMINI_API_KEY");
+const GEMINI_API_KEY = "AIzaSyBRpPe6DuUbYbFklNBo_hiR2LH2HYeHR24"
 
 const callModel = async (
   prompt,
@@ -172,18 +170,52 @@ const callModel = async (
   }
 };
 
+const callModel2 = async (
+  prompt,
+  modelName = "gemini-2.0-pro-exp-02-05",
+  action = "generateContent",
+  generationConfig = {}
+  // autoSearch = true
+) => {
+  // 현재 모델명으로 URL 생성 (모델명 변경 시 최신 URL 사용)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:${action}?key=${GEMINI_API_KEY}`;
+  console.log("처리 시작", new Date(), "모델:", modelName);
+  try {
+    const response = await axios.post(
+      url,
+      {
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data.candidates[0].content.parts[0].text;
+
+  } catch (error) {
+    console.error("오류 발생:", error);
+  } finally {
+    console.log("처리 종료", new Date());
+  }
+};
+
 async function exampleMatchingPromptUsage() {
   const postings = await fetchDataFromSupabase();
   console.log("postings: ", postings);
 
   const userPreferences = {
-    preferredDestination: "이탈리아", // 선호 여행지: 이탈리아
+    preferredDestination: "강릉", // 선호 여행지: 이탈리아
     preferredAgeRange: { min: 20, max: 25 }, // 선호 연령대: 15세~20세
-    preferredGender: "남성", // 선호 성별: 여성
-    preferredBudgetRange: { min: 2000000, max: 4000000 }, // 선호 예산 범위: 400만원~600만원
+    preferredGender: "여성", // 선호 성별: 여성
+    preferredBudgetRange: { min: 200000, max: 4000000 }, // 선호 예산 범위: 400만원~600만원
   };
-
-  console.log();
 
   const summaryPrompt = createSummaryPrompt(postings);
   console.log("summaryPrompt: ", summaryPrompt);
@@ -192,23 +224,199 @@ async function exampleMatchingPromptUsage() {
 
   const matchingPrompt = createMatchingPrompt(summarized, userPreferences);
   console.log("matcingPrompt", matchingPrompt);
-  const matching = await callModel(
+  const matching = await callModel2(
     matchingPrompt,
     "gemini-2.0-flash-thinking-exp-01-21"
   );
-  console.log("matching", matching);
 
-  //   const extractedPostId = parsingMatching(matching);
+  const regex = /{([^}]*)}/;
 
-  //   if (extractedPostId) {
-  //     console.log("추천 게시글 ID:", extractedPostId);
-
-  //     // window.location.href = `detail.html?id=${extractedPostId}`; // 상세 페이지로 이동 (원하는 동작)
-  //   } else {
-  //     alert("추천 게시글 ID를 파싱하지 못했습니다.");
-  //     console.error("추천 게시글 ID 파싱 실패"); // 에러 로그
-  //   }
+  const match = matching.match(regex);
+  console.log(match[0]);
+  const parsedData = JSON.parse(match[0]);
+  console.log(parsedData.ID)
+  displayRecommendPost(parsedData.ID)
 }
+
+async function displayRecommendPost(postid) {
+  const { data: postings, error } = await supabase
+    .from(mateTable)
+    .select(`
+    id,
+    user_id,
+    title,
+    destination,
+    start_date,
+    end_date,
+    people,
+    content,
+    created_at,
+    image_url,
+    state,
+    budget,
+  is_domestic,
+    styles: ${ptsTable} (
+      style_id (
+        style_name
+      )
+    ),
+    userInfo: user_id (
+      username,
+      gender,
+      age
+    )
+  `)
+    .eq("id", postid);
+  const box = document.querySelector("#box");
+  box.innerHTML = ""; // 기존 목록 비우기
+
+  console.log("displayPostings 호출, 표시할 게시글 수:", postings.length);
+  if (postings && postings.length > 0) {
+    postings.forEach((posting) => {
+      // Bootstrap 카드 컬럼 (md 사이즈 이상에서 3개씩 배치)
+      const colDiv = document.createElement("div");
+      colDiv.classList.add("col-md-4", "mb-4"); // col-md-4 클래스로 3개씩 배치, mb-4는 간격
+
+      const card = document.createElement("div");
+      card.classList.add("card");
+      colDiv.appendChild(card); // 컬럼 안에 카드 배치
+
+      const cardBody = document.createElement("div");
+      cardBody.classList.add("card-body");
+      card.appendChild(cardBody);
+
+      const row = document.createElement("div");
+      row.classList.add("row", "g-0");
+      cardBody.appendChild(row);
+
+      const imageCol = document.createElement("div");
+      imageCol.classList.add("col-md-4");
+      row.appendChild(imageCol);
+
+      const imageArea = document.createElement("div");
+      imageArea.classList.add("image-area", "p-3");
+      imageCol.appendChild(imageArea);
+
+      // storage에서 이미지 가져오기
+      if (posting.image_url) {
+        const { data: imageUrlData } = supabase.storage
+          .from("mate-bucket")
+          .getPublicUrl(posting.image_url);
+
+        const imageElement = document.createElement("img");
+        imageElement.src = imageUrlData.publicUrl;
+        imageElement.alt = "게시글 이미지";
+        imageElement.classList.add("img-fluid", "rounded");
+        imageArea.appendChild(imageElement);
+      } else {
+        imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
+        const placeholder = imageArea.querySelector(".image-placeholder");
+        placeholder.classList.add(
+          "bg-light",
+          "d-flex",
+          "justify-content-center",
+          "align-items-center",
+          "p-4"
+        );
+        placeholder.style.height = "150px";
+        placeholder.textContent = "No Image";
+      }
+
+      const infoCol = document.createElement("div");
+      infoCol.classList.add("col-md-8");
+      row.appendChild(infoCol);
+
+      const infoArea = document.createElement("div");
+      infoArea.classList.add("info-area", "p-3");
+      infoCol.appendChild(infoArea);
+
+      const authorInfoElement = document.createElement("p");
+      const genderText =
+        posting.userInfo?.gender === 1
+          ? "남성"
+          : posting.userInfo?.gender === 2
+          ? "여성"
+          : "미제공"; // 삼항 연산자
+      authorInfoElement.innerHTML = `${genderText}  | 나이: ${
+        posting.userInfo?.age || "미제공"
+      }`;
+      infoArea.appendChild(authorInfoElement);
+
+      const destinationElement = document.createElement("p");
+      destinationElement.textContent = `여행지: ${posting.destination}`;
+      infoArea.appendChild(destinationElement);
+
+      const peopleElement = document.createElement("p");
+      peopleElement.textContent = `모집인원수: ${posting.people} 명`;
+      infoArea.appendChild(peopleElement);
+
+      // const budgetElement = document.createElement("p");
+      // const formattedBudget = posting.budget
+      //   ? parseInt(posting.budget).toLocaleString()
+      //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
+      // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
+      // infoArea.appendChild(budgetElement);
+
+      // const dateElement = document.createElement("p");
+      // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
+      // infoArea.appendChild(dateElement);
+
+      const cardFooter = document.createElement("div");
+      cardFooter.classList.add("card-footer", "p-3");
+      card.appendChild(cardFooter);
+      // ------------------------------------------------------------✅ 경로 확인 필요
+      const titleLink = document.createElement("a");
+      titleLink.href = `./detail.html?id=${posting.id}`;
+      titleLink.classList.add("card-title-link");
+      titleLink.style.textDecoration = "none";
+
+      const statusText = posting.state ? "[모집중]" : "[모집 완료]";
+
+      const titleFullElement = document.createElement("h5");
+      titleFullElement.classList.add("card-title", "mb-2");
+      titleFullElement.textContent = `${statusText} `;
+
+      const titleElement = document.createElement("span");
+      titleElement.textContent = posting.title;
+      titleFullElement.appendChild(titleElement);
+      titleLink.appendChild(titleFullElement);
+      cardFooter.appendChild(titleLink);
+
+      // const contentElement = document.createElement("p");
+      // contentElement.classList.add("card-text");
+      // contentElement.textContent = posting.content;
+      // cardFooter.appendChild(contentElement);
+
+      const stylesElement = document.createElement("div");
+      stylesElement.classList.add("styles-tags", "mt-3");
+      if (posting.styles && posting.styles.length > 0) {
+        posting.styles.forEach((style) => {
+          const styleTag = document.createElement("span");
+          styleTag.classList.add("badge", "bg-secondary", "me-1", "mb-1");
+          styleTag.textContent = `#${style.style_id.style_name}`;
+          stylesElement.appendChild(styleTag);
+        });
+      }
+      cardFooter.appendChild(stylesElement);
+
+      box.appendChild(colDiv); // box에 컬럼(colDiv) 추가 (기존 card 대신)
+    });
+  } else {
+    box.textContent = "등록된 게시글이 없습니다.";
+  }
+}
+
+//   const extractedPostId = parsingMatching(matching);
+
+//   if (extractedPostId) {
+//     console.log("추천 게시글 ID:", extractedPostId);
+
+//     // window.location.href = `detail.html?id=${extractedPostId}`; // 상세 페이지로 이동 (원하는 동작)
+//   } else {
+//     alert("추천 게시글 ID를 파싱하지 못했습니다.");
+//     console.error("추천 게시글 ID 파싱 실패"); // 에러 로그
+//   }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#testBtn").addEventListener("click", () => {

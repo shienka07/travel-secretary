@@ -284,11 +284,13 @@ async function initializePage() {
     return;
   }
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
+  setupRouteSaveButton();
 
   const user = await getUserInfo();
   if (!user) return;
   setupEventListeners(postingId);
   fetchPostingDetail(postingId, user.id);
+  await loadSavedRoutes(postingId); // 저장된 경로 데이터 로드
 }
 
 // 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -302,25 +304,5 @@ function setupRouteSaveButton() {
   }
 }
 
-// initializePage 함수 내부에 추가할 코드
-async function initializePage() {
-  // ... 기존 코드 ...
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const postingId = urlParams.get("id");
-
-  if (!postingId) {
-    alert("잘못된 접근입니다.");
-    redirectToPage("/");
-    return;
-  }
-
-  setupRouteSaveButton(); // 저장 버튼 이벤트 리스너 설정
-  const user = await getUserInfo();
-  if (!user) return;
-
-  setupEventListeners(postingId);
-  await fetchPostingDetail(postingId, user.id);
-  await loadSavedRoutes(postingId); // 저장된 경로 데이터 로드
-}
+document.addEventListener("DOMContentLoaded", initializePage);
 // 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 종료

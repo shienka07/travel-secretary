@@ -290,4 +290,4 @@ export {
   getProfile,
   setProfile_auth,
   fetchLatestPosts_auth
-}
+};

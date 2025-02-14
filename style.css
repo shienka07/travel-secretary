@@ -177,10 +177,10 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.feature-card:hover {
+/* .feature-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-}
+} */
 
 .icon-wrapper {
   width: 60px;

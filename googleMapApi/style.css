@@ -38,3 +38,26 @@
 .btn {
   margin: 10px;
 }
+/* 저장 버튼 스타일링 */
+#save-btn {
+  background-color: #28a745;
+  border-color: #28a745;
+  margin-left: 5px;
+}
+
+#save-btn:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+/* 로딩 상태 표시 */
+.save-loading {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  display: none;
+}

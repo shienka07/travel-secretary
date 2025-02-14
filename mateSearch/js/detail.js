@@ -63,33 +63,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Unexpected error during delete operation:", error);
     }
   });
-  const saveRouteBtn = document.getElementById("saveRouteBtn");
-  if (saveRouteBtn) {
-    saveRouteBtn.addEventListener("click", async () => {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const postingId = urlParams.get("id");
-
-        // 현재 입력된 경로 데이터 수집
-        const { routes, locations } = collectRouteData();
-
-        // Supabase에 저장
-        const { error } = await supabase
-          .from(mateTable)
-          .update({
-            routes: routes,
-            locations: locations,
-          })
-          .eq("id", postingId);
-
-        if (error) throw error;
-        alert("경로가 성공적으로 저장되었습니다!");
-      } catch (error) {
-        console.error("경로 저장 중 오류:", error);
-        alert("경로 저장에 실패했습니다.");
-      }
-    });
-  }
 });
 
 async function fetchPostingDetail(postingId) {
@@ -309,4 +282,31 @@ async function saveRouteData(postingId) {
     alert("경로 저장에 실패했습니다.");
     return { success: false, error };
   }
+}
+const saveRouteBtn = document.getElementById("saveRouteBtn");
+if (saveRouteBtn) {
+  saveRouteBtn.addEventListener("click", async () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const postingId = urlParams.get("id");
+
+      // 현재 입력된 경로 데이터 수집
+      const { routes, locations } = collectRouteData();
+
+      // Supabase에 저장
+      const { error } = await supabase
+        .from(mateTable)
+        .update({
+          routes: routes,
+          locations: locations,
+        })
+        .eq("id", postingId);
+
+      if (error) throw error;
+      alert("경로가 성공적으로 저장되었습니다!");
+    } catch (error) {
+      console.error("경로 저장 중 오류:", error);
+      alert("경로 저장에 실패했습니다.");
+    }
+  });
 }

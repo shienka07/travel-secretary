@@ -29,9 +29,9 @@ export async function fetchTravelStylesAndDisplayCheckboxes(id) {
         const checkboxInput = document.createElement("input");
         checkboxInput.classList.add("form-check-input");
         checkboxInput.type = "checkbox";
-        checkboxInput.name = "styles"; //
-        checkboxInput.value = style.style_name; //
-        checkboxInput.id = `style${style.name}`; //
+        checkboxInput.name = "styles";
+        checkboxInput.value = style.style_name;
+        checkboxInput.id = `style${style.style_name}`;
 
         const checkboxLabel = document.createElement("label");
         checkboxLabel.classList.add("form-check-label");

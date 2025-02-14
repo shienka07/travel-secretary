@@ -8,12 +8,7 @@ import {
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin } from "../../js/auth.js";
-const islogined = await checkLogin()
-if (!islogined){
-  
-    window.location.href = "https://aibe-chill-team.github.io/travel-secretary/";
-    alert("로그인이 필요합니다");
-}
+
 
 let allPostings = []; // 모든 게시글 데이터를 저장할 변수 (필터링 위해)
 
@@ -324,7 +319,14 @@ function filterPosting(postings, filters) {
 }
 
 // 페이지 로드 시 게시글 목록 불러오기
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const islogined = await checkLogin()
+  if (!islogined){
+    
+      window.location.href = "https://aibe-chill-team.github.io/travel-secretary/";
+      alert("로그인이 필요합니다");
+  }
+  
   fetchMatePostingsWithStyles(); // 게시글 목록 및 스타일 정보 가져오는 함수 호출
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");
 

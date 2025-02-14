@@ -29,9 +29,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-
-      await saveComment(postingId, commentContent, data.user.id);
-      document.getElementById("comment-content").value = ""; // 입력창 초기화
+      const success = await saveComment(
+        postingId,
+        commentContent,
+        data.user.id
+      );
+      if (success) {
+        document.getElementById("comment-content").value = ""; // 입력창 초기화
+        await loadComments(postingId); // 댓글 목록 갱신
+      }
     });
   }
 });
@@ -39,85 +45,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 댓글 저장 함수
 async function saveComment(postingId, content, userId, parentCommentId = null) {
   try {
-    const { data: insertedData, error } = await supabase
-      .from("POSTING_COMMENTS")
-      .insert([
-        {
-          post_id: postingId,
-          user_id: userId,
-          content: content,
-          parent_comment_id: parentCommentId, // 대댓글이면 부모 댓글 ID 저장
-        },
-      ])
-      .select(); // 삽입된 데이터 반환
-
+    const { error } = await supabase.from(cmtTable).insert([
+      {
+        post_id: postingId,
+        user_id: userId,
+        content: content,
+        parent_comment_id: parentCommentId,
+      },
+    ]);
 
     if (error) {
       console.error("댓글 저장 실패:", error);
       alert("댓글 작성에 실패했습니다.");
-      return null;
+      return false;
     }
 
-    // 바로 다시 댓글을 불러오는 대신, 현재 상태에서 UI 업데이트
-    if (insertedData && insertedData.length > 0) {
-      const newComment = insertedData[0];
-      await updateCommentsUIAfterSave(newComment, parentCommentId);
-    }
-
-    return insertedData ? insertedData[0] : null;
+    return true;
   } catch (error) {
     console.error("댓글 저장 중 오류 발생:", error);
-    return null;
-  }
-}
-
-async function updateCommentsUIAfterSave(newComment, parentCommentId) {
-  const { data: commentUserInfo } = await supabase
-    .from("userinfo")
-    .select("username")
-    .eq("user_id", newComment.user_id)
-    .single();
-
-  // 새 댓글 객체 생성
-  const commentToRender = {
-    ...newComment,
-    userinfo: { username: commentUserInfo?.username || "알 수 없음" },
-    replies: [],
-  };
-
-  // 부모 댓글 요소 찾기
-  const parentCommentElement = parentCommentId
-    ? document.querySelector(`[data-comment-id="${parentCommentId}"]`)
-    : null;
-
-  // 댓글 컨테이너
-  const commentsContainer = document.getElementById("comments-container");
-
-  if (parentCommentId && parentCommentElement) {
-    // 대댓글인 경우
-    let repliesContainer = parentCommentElement.querySelector(".replies");
-    if (!repliesContainer) {
-      repliesContainer = document.createElement("div");
-      repliesContainer.classList.add("replies", "ms-4");
-      parentCommentElement.appendChild(repliesContainer);
-    }
-
-    // 대댓글 렌더링 (부모 댓글 ID 전달)
-    renderComment(
-      commentToRender,
-      repliesContainer,
-      currentUser,
-      newComment.post_id,
-      parentCommentId // 부모 댓글 ID 전달
-    );
-  } else {
-    // 최상위 댓글인 경우
-    renderComment(
-      commentToRender,
-      commentsContainer,
-      currentUser,
-      newComment.post_id
-    );
+    return false;
   }
 }
 
@@ -334,8 +280,16 @@ function showReplyForm(parentCommentId, parentElement, postingId) {
         return;
       }
 
-      await saveComment(postingId, content, data.user.id, parentCommentId);
-      replyForm.remove();
+      const success = await saveComment(
+        postingId,
+        content,
+        data.user.id,
+        parentCommentId
+      );
+      if (success) {
+        replyForm.remove();
+        await loadComments(postingId); // 댓글 목록 갱신
+      }
     }
   };
 

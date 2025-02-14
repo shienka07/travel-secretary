@@ -6,6 +6,7 @@ import {
   matebucketName,
   folderName,
 } from "./config.js";
+import { checkLogin, getProfile, logout } from "../../js/auth.js";
 
 // const { userInfo, error: authError } = await supabase.auth.getUser();
 // console.log("userInfo", userInfo);

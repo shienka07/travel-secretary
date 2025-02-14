@@ -9,6 +9,13 @@ import {
 } from "./config.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
+import { checkLogin } from "../../js/auth.js";
+const islogined = await checkLogin()
+if (!islogined){
+    window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
+    alert("로그인이 필요합니다");
+}
+
 const form = document.querySelector("#editForm");
 const cancelBtn = document.querySelector("#cancelWriteBtn");
 const imageInput = document.querySelector("#imageUrl");

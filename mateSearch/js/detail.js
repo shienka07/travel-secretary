@@ -7,6 +7,13 @@ import {
   folderName,
 } from "./config.js";
 
+import { checkLogin } from "../../js/auth.js";
+const islogined = await checkLogin()
+if (!islogined){
+    window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
+    alert("로그인이 필요합니다");
+}
+
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");
 

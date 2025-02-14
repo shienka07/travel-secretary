@@ -10,6 +10,7 @@ async function login(email, password) {
     alert("로그인 실패: " + error.message);
     return;
   }
+}
 
 async function checkProfile() {
   const { data, error: auth } = await supabase.auth.getUser();
@@ -289,4 +290,4 @@ export {
   getProfile,
   setProfile_auth,
   fetchLatestPosts_auth
-};
+}

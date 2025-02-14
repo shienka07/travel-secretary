@@ -97,21 +97,62 @@ const postingService = {
   },
 };
 
+function isValidDateRange(startDate, endDate) {
+  if (!startDate || !endDate) {
+    alert("시작 날짜와 종료 날짜를 모두 입력해주세요.");
+    return false;
+  }
+
+  const startDateObj = new Date(startDate);
+  const endDateObj = new Date(endDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const currentYear = new Date().getFullYear();
+  const maxAllowedYear = currentYear + 2; // 최대 허용 년도를 현재 년도 + 2년으로 설정
+
+  if (startDateObj > endDateObj) {
+    alert("종료 날짜는 시작 날짜 이후여야 합니다.");
+    return false;
+  }
+
+  if (startDateObj < today || endDateObj < today) {
+    alert("시작 날짜와 종료 날짜는 오늘 이후로 선택해주세요.");
+    return false;
+  }
+
+  if (endDateObj.getFullYear() > maxAllowedYear) {
+    alert(
+      `최대 허용 년도는 ${maxAllowedYear}년입니다. ${maxAllowedYear}년 이하로 선택해주세요.`
+    );
+    return false;
+  }
+
+  return true;
+}
+
 // 폼 제출 처리
 async function handleSubmit(event) {
   event.preventDefault();
 
+  const formData = new FormData(mateForm);
+  const startDate = formData.get("startDate");
+  const endDate = formData.get("endDate");
+
+  // 날짜 유효성 검증
+  if (!isValidDateRange(startDate, endDate)) {
+    return;
+  }
+
   try {
     const userId = await postingService.checkAuth();
-    const formData = new FormData(mateForm);
 
     // 게시글 데이터
     const postData = {
       user_id: userId,
       title: formData.get("title"),
       content: formData.get("content"),
-      start_date: formData.get("startDate"),
-      end_date: formData.get("endDate"),
+      start_date: startDate,
+      end_date: endDate,
       destination: formData.get("destination"),
       is_domestic: formData.get("isDomestic"),
       people: parseInt(formData.get("people")),

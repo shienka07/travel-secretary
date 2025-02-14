@@ -63,7 +63,6 @@
       async
       defer
     ></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   </head>
   <body>
     <h2>여러 장소 입력 후 경로 그리기 (날짜별)</h2>
@@ -95,8 +94,6 @@
       선택 날짜 경로 그리기
     </button>
     <div id="map"></div>
-    <button id="saveRouteBtn">경로 저장</button>
-<div id="postContent">
 
     <script>
       let map;
@@ -273,144 +270,6 @@
       function getDayColor(dayIndex) {
         const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
         return colors[dayIndex % colors.length];
-      }
-
-      //superbase 설정
-      const supabase = createClient(
-        "https://frqevnyaghrnmtccnerc.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ"
-      );
-
-      async function saveRouteToSupabase(dayIndex, dayPlaces) {
-        try {
-          // 게시글 ID (임의로 설정, 실제 게시글 ID로 바꿔주세요)
-          const postId = 1;
-
-          // 마커 위치 저장
-          const markerPromises = dayPlaces.map((place, index) => {
-            return supabase.from("markers").insert([
-              {
-                latitude: place.lat(),
-                longitude: place.lng(),
-                post_id: postId,
-              },
-            ]);
-          });
-
-          const markerResults = await Promise.all(markerPromises);
-
-          // 마커 ID를 가져와 경로 저장
-          const routePromises = markerResults.map((result, index) => {
-            const markerId = result.data[0].id;
-            return supabase
-              .from("routes")
-              .insert([
-                { post_id: postId, marker_id: markerId, order: index + 1 },
-              ]);
-          });
-
-          await Promise.all(routePromises);
-          console.log("경로가 성공적으로 저장되었습니다.");
-        } catch (error) {
-          console.error("경로 저장 오류:", error);
-        }
-      }
-      //마커 정보 테이블에 저장
-      async function saveMarkerToSupabase(latitude, longitude, postId) {
-        try {
-          const { data, error } = await supabase.from("markers").insert([
-            {
-              latitude: latitude,
-              longitude: longitude,
-              post_id: postId,
-            },
-          ]);
-
-          if (error) throw error;
-          console.log("마커 저장 성공:", data);
-        } catch (error) {
-          console.error("마커 저장 오류:", error);
-        }
-      }
-      //route테이블에 경로 정보 저장
-      async function saveRouteToSupabase(postId, markerId, order) {
-        try {
-          const { data, error } = await supabase.from("routes").insert([
-            {
-              post_id: postId,
-              marker_id: markerId,
-              order: order,
-            },
-          ]);
-
-          if (error) throw error;
-          console.log("경로 저장 성공:", data);
-        } catch (error) {
-          console.error("경로 저장 오류:", error);
-        }
-      }
-
-      //마커 출력
-      async function saveRouteWithMarkers(postId, dayPlaces) {
-        try {
-          // 마커 저장
-          const markerPromises = dayPlaces.map((place, index) => {
-            return saveMarkerToSupabase(place.lat(), place.lng(), postId).then(
-              (result) => result.data[0].markers_id
-            );
-          });
-
-          const markerIds = await Promise.all(markerPromises);
-
-          // 경로 저장
-          markerIds.forEach((markerId, index) => {
-            saveRouteToSupabase(postId, markerId, index + 1);
-          });
-
-          console.log("마커 및 경로 저장 완료");
-        } catch (error) {
-          console.error("마커 및 경로 저장 오류:", error);
-        }
-      }
-
-      //게시글에 맞는 마커,마커경로 불러오기
-      async function loadRouteFromSupabase(postId) {
-        try {
-          // 게시글에 해당하는 마커를 불러옵니다.
-          const { data: markers } = await supabase
-            .from("markers")
-            .select("*")
-            .eq("post_id", postId);
-
-          // 경로 정보를 불러옵니다.
-          const { data: routes } = await supabase
-            .from("routes")
-            .select("*")
-            .eq("post_id", postId)
-            .order("order", { ascending: true });
-
-          // 마커 정보를 이용해 경로를 그립니다.
-          const dayPlaces = markers.map(
-            (marker) =>
-              new google.maps.LatLng(marker.latitude, marker.longitude)
-          );
-
-          // 경로를 지도에 표시합니다.
-          drawRouteOnMap(dayPlaces);
-        } catch (error) {
-          console.error("경로 불러오기 오류:", error);
-        }
-      }
-
-      function drawRouteOnMap(dayPlaces) {
-        const polyline = new google.maps.Polyline({
-          path: dayPlaces,
-          geodesic: true,
-          strokeColor: "#FF0000", // 경로 색상 설정
-          strokeOpacity: 1.0,
-          strokeWeight: 2,
-        });
-        polyline.setMap(map);
       }
     </script>
   </body>

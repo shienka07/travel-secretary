@@ -12,18 +12,6 @@
     />
     <link rel="stylesheet" href="../font.css" />
     <style>
-      @font-face {
-        font-family: "GongGothicMedium";
-        src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10@1.0/GongGothicMedium.woff")
-          format("woff");
-        /* font-weight: normal;
-        font-style: normal;*/
-      }
-
-      * {
-        font-family: "GongGothicMedium";
-      }
-
       .image-area .image-placeholder {
         height: 150px; /* placeholder 높이 CSS로 설정 (JS 코드에서 삭제 가능) */
       }
@@ -65,7 +53,6 @@
                 src="https://github.com/AIBE-chill-TEAM/travel-secretary/blob/dev/assets/logo.png?raw=true"
                 style="width: 40px"
               />
-
             <span class="fs-4">여행 비서</span>
           </a>
           </div>
@@ -275,6 +262,7 @@
                   value="true"
                   id="statusOpenFilter"
                   name="stateFilter"
+                  checked
                 />
                 <label class="form-check-label" for="statusOpenFilter">
                   모집중
@@ -309,9 +297,6 @@
           <button type="button" class="btn btn-secondary" id="writeBtn">
             글작성
           </button>
-          <button type="button" class="btn btn-secondary" id="testBtn">
-            테스트
-          </button>
           <div id="box" class="row"></div>
         </div>
       </div>
@@ -321,9 +306,7 @@
         crossorigin="anonymous"
       ></script>
 
-      <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
       <script type="module" src="./js/main.js"></script>
-      <script type="module" src="./js/recommend_test.js"></script>
     </div>
   </body>
 </html>

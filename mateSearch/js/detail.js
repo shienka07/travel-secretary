@@ -87,6 +87,8 @@ async function fetchPostingDetail(postingId, userId) {
 		  content,
 		  created_at,
 		  image_url,
+      locations,
+      routes,
 		  state,
 		  styles: ${ptsTable} (  
 			style_id (
@@ -254,9 +256,15 @@ async function initializePage() {
     profile.src = profile_img;
   } else {
     const data = await getProfile();
-    const profile_img =
-      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
-      data.image_url;
+
+    if (!data.image_url == "") {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+        data.image_url;
+    } else {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
+    }
     const profile = document.querySelector("#profile");
     profile.src = profile_img;
   }
@@ -276,11 +284,25 @@ async function initializePage() {
     return;
   }
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
+  setupRouteSaveButton();
 
   const user = await getUserInfo();
   if (!user) return;
   setupEventListeners(postingId);
   fetchPostingDetail(postingId, user.id);
+  await loadSavedRoutes(postingId); // 저장된 경로 데이터 로드
+}
+
+// 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// detail.js에 추가할 코드
+
+// 저장 버튼 이벤트 리스너 설정
+function setupRouteSaveButton() {
+  const saveRouteBtn = document.getElementById("saveRouteBtn");
+  if (saveRouteBtn) {
+    saveRouteBtn.addEventListener("click", handleRouteSave);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initializePage);
+// 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 종료

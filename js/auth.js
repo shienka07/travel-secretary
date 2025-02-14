@@ -1,6 +1,7 @@
 import { supabase } from "./supabase.js";
 
 async function login(email, password) {
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -9,7 +10,6 @@ async function login(email, password) {
     alert("로그인 실패: " + error.message);
     return;
   }
-}
 
 async function checkProfile() {
   const { data, error: auth } = await supabase.auth.getUser();

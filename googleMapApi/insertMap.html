@@ -93,10 +93,10 @@
     <button class="draw-route-btn" onclick="drawDayRoutes()">
       선택 날짜 경로 그리기
     </button>
+
+    <h2>경로 등록</h2>
     <div id="map"></div>
-    <div>
-      <button onclick="saveMarkers()">등록하기</button>
-    </div>
+    <button onclick="saveRoute()">등록 완료</button>
 
     <script>
       let map;
@@ -104,6 +104,8 @@
       let markers = [];
       let polylines = []; // 각 날짜별 경로를 저장할 배열
       let dayCount = 1; // 초기 날짜 수
+
+      let postId = new URLSearchParams(window.location.search).get("post_id"); // URL에서 post_id 가져오기
 
       // 구글 맵 초기화
       function initMap() {
@@ -273,12 +275,6 @@
       function getDayColor(dayIndex) {
         const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
         return colors[dayIndex % colors.length];
-      }
-
-      function saveMarkers() {
-        // 마커와 경로 정보를 부모 창에 전달
-        window.opener.postMessage({ markers: markers }, "*");
-        window.close(); // 창을 닫습니다.
       }
     </script>
   </body>

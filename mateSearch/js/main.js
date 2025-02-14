@@ -73,74 +73,56 @@ function displayPostings(postings) {
       card.classList.add("card");
       colDiv.appendChild(card); // 컬럼 안에 카드 배치
 
-      const cardBody = document.createElement("div");
-      cardBody.classList.add("card-body");
-      card.appendChild(cardBody);
+      const imgArea = document.createElement("div");
+      imgArea.classList.add("position-relative");
+      card.appendChild(imgArea);
 
-      const row = document.createElement("div");
-      row.classList.add("row", "g-0");
-      cardBody.appendChild(row);
+      const { data: imageUrlData } = supabase.storage
+        .from(matebucketName)
+        .getPublicUrl(posting.image_url);
+      const imageElement = document.createElement("img");
+      imageElement.src = imageUrlData.publicUrl;
+      imageElement.classList.add("card-img-top", "object-fit-cover");
+      imageElement.style = "height: 225px";
+      imageElement.alt = "게시글 이미지";
 
-      const imageCol = document.createElement("div");
-      imageCol.classList.add("col-md-4");
-      row.appendChild(imageCol);
+      // 커서 스타일 추가
+      imageElement.style.cursor = "pointer";
 
-      const imageArea = document.createElement("div");
-      imageArea.classList.add("image-area", "p-3");
-      imageCol.appendChild(imageArea);
+      // 클릭 이벤트 추가
+      imageElement.addEventListener("click", () => {
+        window.location.href = `./detail.html?id=${posting.id}`;
+      });
+      imgArea.appendChild(imageElement);
 
-      // storage에서 이미지 가져오기
-      if (posting.image_url) {
-        const { data: imageUrlData } = supabase.storage
-          .from(matebucketName)
-          .getPublicUrl(posting.image_url);
+      // const cardBody = document.createElement("div");
+      // cardBody.classList.add("card-body");
+      // card.appendChild(cardBody);
 
-        const imageElement = document.createElement("img");
-        imageElement.src = imageUrlData.publicUrl;
-        imageElement.alt = "게시글 이미지";
-        imageElement.classList.add("img-fluid", "rounded");
-        imageArea.appendChild(imageElement);
-      } else {
-        imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
-        const placeholder = imageArea.querySelector(".image-placeholder");
-        placeholder.classList.add(
-          "bg-light",
-          "d-flex",
-          "justify-content-center",
-          "align-items-center",
-          "p-4"
-        );
-        placeholder.style.height = "150px";
-        placeholder.textContent = "No Image";
-      }
+      // const infoArea = document.createElement("div");
+      // // infoArea.classList.add("info-area", "p-3");
+      // infoArea.classList.add("card-text");
+      // cardBody.appendChild(infoArea);
 
-      const infoCol = document.createElement("div");
-      infoCol.classList.add("col-md-8");
-      row.appendChild(infoCol);
+      // const authorInfoElement = document.createElement("p");
+      // const genderText =
+      //   posting.userInfo?.gender === 1
+      //     ? "남성"
+      //     : posting.userInfo?.gender === 2
+      //     ? "여성"
+      //     : "미제공"; // 삼항 연산자
+      // authorInfoElement.innerHTML = `${genderText}  | 나이: ${
+      //   posting.userInfo?.age || "미제공"
+      // }`;
+      // infoArea.appendChild(authorInfoElement);
 
-      const infoArea = document.createElement("div");
-      infoArea.classList.add("info-area", "p-3");
-      infoCol.appendChild(infoArea);
+      // const destinationElement = document.createElement("p");
+      // destinationElement.textContent = `여행지: ${posting.destination}`;
+      // infoArea.appendChild(destinationElement);
 
-      const authorInfoElement = document.createElement("p");
-      const genderText =
-        posting.userInfo?.gender === 1
-          ? "남성"
-          : posting.userInfo?.gender === 2
-          ? "여성"
-          : "미제공"; // 삼항 연산자
-      authorInfoElement.innerHTML = `${genderText}  | 나이: ${
-        posting.userInfo?.age || "미제공"
-      }`;
-      infoArea.appendChild(authorInfoElement);
-
-      const destinationElement = document.createElement("p");
-      destinationElement.textContent = `여행지: ${posting.destination}`;
-      infoArea.appendChild(destinationElement);
-
-      const peopleElement = document.createElement("p");
-      peopleElement.textContent = `모집인원수: ${posting.people} 명`;
-      infoArea.appendChild(peopleElement);
+      // const peopleElement = document.createElement("p");
+      // peopleElement.textContent = `모집인원수: ${posting.people} 명`;
+      // infoArea.appendChild(peopleElement);
 
       // const budgetElement = document.createElement("p");
       // const formattedBudget = posting.budget
@@ -156,22 +138,32 @@ function displayPostings(postings) {
       const cardFooter = document.createElement("div");
       cardFooter.classList.add("card-footer", "p-3");
       card.appendChild(cardFooter);
-      // ------------------------------------------------------------✅ 경로 확인 필요
+
       const titleLink = document.createElement("a");
       titleLink.href = `./detail.html?id=${posting.id}`;
       titleLink.classList.add("card-title-link");
       titleLink.style.textDecoration = "none";
 
-      const statusText = posting.state ? "[모집중]" : "[모집 완료]";
+      const statusText = posting.state ? "모집중" : "모집 완료";
+      // const isDomesticText = posting.is_domestic ? "국내" : "해외";
+      const destinationText = posting.destination;
 
-      const titleFullElement = document.createElement("h5");
-      titleFullElement.classList.add("card-title", "mb-2");
-      titleFullElement.textContent = `${statusText} `;
+      const titleFullElement = document.createElement("h6");
+      titleFullElement.classList.add("mb-2");
+      titleFullElement.style.fontWeight = 700;
+      titleFullElement.textContent = `[${statusText}] ${destinationText}`;
 
-      const titleElement = document.createElement("span");
-      titleElement.textContent = posting.title;
-      titleFullElement.appendChild(titleElement);
+      const MAX_LENGTH = 15;
+      const titleElement = document.createElement("p");
+      titleElement.style.fontWeight = 300;
+      titleElement.textContent =
+        posting.title.length > MAX_LENGTH
+          ? posting.title.substring(0, MAX_LENGTH) + "..."
+          : posting.title;
+      // titleElement.textContent = posting.title;
+      // titleFullElement.appendChild(titleElement);
       titleLink.appendChild(titleFullElement);
+      titleLink.appendChild(titleElement);
       cardFooter.appendChild(titleLink);
 
       // const contentElement = document.createElement("p");
@@ -332,24 +324,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   const username = localStorage.getItem("username") || "Guest";
   document.getElementById("username").textContent = username + " 님";
 
-  if(localStorage.getItem("profile_img"))
-    {
-        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
+  if (localStorage.getItem("profile_img")) {
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      localStorage.getItem("profile_img");
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  } else {
+    const data = await getProfile();
+
+    if (!data.image_url == "") {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+        data.image_url;
+    } else {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
     }
-    else{
-        const data = await getProfile();
-        
-        if(!data.image_url == ""){
-            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
-        }
-        else{
-            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
-        }
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
-    }
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  }
 
   document.getElementById("logout").addEventListener("click", async (event) => {
     event.preventDefault();

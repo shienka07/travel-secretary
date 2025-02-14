@@ -1,10 +1,13 @@
-// 구글맵 API 키
-const googlemapAPiKey = "AIzaSyDv3p4H66gnGpN3DtDd7lpMWSkeOGiObUY";
+// supabase
+import { addDBData, getDBDataByUserId, getId, deleteDBData } from "./db.js";
 
+// 구글맵 API 키
+const googlemapAPiKey = "AIzaSyAg8Mizg_fmz1cMBS3UDFLxOOOzlb0dujw";
 // 구글맵 장소 탐색
 // 비동기 textSearch, 좌표 지정하고 거리로 검색범위, 입력값 정확도(LLM으로 영문으로 된 지역명을 추가시킨 장소명 생성)
 let map;
 
+// Google Maps API가 로드된 후 실행할 함수
 async function initMap(
   places = ["Googleplex"],
   latLngTxt = '{ "lat": 0, "lng": 0 }'
@@ -21,6 +24,7 @@ async function initMap(
   } catch {
     latLng = { lat: 0, lng: 0 };
   }
+
   map = new Map(document.getElementById("map"), {
     center: latLng,
     zoom: 12,
@@ -35,7 +39,6 @@ async function initMap(
 
   let bounds = new google.maps.LatLngBounds();
 
-  // 각 장소에 대해 검색을 순차적으로 실행
   for (const place of places) {
     try {
       const request = {
@@ -51,11 +54,9 @@ async function initMap(
             results &&
             results.length > 0
           ) {
-            // 첫 번째 결과만 사용
             const result = results[0];
             const location = result.geometry.location;
 
-            // 마커 생성
             new google.maps.Marker({
               map,
               position: location,
@@ -63,8 +64,6 @@ async function initMap(
             });
 
             bounds.extend(location);
-
-            // 검색 결과 로깅
             console.log(
               `Found place: ${result.name} for search term: ${place}`
             );
@@ -79,20 +78,28 @@ async function initMap(
     }
   }
 
-  // 검색된 장소들이 모두 보이도록 지도 조정
   if (!bounds.isEmpty()) {
     map.fitBounds(bounds);
   }
 }
 
-// Google Maps API 로드
-const scriptUrl = `https://maps.googleapis.com/maps/api/js?key=${googlemapAPiKey}&callback=initMap&libraries=places`;
+// Google Maps API 로드 후 실행할 함수
+function loadGoogleMapsAPI() {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googlemapAPiKey}&libraries=places`;
+    script.async = true; // 비동기 로드
+    script.defer = true; // 페이지 파싱이 끝난 후 실행
+    script.setAttribute("loading", "lazy"); // 최적화를 위한 loading="lazy" 추가
+    script.onload = resolve; // 로드 완료 후 resolve 호출
+    document.head.appendChild(script);
+  });
+}
 
-const script = document.createElement("script");
-script.src = scriptUrl;
-script.async = true;
-script.defer = true;
-document.head.appendChild(script);
+// API 로드 후 initMap 실행
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadGoogleMapsAPI();
+});
 
 document.addEventListener("DOMContentLoaded", function () {
   // Form과 요소들을 제대로 선택
@@ -114,21 +121,31 @@ document.addEventListener("DOMContentLoaded", function () {
   const listItems = document.getElementById("listItems");
   const mapPopup = document.getElementById("map");
 
-  // supabase
-  const supabaseUrl = "https://frqevnyaghrnmtccnerc.supabase.co";
-  const supabaseAnonKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ";
-  const tableName = "travel_planner";
-
   function saveMarkdown() {
-    const markdown = localStorage.getItem("markdown");
-    if (markdown !== null) {
-      // ********************** 11111
+    const markdownDB = localStorage.getItem("markdown");
+    if (markdownDB !== null) {
+      const arrayDB = localStorage.getItem("array");
+      const locationDB = localStorage.getItem("location");
+      const submitDataDB = JSON.parse(localStorage.getItem("submitData"));
+      const nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
+
+      console.log(nameDB);
+      console.log(arrayDB);
       // 마크다운을 데이터베이스에 저장
       // 방문장소를 데이터베이스에 저장
       // 좌표를 데이터베이스에 저장
       // 제목을 데이터베이스에 저장 (${travelDays}일간의 ${destination} ${travelTheme} 여행)
-      // **********************
+      getId()
+        .then((Id) => {
+          if (Id) {
+            addDBData(Id, nameDB, markdownDB, locationDB, arrayDB);
+          } else {
+            console.log("로그인되지 않았거나 유저 정보가 없습니다.");
+          }
+        })
+        .catch((error) => {
+          console.error("유저 ID 조회 실패:", error);
+        });
     } else {
       showToast("저장할 내용이 없습니다.", "danger");
     }
@@ -137,70 +154,68 @@ document.addEventListener("DOMContentLoaded", function () {
   listModal.addEventListener("shown.bs.modal", () => {
     listItems.innerHTML = ""; // 기존 리스트 초기화
 
-    // 리스트 아이템 데이터
-    // *************
-    // DB에서 제목과 id 불러오기
-    // *************
-    const items = [
-      // 예시
-      { text: "제목 1", id: "id 1" },
-      { text: "제목 2", id: "id 2" },
-      { text: "제목 3", id: "id 3" },
-      { text: "제목 4", id: "id 4" },
-    ];
+    getId()
+      .then((Id) => {
+        if (Id) {
+          getDBDataByUserId(Id)
+            .then((items) => {
+              console.log(items);
+              items.forEach((item) => {
+                const li = document.createElement("li");
+                li.style.display = "flex"; // flexbox 사용
+                li.style.alignItems = "center"; // 수직 가운데 정렬
+                li.style.padding = "10px";
+                li.style.borderBottom = "1px solid #eee";
 
-    items.forEach((item) => {
-      const li = document.createElement("li");
-      li.style.display = "flex"; // flexbox 사용
-      li.style.alignItems = "center"; // 수직 가운데 정렬
-      li.style.padding = "10px";
-      li.style.borderBottom = "1px solid #eee";
+                const span = document.createElement("span");
+                span.style.flexGrow = "1"; // span이 남은 공간을 모두 차지
+                span.textContent = item.list_name; // 리스트 텍스트 표시
 
-      const span = document.createElement("span");
-      span.style.flexGrow = "1"; // span이 남은 공간을 모두 차지
-      span.textContent = item.text; // 리스트 텍스트 표시
+                const loadButton = document.createElement("button");
+                loadButton.textContent = "불러오기";
+                loadButton.classList.add("btn", "btn-sm", "btn-success"); // 부트스트랩 버튼 스타일 추가 및 클래스
+                loadButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
+                loadButton.style.border = "3px";
 
-      const loadButton = document.createElement("button");
-      loadButton.textContent = "불러오기";
-      loadButton.classList.add("btn", "btn-sm", "btn-primary", "loadButton"); // 부트스트랩 버튼 스타일 추가 및 클래스
-      loadButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
+                // 불러오기 버튼 클릭 시
+                loadButton.addEventListener("click", () => {
+                  // 방문장소, 좌표 로컬스토리지에 저장하기
+                  localStorage.setItem("array", item.list_daily_places);
+                  localStorage.setItem("location", item.list_location);
+                  localStorage.setItem("markdown", item.list_content);
+                  box.innerHTML = "";
+                  // addMsg(불러온 마크다운)
+                  addMsg(item.list_content);
+                });
 
-      // 불러오기 버튼 클릭 시
-      loadButton.addEventListener("click", () => {
-        // *********************
-        // item.id
-        // DB 내 해당 데이터(마크다운, 방문장소, 좌표) 불러오기
-        // 방문장소, 좌표 로컬스토리지에 저장하기
-        // 불러온 마크다운 출력
-        // addMsg(불러온 마크다운)
-        // *********************
-        alert("불러오기");
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "삭제";
+                deleteButton.classList.add("btn", "btn-sm", "btn-danger"); // 부트스트랩 버튼 스타일 추가 및 클래스
+                deleteButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
+
+                // 삭제 버튼 클릭 시
+                deleteButton.addEventListener("click", () => {
+                  // DB 내 해당 데이터 삭제
+                  listItems.removeChild(li);
+                  deleteDBData(item.id);
+                });
+
+                li.appendChild(span);
+                li.appendChild(loadButton);
+                li.appendChild(deleteButton);
+                listItems.appendChild(li);
+              });
+            })
+            .catch((error) => {
+              console.error("데이터 가져오기 실패:", error); // 오류 처리
+            });
+        } else {
+          console.log("로그인되지 않았거나 유저 정보가 없습니다.");
+        }
+      })
+      .catch((error) => {
+        console.error("유저 ID 조회 실패:", error);
       });
-
-      const deleteButton = document.createElement("button");
-      deleteButton.textContent = "삭제";
-      deleteButton.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-primary",
-        "deleteButton"
-      ); // 부트스트랩 버튼 스타일 추가 및 클래스
-      deleteButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
-
-      // 삭제 버튼 클릭 시
-      deleteButton.addEventListener("click", () => {
-        // ******************
-        // item.id
-        // DB 내 해당 데이터 삭제
-        // ******************
-        alert("삭제");
-      });
-
-      li.appendChild(span);
-      li.appendChild(loadButton);
-      li.appendChild(deleteButton);
-      listItems.appendChild(li);
-    });
   });
 
   saveBtn.addEventListener("click", saveMarkdown);
@@ -273,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function locationsOpenPopup(places) {
     console.log(places);
-    window.initMap(places, JSON.parse(localStorage.getItem("location"))); // DOMContentLoaded 후에 places 데이터를 initMap에 전달
+    initMap(places, JSON.parse(localStorage.getItem("location"))); // DOMContentLoaded 후에 places 데이터를 initMap에  전달
     locationsPopup.style.display = "block"; // 팝업 보이기
     locationsPopupOverlay.style.display = "block"; // 오버레이 보이기
     locationsPopupBtn.style.display = "block"; // 팝업 닫기 보이기
@@ -303,14 +318,14 @@ document.addEventListener("DOMContentLoaded", function () {
           // 해당 일정 장소들 팝업 지도에 찍기
           const mapUrl = link.getAttribute("href"); // 링크의 URL을 가져옴
           console.log(mapUrl);
-          locationsArray = JSON.parse(localStorage.getItem("array"));
+          const locationsArray = JSON.parse(localStorage.getItem("array"));
           console.log(locationsArray);
           locationsOpenPopup(locationsArray[mapUrl]);
         });
       } else {
         link.addEventListener("click", (e) => {
           e.preventDefault(); // 기본 링크 동작을 막고
-          linkPlace = link.getAttribute("href");
+          const linkPlace = link.getAttribute("href");
           console.log(linkPlace);
           const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlemapAPiKey}&q=${linkPlace}`; // API로 찾은 URL
           openPopup(mapUrl); // 팝업 열기
@@ -460,7 +475,7 @@ document.addEventListener("DOMContentLoaded", function () {
       예시: { "lat": 37.422, "lng": 122.084 }
       다른 내용 추가하지말고
       { "lat": latitude, "lng": longitude }
-      형식으로만 출력하십시오.
+      마크다운을 사용하지 않고 제시된 형식으로만 출력하십시오.
       `;
       return await callModel(prompt);
     };
@@ -622,9 +637,9 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
     const fifthAI = async (fourthResponse) => {
-      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마십시오.
+      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마십시오. 지역명을 포함하시오.
       예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
-      예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마십시오.
+      마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마십시오.
 ${fourthResponse}`;
       return await callModel000(prompt);
     };

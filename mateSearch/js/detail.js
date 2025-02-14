@@ -7,6 +7,7 @@ import {
   folderName,
 } from "./config.js";
 
+
 import { checkLogin } from "../../js/auth.js";
 const islogined = await checkLogin()
 if (!islogined){
@@ -16,6 +17,9 @@ if (!islogined){
 
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");
+
+
+import { loadComments } from "./comment.js";
 
 async function getUserInfo() {
   const { data: userInfo, error } = await supabase.auth.getUser();

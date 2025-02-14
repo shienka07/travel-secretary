@@ -6,7 +6,6 @@ import {
   getImagePath,
   fetchLatestPosts_auth,
 } from "./js/auth.js";
-import { supabase } from "./js/supabase.js";
 
 // 전역 스코프에서 바로 실행되는 즉시 실행 함수
 (async function initialize() {
@@ -124,7 +123,7 @@ async function updateLoginUI(isLoggedIn) {
   }
 }
 
-function updateMainPage(posts) {
+async function updateMainPage(posts) {
   const postContainer = document.querySelector(
     ".row.row-cols-1.row-cols-sm-2.row-cols-md-3.g-3"
   );
@@ -134,50 +133,87 @@ function updateMainPage(posts) {
     return;
   }
 
-  postContainer.innerHTML = posts
-    .map((post) => {
-      // 이미지 URL 처리
-      let imageUrl;
-      if (post.image_url) {
-        // Supabase Storage public URL 생성
-        imageUrl = ""; // TODO
-      } else {
-        // 다른 플레이스홀더 이미지 사용
-        imageUrl = "https://placehold.co/225x225";
-      }
+  // 게시물을 3개씩 그룹화
+  const groupedPosts = [];
+  for (let i = 0; i < posts.length; i += 3) {
+    groupedPosts.push(posts.slice(i, i + 3));
+  }
 
-      return `
-      <div class="col">
-        <div class="card shadow-sm">
-          <img src="${imageUrl}" 
-               class="bd-placeholder-img card-img-top" 
-               width="100%" 
-               height="225" 
-               alt="게시글 이미지"
-               onerror="this.src='https://placehold.co/225x225'">
-          <div class="card-body">
-            <h5 class="card-title">${post.title || "제목 없음"}</h5>
-            <p class="card-text">${
-              post.content ? post.content.substring(0, 50) + "..." : "내용 없음"
-            }</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group">
-                <a href="detail.html?id=${
-                  post.id
-                }" class="btn btn-sm btn-outline-secondary">View</a>
-              </div>
-              <small class="text-body-secondary">${new Date(
-                post.created_at
-              ).toLocaleDateString()}</small>
+  // 모든 이미지 URL을 미리 처리
+  const processedPosts = await Promise.all(
+    posts.map(async (post) => ({
+      ...post,
+      processedImageUrl: post.image_url
+        ? await getImagePath(post.image_url)
+        : "https://placehold.co/225x225",
+    }))
+  );
+
+  // 처리된 게시물을 다시 그룹화
+  const processedGroupedPosts = [];
+  for (let i = 0; i < processedPosts.length; i += 3) {
+    processedGroupedPosts.push(processedPosts.slice(i, i + 3));
+  }
+
+  postContainer.innerHTML = `
+    <div id="postCarousel" class="carousel slide w-100" data-bs-ride="carousel" data-bs-interval="5000">
+      <div class="carousel-inner">
+        ${processedGroupedPosts
+          .map(
+            (group, index) => `
+          <div class="carousel-item ${index === 0 ? "active" : ""}">
+            <div class="row g-4">
+              ${group
+                .map(
+                  (post) => `
+                <div class="col-md-4">
+                  <div class="card h-100 shadow-sm border-0">
+                    <div class="position-relative">
+                      <img src="${post.processedImageUrl}" 
+                        class="card-img-top object-fit-cover"
+                        style="height: 225px;"
+                        alt="게시글 이미지"
+                        onerror="this.src='https://placehold.co/225x225'">
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title fw-bold mb-3">${
+                        post.title || "제목 없음"
+                      }</h5>
+                      <p class="card-text flex-grow-1 mb-3">${
+                        post.content
+                          ? post.content.substring(0, 50) + "..."
+                          : "내용 없음"
+                      }</p>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <a href="detail.html?id=${
+                          post.id
+                        }" class="btn btn-outline-secondary btn-sm px-3">View</a>
+                        <small class="text-muted">${new Date(
+                          post.created_at
+                        ).toLocaleDateString()}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
             </div>
           </div>
-        </div>
+        `
+          )
+          .join("")}
       </div>
-    `;
-    })
-    .join("");
-
-  console.log("✅ 6. 게시글 표시 완료");
+      <button class="carousel-control-prev" type="button" data-bs-target="#postCarousel" data-bs-slide="prev" style="width: 5%">
+        <span class="carousel-control-prev-icon bg-dark bg-opacity-25 rounded p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#postCarousel" data-bs-slide="next" style="width: 5%">
+        <span class="carousel-control-next-icon bg-dark bg-opacity-25 rounded p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  `;
 }
 
 document.addEventListener("DOMContentLoaded", () => {

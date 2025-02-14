@@ -156,7 +156,7 @@ function displayPostings(postings) {
       card.appendChild(cardFooter);
       // ------------------------------------------------------------✅ 경로 확인 필요
       const titleLink = document.createElement("a");
-      titleLink.href = `/travel-secretary/mateSearch/detail.html?id=${posting.id}`;
+      titleLink.href = `./detail.html?id=${posting.id}`;
       titleLink.classList.add("card-title-link");
       titleLink.style.textDecoration = "none";
 
@@ -272,7 +272,7 @@ function filterPosting(postings, filters) {
       }
     }
 
-    // 여행 스타일 필터
+    // 여행 스타일 필터 (수정 후 - every() 로 변경)
     if (filters.styles && filters.styles.length > 0) {
       console.log(
         "styles 필터:",
@@ -283,7 +283,12 @@ function filterPosting(postings, filters) {
       const postingStyles = posting.styles.map(
         (style) => style.style_id.style_name
       );
-      if (!filters.styles.some((style) => postingStyles.includes(style))) {
+      if (
+        !filters.styles.every((filterStyle) =>
+          postingStyles.includes(filterStyle)
+        )
+      ) {
+        // every() 로 변경
         return false;
       }
     }
@@ -304,6 +309,7 @@ function filterPosting(postings, filters) {
     if (!isOpenStatusChecked && !isClosedStatusChecked) {
       return true; //  모집 상태 필터 무시 (둘 다 체크 X)
     }
+
     if (isOpenStatusChecked && !posting.state) {
       return false;
     }

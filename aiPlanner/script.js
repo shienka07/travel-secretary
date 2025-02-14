@@ -1,3 +1,99 @@
+// 구글맵 API 키
+const googlemapAPiKey = "AIzaSyDv3p4H66gnGpN3DtDd7lpMWSkeOGiObUY";
+
+// 구글맵 장소 탐색
+// 비동기 textSearch, 좌표 지정하고 거리로 검색범위, 입력값 정확도(LLM으로 영문으로 된 지역명을 추가시킨 장소명 생성)
+let map;
+
+async function initMap(
+  places = ["Googleplex"],
+  latLngTxt = '{ "lat": 0, "lng": 0 }'
+) {
+  const { Map } = await google.maps.importLibrary("maps");
+  const { PlacesService } = await google.maps.importLibrary("places");
+
+  let latLng;
+  try {
+    latLng = JSON.parse(latLngTxt);
+    if (typeof latLng !== "object" || latLng === null) {
+      latLng = { lat: 0, lng: 0 };
+    }
+  } catch {
+    latLng = { lat: 0, lng: 0 };
+  }
+  map = new Map(document.getElementById("map"), {
+    center: latLng,
+    zoom: 12,
+  });
+
+  const service = new PlacesService(map);
+
+  if (!places || !Array.isArray(places) || places.length === 0) {
+    console.error("장소 데이터가 없거나 올바르지 않습니다.");
+    return;
+  }
+
+  let bounds = new google.maps.LatLngBounds();
+
+  // 각 장소에 대해 검색을 순차적으로 실행
+  for (const place of places) {
+    try {
+      const request = {
+        query: place,
+        location: latLng,
+        radius: 50000, // 50km
+      };
+
+      await new Promise((resolve) => {
+        service.textSearch(request, (results, status) => {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            results &&
+            results.length > 0
+          ) {
+            // 첫 번째 결과만 사용
+            const result = results[0];
+            const location = result.geometry.location;
+
+            // 마커 생성
+            new google.maps.Marker({
+              map,
+              position: location,
+              title: result.name,
+            });
+
+            bounds.extend(location);
+
+            // 검색 결과 로깅
+            console.log(
+              `Found place: ${result.name} for search term: ${place}`
+            );
+          } else {
+            console.warn(`검색 실패 - 장소: ${place}, 상태: ${status}`);
+          }
+          resolve();
+        });
+      });
+    } catch (error) {
+      console.error(`Error searching for ${place}:`, error);
+    }
+  }
+
+  // 검색된 장소들이 모두 보이도록 지도 조정
+  if (!bounds.isEmpty()) {
+    map.fitBounds(bounds);
+  }
+}
+
+// Google Maps API 로드
+const scriptUrl = `https://maps.googleapis.com/maps/api/js?key=${googlemapAPiKey}&callback=initMap&libraries=places`;
+
+const script = document.createElement("script");
+script.src = scriptUrl;
+script.async = true;
+script.defer = true;
+document.head.appendChild(script);
+
 document.addEventListener("DOMContentLoaded", function () {
   // Form과 요소들을 제대로 선택
   const controllerForm = document.getElementById("controller");
@@ -5,13 +101,18 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitBtn = controllerForm.querySelector("button[type='submit']");
   const box = document.getElementById("box");
   const popup = document.getElementById("popup");
+  const locationsPopup = document.getElementById("locationsPopup");
   const popupOverlay = document.getElementById("popupOverlay");
+  const locationsPopupOverlay = document.getElementById(
+    "locationsPopupOverlay"
+  );
   const popupBtn = document.getElementById("closePopupBtn");
+  const locationsPopupBtn = document.getElementById("locationsClosePopupBtn");
   const mapIframe = document.getElementById("mapIframe");
   const saveBtn = document.getElementById("saveBtn");
-  const listBtn = document.getElementById("listBtn");
   const listModal = document.getElementById("listModal");
   const listItems = document.getElementById("listItems");
+  const mapPopup = document.getElementById("map");
 
   function saveMarkdown() {
     const markdown = localStorage.getItem("markdown");
@@ -24,11 +125,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // 리스트 아이템 데이터 (예시)
+  // 리스트 아이템 데이터
   // *************
   // DB에서 불러와야함
   // *************
   const items = [
+    // 예시
     { text: "리스트 1" },
     { text: "리스트 2" },
     { text: "리스트 3" },
@@ -51,10 +153,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const loadButton = document.createElement("button");
       loadButton.textContent = "불러오기";
-      loadButton.classList.add("btn", "btn-sm", "btn-primary"); // 부트스트랩 버튼 스타일 추가
+      loadButton.classList.add("btn", "btn-sm", "btn-primary", "loadButton"); // 부트스트랩 버튼 스타일 추가 및 클래스
       loadButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
 
-      // 버튼 클릭 이벤트 리스너 (예시)
+      // 불러오기 버튼 클릭 시
       loadButton.addEventListener("click", () => {
         // *********************
         // DB 내 해당 데이터 불러오기
@@ -66,10 +168,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "삭제";
-      deleteButton.classList.add("btn", "btn-sm", "btn-primary"); // 부트스트랩 버튼 스타일 추가
+      deleteButton.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-primary",
+        "deleteButton"
+      ); // 부트스트랩 버튼 스타일 추가 및 클래스
       deleteButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
 
-      // 버튼 클릭 이벤트 리스너 (예시)
+      // 삭제 버튼 클릭 시
       deleteButton.addEventListener("click", () => {
         // ******************
         // DB 내 해당 데이터 삭제
@@ -83,6 +190,9 @@ document.addEventListener("DOMContentLoaded", function () {
       listItems.appendChild(li);
     });
   });
+
+  const loadButton = document.querySelector(".loadButton");
+  const deleteButton = document.querySelector(".deleteButton");
 
   saveBtn.addEventListener("click", saveMarkdown);
 
@@ -151,8 +261,16 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
       showToast("생성중이니 잠시만 기다려주십시오.", "success");
       submitBtn.disabled = false; // 버튼 다시 활성화
-    }, 1500);
+    }, 3000); // 3초 딜레이
   });
+
+  function locationsOpenPopup(places) {
+    console.log(places);
+    window.initMap(places, JSON.parse(localStorage.getItem("location"))); // DOMContentLoaded 후에 places 데이터를 initMap에 전달
+    locationsPopup.style.display = "block"; // 팝업 보이기
+    locationsPopupOverlay.style.display = "block"; // 오버레이 보이기
+    locationsPopupBtn.style.display = "block"; // 팝업 닫기 보이기
+  }
 
   // 두 번째 기능 (마크다운 파싱 + 로컬 스토리지 활용)
   const addMsg = (msg) => {
@@ -170,24 +288,22 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log(mapUrl);
           window.open(mapUrl);
         });
-      } else if (link.getAttribute("href").includes("DAY")) {
+      } else if (link.getAttribute("href").includes("Day")) {
         // DAY가 포함되면
         link.addEventListener("click", (e) => {
           e.preventDefault(); // 기본 링크 동작을 막고
-          // **************************
           // 해당 일정 장소들 팝업 지도에 찍기
-          // **************************
+          const mapUrl = link.getAttribute("href"); // 링크의 URL을 가져옴
+          console.log(mapUrl);
+          locationsArray = JSON.parse(localStorage.getItem("array"));
+          console.log(locationsArray);
+          locationsOpenPopup(locationsArray[mapUrl]);
         });
       } else {
         link.addEventListener("click", (e) => {
           e.preventDefault(); // 기본 링크 동작을 막고
           linkPlace = link.getAttribute("href");
           console.log(linkPlace);
-
-          // ********************************************
-          // linkPlace를 구글맵 API로 찾아 API 임배드 URL을 얻기
-          // ********************************************
-          const googlemapAPiKey = "AIzaSyB83YF__ZJ5WuhL3v8XjgqQBsCqz3wLDwo";
           const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlemapAPiKey}&q=${linkPlace}`; // API로 찾은 URL
           openPopup(mapUrl); // 팝업 열기
         });
@@ -214,6 +330,18 @@ document.addEventListener("DOMContentLoaded", function () {
   // 팝업 오버레이 클릭 시 팝업 닫기
   popupOverlay.addEventListener("click", closePopup);
   popupBtn.addEventListener("click", closePopup);
+
+  // 팝업 닫기
+  function locationsClosePopup() {
+    locationsPopup.style.display = "none"; // 팝업 숨기기
+    locationsPopupOverlay.style.display = "none"; // 오버레이 숨기기
+    locationsPopupBtn.style.display = "none"; // 팝업 닫기 숨기기
+    mapPopup.innerText = ""; // map 초기화
+  }
+
+  // 팝업 오버레이 클릭 시 팝업 닫기
+  locationsPopupOverlay.addEventListener("click", locationsClosePopup);
+  locationsPopupBtn.addEventListener("click", locationsClosePopup);
 
   // submit 데이터 불러오기
   const submitDataStr = localStorage.getItem("submitData");
@@ -289,19 +417,19 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     // Gemini 2.0
-    // const callModel = async (prompt) => {
-    //   try {
-    //     const response = await axios.post(
-    //       "https://quartz-ruddy-cry.glitch.me/0",
-    //       {
-    //         text: prompt,
-    //       }
-    //     );
-    //     return response.data.reply;
-    //   } catch (error) {
-    //     console.error("Error: ", error);
-    //   }
-    // };
+    const callModel = async (prompt) => {
+      try {
+        const response = await axios.post(
+          "https://quartz-ruddy-cry.glitch.me/0",
+          {
+            text: prompt,
+          }
+        );
+        return response.data.reply;
+      } catch (error) {
+        console.error("Error: ", error);
+      }
+    };
 
     // Gemini 2.0 thinking
     const callModel000 = async (prompt) => {
@@ -318,66 +446,20 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     };
 
-    // 일단 주석처리
-    // const firstAI = async (
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // ) => {
-    //   const prompt = `당신은 세계 최고의 숙소 전문가입니다. 단어만 나열하고 다른 **설명 없이** 출력하세요. 출력 형태는 숙소이름만 작성하고 구분자는 , 으로 합니다. ${travelStyle} 여행을 위한 ${destination}으로 여행을 ${companion}와 같이 갑니다. 전체 여행 예산이 ${budget} 입니다. 이를 바탕으로 숙소를 추천해주세요. 1*${travelDays} 개의 숙소를 추천해주세요. 숙소는 숙소 카테고리가 아닌 세부적으로 특정한 이름을 가진 숙박업소 이름입니다. 구글에 검색하면 해당 장소가 나오도록 **영어로** 작성해야합니다. 출력 형태는 숙소이름만 작성하고 구분자는 , 으로 합니다.`;
-    //   return await callModel(prompt);
-    // };
+    const thirdAI = async (destination) => {
+      const prompt = `${destination}의 latitude, longitude 를 작성하세요. 출력 형식은 설명 없이 { "lat": latitude, "lng": longitude } 로 출력하십시오. 다른 내용을 추가하지마십시오.
+      예시: { "lat": 48.858, "lng": 2.294 }
+      예시: { "lat": 37.422, "lng": 122.084 }
+      다른 내용 추가하지말고
+      { "lat": latitude, "lng": longitude }
+      형식으로만 출력하십시오.
+      `;
+      return await callModel(prompt);
+    };
 
-    // const firstResponse = await firstAI(
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // );
-    // console.log("- **추천 숙소**: " + firstResponse);
-
-    // const secondAI = async (
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // ) => {
-    //   const prompt = `당신은 세계 최고의 음식점 전문가입니다. 단어만 나열하고 다른 **설명 없이** 출력하세요. 출력 형태는 음식점이름만 작성하고 구분자는 , 으로 합니다. ${travelStyle} 여행을 위한 ${destination}으로 여행을 ${companion}와 같이 갑니다. 전체 여행 예산이 ${budget} 입니다. 이를 바탕으로 음식점을 추천해주세요. 3*${travelDays} 개의 음식점을 추천해주세요. 음식점은 음식 이름이 아닌 세부적으로 특정한 이름을 가진 가게이름입니다. 구글에 검색하면 해당 장소가 나오도록 **영어로** 작성해야합니다. 출력 형태는 음식점이름만 작성하고 구분자는 , 으로 합니다.`;
-    //   return await callModel(prompt);
-    // };
-
-    // const secondResponse = await secondAI(
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // );
-    // console.log("- **추천 음식점**: " + secondResponse);
-
-    // const thirdAI = async (
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // ) => {
-    //   const prompt = `당신은 세계 최고의 관광지 전문가입니다. 단어만 나열하고 다른 **설명 없이** 출력하세요. 출력 형태는 관광지이름만 작성하고 구분자는 , 으로 합니다. ${travelStyle} 여행을 위한 ${destination}으로 여행을 ${companion}와 같이 갑니다. 전체 여행 예산이 ${budget} 입니다. 이를 바탕으로 관광지를 추천해주세요. 2*${travelDays} 개의 관광지를 추천해주세요. 관광지는 도시, 지역명이 아닌 특징이 있는 세부적인 spot입니다. 구글에 검색하면 해당 장소가 나오도록 **영어로** 작성해야합니다. 출력 형태는 관광지이름만 작성하고 구분자는 , 으로 합니다.`;
-    //   return await callModel(prompt);
-    // };
-
-    // const thirdResponse = await thirdAI(
-    //   budget,
-    //   companion,
-    //   destination,
-    //   travelDays,
-    //   travelStyle
-    // );
-    // console.log("- **추천 관광지**: " + thirdResponse);
+    const thirdResponse = await thirdAI(destination);
+    console.log("- **위경도**: " + thirdResponse);
+    localStorage.setItem("location", JSON.stringify(thirdResponse));
 
     // 플래너 생성
     const fourthAI = async (
@@ -532,7 +614,7 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
     const fifthAI = async (fourthResponse) => {
-      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 숙소이름를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
+      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
 ${fourthResponse}`;
       return await callModel000(prompt);
     };
@@ -540,11 +622,11 @@ ${fourthResponse}`;
     // array 형태의 구분자 | 인 문자열
     const fifthResponse = await fifthAI(fourthResponse);
     console.log(`방문 장소: ${fifthResponse}`);
+    const dailyArray = {};
     try {
       // array 형태의 구분자 | 인 문자열 분해
       const placeArray = fifthResponse.split("|");
       console.log("추출 성공");
-      const dailyArray = {};
       placeArray.forEach((e, index) => {
         dailyArray[`Day ${index + 1}`] = JSON.parse(e);
       });
@@ -558,6 +640,6 @@ ${fourthResponse}`;
 
     addMsg(`${fourthResponse}`); // 출력
 
-    localStorage.setItem("array", dailyArray);
+    localStorage.setItem("array", JSON.stringify(dailyArray));
   });
 });

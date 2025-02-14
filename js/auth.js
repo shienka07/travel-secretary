@@ -10,6 +10,7 @@ async function login(email, password) {
     alert("로그인 실패: " + error.message);
     return;
   }
+  window.location.href="../index.html";
 }
 
 async function checkProfile() {

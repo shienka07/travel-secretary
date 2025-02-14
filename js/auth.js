@@ -3,9 +3,10 @@ import { supabase } from "./supabase.js";
 async function login(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-        alert("로그인 실패: " + error.message);
+        alert("로그인 실패: " + error.message);    
         return;
     }
+    window.location.href = "../index.html"
 }
 
 async function checkProfile(){

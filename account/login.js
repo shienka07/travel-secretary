@@ -8,7 +8,8 @@ loginBtn.addEventListener("click", async (event) => {
     const password = document.querySelector("#password").value;
 
     await login(username, password);
-    window.location.href = "../index.html";
+ 
+    
 });
 
 const islogined = await checkLogin()

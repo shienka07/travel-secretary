@@ -250,7 +250,7 @@ function getImagePath(url) {
   return data.publicUrl;
 }
 
-export async function fetchLatestPosts_auth() {
+async function fetchLatestPosts_auth() {
   try {
     const response = await supabase
       .from("MATE_POSTING")
@@ -288,4 +288,5 @@ export {
   getNickname,
   getProfile,
   setProfile_auth,
+  fetchLatestPosts_auth
 };

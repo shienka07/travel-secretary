@@ -124,10 +124,10 @@ function createMatchingPrompt(data, userPrefer) {
   //   prompt += `- **필수적으로 사용자 선호 여행지와 게시글 여행지가 일치해야 합니다.**\n`;
   prompt += `- **선호 연령대, 성별, 예산 범위는** 사용자의 선호 사항이지만, **필수 조건은 아닙니다.**  선호 조건에 얼마나 부합하는지에 따라 추천 점수를 차등적으로 부여하여, 최종적으로 사용자에게 **가장 잘 맞을 것 같은 게시글 ID**를 추천해주세요.\n`;
   prompt += `- 만약 선호 여행지가 일치하지 않는다면, "여행지 불일치" 라고 명확하게 답변해주세요.\n`;
-  prompt += `- 답변은 **추천 게시글 ID**만 간결하게 숫자 형태로  표시해주세요.  만약 추천할 게시글 ID가 없다면, "0" 이라고 답변해주세요.\n`; // 명확한 답변 형식 지시
+  prompt += `- 답변은 **추천 게시글 ID**만 간결하게 숫자 형태로  표시해주세요.  만약 추천할 게시글 ID가 없다면, 0 이라고 답변해주세요.\n`; // 명확한 답변 형식 지시
   prompt += `\n`;
 
-  prompt += `## 질문에 대해 JSON 형식으로 응답하세요\n {"answer" : "추천내용" , "ID" : "추천 게시글  ID"}`; // LLM 답변 시작 지점 명시
+  prompt += `## 질문에 대해 JSON 형식으로 응답하세요\n {"answer" : "추천내용" , "ID" : "추천 게시글  ID"}`; // LLM 답변 시작 지점 명시 sweetalert spinner
 
 
   return prompt;
@@ -211,6 +211,7 @@ async function exampleMatchingPromptUsage() {
   console.log("postings: ", postings);
 
   const userPreferences = {
+    // 본인 꺼 + 질문 5개 저장해서
     preferredDestination: "강릉", // 선호 여행지: 이탈리아
     preferredAgeRange: { min: 20, max: 25 }, // 선호 연령대: 15세~20세
     preferredGender: "여성", // 선호 성별: 여성
@@ -239,6 +240,9 @@ async function exampleMatchingPromptUsage() {
 }
 
 async function displayRecommendPost(postid) {
+  if(postid == 0){
+    return;
+  }
   const { data: postings, error } = await supabase
     .from(mateTable)
     .select(`

@@ -219,7 +219,7 @@ async function loadPosts_Recommend_auth() {
       .from('posts_recommend')
       .select(`*, userinfo : userinfo(username)`)
       .order('id', { ascending: false });
-    if (error) {
+    if (error) {https://aibe-chill-team.github.io/travel-secretary/https://aibe-chill-team.github.io/travel-secretary/
       return error;
     }
 
@@ -246,6 +246,22 @@ function getImagePath(url){
     return data.publicUrl;
 }
 
-export {loadPosts, createPost, signup, login, logout, checkLogin, checkNickname, editPost_auth, deletePost_auth, updatePost_auth, createPost_Recommend_auth, loadPosts_Recommend_auth,uploadImage_auth, getImagePath, checkProfile, getNickname, getProfile, setProfile_auth};
+async function setAnswer(text){
+    const {data, error:auth} = await supabase.auth.getUser();
+    if(auth){
+        return auth;
+    }
+
+    const {error : insertError} = await supabase
+        .from("userinfo")
+        .update({answer : text})
+        .eq('id', data.user.id);
+
+    if(error){
+        return insertErrorerror;
+    }
+}
+
+export { loadPosts, createPost, signup, login, logout, checkLogin, checkNickname, editPost_auth, deletePost_auth, updatePost_auth, createPost_Recommend_auth, loadPosts_Recommend_auth,uploadImage_auth, getImagePath, checkProfile, getNickname, getProfile, setProfile_auth };
 
 

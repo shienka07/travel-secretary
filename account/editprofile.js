@@ -116,6 +116,8 @@ for (let i = 0; i < questionItems.length; i++) {
 
     const text = `${selectedValues.join(" ")}`;
 
+    
+
     form_container.removeChild(newForm);
     const spinnerdiv = document.createElement("div");
     spinnerdiv.className = "d-flex justify-content-center align-items-center"

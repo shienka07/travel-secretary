@@ -11,4 +11,3 @@ export const ptsTable = "POSTING_TRAVEL_STYLES";
 export const cmtTable = "POSTING_COMMENTS";
 export const matebucketName = "mate-bucket";
 export const folderName = "mate";
-

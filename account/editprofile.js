@@ -258,7 +258,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const username = localStorage.getItem("username") || "Guest";
     document.querySelector("#username").textContent = username + " 님";
-    console.log(username);
 
     if(localStorage.getItem("profile_img"))
     {
@@ -268,7 +267,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     else{
         const data = await getProfile();
-        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
+        
+        if(!data.image_url == ""){
+            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
+        }
+        else{
+            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
+        }
         const profile = document.querySelector("#profile");
         profile.src = profile_img;
     }

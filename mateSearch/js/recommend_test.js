@@ -129,6 +129,8 @@ function createMatchingPrompt(data, userPrefer) {
 
   prompt += `## 답변:\n`; // LLM 답변 시작 지점 명시
   prompt += `- 추천 게시글 ID: `; // 답변은 게시글 ID 형태로 요청
+  prompt += `\n`;
+  prompt += `- 추천 이유: `; //
 
   return prompt;
 }
@@ -175,7 +177,7 @@ async function exampleMatchingPromptUsage() {
   console.log("postings: ", postings);
 
   const userPreferences = {
-    preferredDestination: "이탈리아", // 선호 여행지: 이탈리아
+    preferredDestination: "없음", // 선호 여행지: 이탈리아
     preferredAge: { min: 15, max: 20 }, // 선호 연령대: 15세~20세
     preferredGender: "여성", // 선호 성별: 여성
     preferredBudgetRange: { min: 4000000, max: 6000000 }, // 선호 예산 범위: 400만원~600만원
@@ -196,17 +198,15 @@ async function exampleMatchingPromptUsage() {
   );
   console.log("matching", matching);
 
-  // //   if (
-  // //     recommendedPostId &&
-  // //     recommendedPostId !== "매칭되는 게시글 없음" &&
-  // //     !isNaN(recommendedPostId)
-  // //   ) {
-  // //     alert(`추천 게시글 ID: ${recommendedPostId}`); // 추천 게시글 ID 알림 (UI에 표시)
-  // //     // window.location.href = `detail.html?id=${recommendedPostId}`; // 상세 페이지로 이동 (구현 필요)
-  // //   } else if (recommendedPostId === "매칭되는 게시글 없음") {
-  // //     alert("사용자 선호도에 맞는 게시글을 찾을 수 없습니다.");
-  // //   } else {
-  // //     alert("답변 분석 실패 또는 추천 게시글 ID를 추출할 수 없습니다."); // LLM 응답 형식 에러 또는 기타 문제 발생 시 알림
+  //   const extractedPostId = parsingMatching(matching);
+
+  //   if (extractedPostId) {
+  //     console.log("추천 게시글 ID:", extractedPostId);
+
+  //     // window.location.href = `detail.html?id=${extractedPostId}`; // 상세 페이지로 이동 (원하는 동작)
+  //   } else {
+  //     alert("추천 게시글 ID를 파싱하지 못했습니다.");
+  //     console.error("추천 게시글 ID 파싱 실패"); // 에러 로그
   //   }
 }
 

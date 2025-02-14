@@ -1,11 +1,4 @@
-import {
-  supabase,
-  mateTable,
-  tsTable,
-  ptsTable,
-  matebucketName,
-  folderName,
-} from "./config.js";
+import { supabase, mateTable, ptsTable, matebucketName } from "./config.js";
 
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");

@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+
       await saveComment(postingId, commentContent, data.user.id);
       document.getElementById("comment-content").value = ""; // 입력창 초기화
     });
@@ -49,6 +50,7 @@ async function saveComment(postingId, content, userId, parentCommentId = null) {
         },
       ])
       .select(); // 삽입된 데이터 반환
+
 
     if (error) {
       console.error("댓글 저장 실패:", error);

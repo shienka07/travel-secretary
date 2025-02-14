@@ -309,6 +309,7 @@ function filterPosting(postings, filters) {
     if (!isOpenStatusChecked && !isClosedStatusChecked) {
       return true; //  모집 상태 필터 무시 (둘 다 체크 X)
     }
+
     if (isOpenStatusChecked && !posting.state) {
       return false;
     }

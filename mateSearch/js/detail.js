@@ -1,10 +1,12 @@
 import { supabase, mateTable, ptsTable, matebucketName } from "./config.js";
 
-
-import { checkLogin,getProfile,logout } from "../../js/auth.js";
+import { checkLogin, getProfile, logout } from "../../js/auth.js";
 
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");
+const completeBtn = document.querySelector("#complete-btn");
+
+import { loadComments } from "./comment.js";
 
 async function getUserInfo() {
   const { data: userInfo, error } = await supabase.auth.getUser();
@@ -25,6 +27,27 @@ function setupEventListeners(postingId) {
   deleteBtn.addEventListener("click", () => {
     if (confirm("게시글을 삭제하시겠습니까?")) handleDelete(postingId);
   });
+  completeBtn.addEventListener("click", () => {
+    if (confirm("모집완료 처리하시겠습니까?")) handleComplete(postingId);
+  });
+}
+
+async function handleComplete(postingId) {
+  try {
+    const { error: completeError } = await supabase
+      .from(mateTable)
+      .update({ state: false })
+      .eq("id", postingId);
+
+    if (completeError) {
+      console.error("모집완료 처리 실패: ", completeError);
+      return;
+    }
+    console.log("모집완료 처리 성공: ", postingId);
+    window.location.reload();
+  } catch (error) {
+    console.error("모집 완료 처리 중 오류: ", error);
+  }
 }
 
 async function handleDelete(postingId) {
@@ -49,6 +72,7 @@ function redirectToPage(url) {
 }
 
 async function fetchPostingDetail(postingId, userId) {
+  console.log(postingId);
   try {
     const { data: posting, error } = await supabase
       .from(mateTable)
@@ -91,6 +115,10 @@ async function fetchPostingDetail(postingId, userId) {
     if (posting.user_id === userId) {
       editBtn.removeAttribute("hidden");
       deleteBtn.removeAttribute("hidden");
+
+      if (posting.state) {
+        completeBtn.removeAttribute("hidden");
+      }
     }
   } catch (error) {
     console.error("게시글 상세 정보 조회 중 오류:", error);
@@ -210,36 +238,46 @@ function getFormattedDateTime(dateString) {
 }
 
 async function initializePage() {
-  const islogined = await checkLogin()
-  if (!islogined){
-      window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-      alert("로그인이 필요합니다");
+  const islogined = await checkLogin();
+  if (!islogined) {
+    window.location.href =
+      "https://aibe-chill-team.github.io/travel-secretary/";
+    alert("로그인이 필요합니다");
   }
 
   const username = localStorage.getItem("username") || "Guest";
-    document.getElementById("username").textContent = username + " 님";
+  document.getElementById("username").textContent = username + " 님";
 
-    if(localStorage.getItem("profile_img"))
-    {
-        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
-    }
-    else{
-        const data = await getProfile();
-        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
-    }
+  if (localStorage.getItem("profile_img")) {
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      localStorage.getItem("profile_img");
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  } else {
+    const data = await getProfile();
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      data.image_url;
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  }
 
-    document.getElementById("logout").addEventListener("click", async (event) => {
-        event.preventDefault();
-        await logout();
-        window.location.href = "../index.html"
-    });
-  
+  document.getElementById("logout").addEventListener("click", async (event) => {
+    event.preventDefault();
+    await logout();
+    window.location.href = "../index.html";
+  });
+
   const urlParams = new URLSearchParams(window.location.search);
   const postingId = urlParams.get("id");
+
+  const islogined = await checkLogin();
+  if (!islogined) {
+    window.location.href =
+      "https://aibe-chill-team.github.io/travel-secretary/";
+    alert("로그인이 필요합니다");
+  }
 
   if (!postingId) {
     alert("잘못된 접근입니다.");

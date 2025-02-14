@@ -70,7 +70,6 @@ async function saveComment(postingId, content, userId, parentCommentId = null) {
 }
 
 async function updateCommentsUIAfterSave(newComment, parentCommentId) {
-  const { data: currentUser } = await supabase.auth.getUser();
   const { data: commentUserInfo } = await supabase
     .from("userinfo")
     .select("username")

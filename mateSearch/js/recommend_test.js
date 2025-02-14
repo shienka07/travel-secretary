@@ -176,9 +176,9 @@ async function exampleMatchingPromptUsage() {
 
   const userPreferences = {
     preferredDestination: "이탈리아", // 선호 여행지: 이탈리아
-    preferredAge: { min: 15, max: 20 }, // 선호 연령대: 15세~20세
-    preferredGender: "여성", // 선호 성별: 여성
-    preferredBudgetRange: { min: 4000000, max: 6000000 }, // 선호 예산 범위: 400만원~600만원
+    preferredAgeRange: { min: 20, max: 25 }, // 선호 연령대: 15세~20세
+    preferredGender: "남성", // 선호 성별: 여성
+    preferredBudgetRange: { min: 2000000, max: 4000000 }, // 선호 예산 범위: 400만원~600만원
   };
 
   console.log();

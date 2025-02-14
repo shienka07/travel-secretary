@@ -9,12 +9,7 @@ import {
 } from "./config.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
-import { checkLogin } from "../../js/auth.js";
-const islogined = await checkLogin()
-if (!islogined){
-    window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-    alert("로그인이 필요합니다");
-}
+import { checkLogin,getProfile,logout } from "../../js/auth.js";
 
 const form = document.querySelector("#editForm");
 const cancelBtn = document.querySelector("#cancelWriteBtn");
@@ -183,7 +178,7 @@ async function handleSubmit(event, postId) {
     }
 
     alert("게시글 수정 완료!");
-    window.location.href = `detail.html?id=${postId}`; // TODO
+    window.location.href = `./detail.html?id=${postId}`; // TODO
   } catch (error) {
     console.error("게시글 수정 중 오류:", error);
     alert("게시글 수정 중 오류가 발생했습니다.");
@@ -205,6 +200,34 @@ function handleImageChange(event) {
 // 초기화
 async function initializeEdit(postId) {
   try {
+    const islogined = await checkLogin()
+    if (!islogined){
+        window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
+        alert("로그인이 필요합니다");
+    }
+
+    const username = localStorage.getItem("username") || "Guest";
+    document.getElementById("username").textContent = username + " 님";
+
+    if(localStorage.getItem("profile_img"))
+    {
+        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
+        const profile = document.querySelector("#profile");
+        profile.src = profile_img;
+    }
+    else{
+        const data = await getProfile();
+        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
+        const profile = document.querySelector("#profile");
+        profile.src = profile_img;
+    }
+
+    document.getElementById("logout").addEventListener("click", async (event) => {
+        event.preventDefault();
+        await logout();
+        window.location.href = "../index.html"
+    });
+
     await postingService.checkAuth();
     await fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");
 
@@ -224,7 +247,7 @@ async function initializeEdit(postId) {
   } catch (error) {
     console.error("초기화 오류:", error);
     alert("페이지 로드 중 오류가 발생했습니다.");
-    window.location.href = "index.html"; // TODO
+    window.location.href = "./index.html"; // TODO
   }
 }
 
@@ -234,7 +257,7 @@ const postId = urlParams.get("id");
 
 if (!postId) {
   alert("게시글 ID가 필요합니다.");
-  window.location.href = "index.html";
+  window.location.href = "./index.html";
 } else {
   document.addEventListener("DOMContentLoaded", () => initializeEdit(postId));
 }

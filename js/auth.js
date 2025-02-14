@@ -60,7 +60,7 @@ async function signup(email, password, username) {
       }
     await supabase.auth.signOut();
     alert("회원가입 성공! 로그인 페이지로 이동합니다.");
-    window.location.href = "login.html";
+    window.location.href = "./login.html";
     
 }
 async function getNickname(){
@@ -123,6 +123,7 @@ async function checkLogin() {
 async function logout() {
     await supabase.auth.signOut();
     localStorage.removeItem("username")
+    localStorage.removeItem("profile_img")
     alert('로그아웃되었습니다.');
 }
 

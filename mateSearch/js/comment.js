@@ -2,17 +2,7 @@ import { supabase, cmtTable } from "./config.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  // const postingId = urlParams.get("id");
-  const postingId = 2;
-
-  if (!postingId) {
-    console.warn("❌ 댓글 기능: postingId 없음. 댓글 기능을 비활성화합니다.");
-    return;
-  }
-
-  console.log("✅ 댓글 기능 활성화. 게시글 ID:", postingId);
-
-  await loadComments(postingId);
+  const postingId = urlParams.get("id");
 
   // ✅ 댓글 작성 버튼 클릭 이벤트 추가
   const commentButton = document.getElementById("comment-submit-btn");
@@ -25,12 +15,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("댓글 내용을 입력해주세요!");
         return;
       }
-
-      // const { data: user } = await supabase.auth.getUser();
-      // if (!user || !user.id) {
-      //   alert("로그인이 필요합니다!");
-      //   return;
-      // }
 
       console.log("✅ 댓글 저장 시도:", {
         post_id: postingId,
@@ -51,7 +35,9 @@ async function saveComment(postingId, content) {
   try {
     const {data, error:authError} = await supabase.auth.getUser();
 
-    const { error } = await supabase.from(cmtTable).insert([
+    const { error } = await supabase
+    .from(cmtTable)
+    .insert([
       {
         post_id: postingId,
         user_id: data.user.id,
@@ -145,4 +131,6 @@ async function loadComments(postingId) {
     commentElement.appendChild(editButton);
     commentsContainer.appendChild(commentElement);
   });
+  
 }
+export {loadComments};

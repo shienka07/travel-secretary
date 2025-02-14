@@ -11,6 +11,7 @@
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./css/comment.css" />
   </head>
   <body>
     <div class="container mt-5">
@@ -100,7 +101,7 @@
           <p class="mb-0 text-end" id="detail-created-at"></p>
         </div>
 
-        <!-- ✅ 댓글 입력 폼 -->
+        <!-- 댓글 입력 폼 -->
         <div class="container mt-4">
           <h5>💬 댓글</h5>
           <div id="comments-container" class="mb-3">
@@ -114,13 +115,15 @@
               rows="3"
               placeholder="댓글을 입력하세요"
             ></textarea>
-            <button
-              id="comment-submit-btn"
-              type="button"
-              class="btn btn-primary mt-2"
-            >
-              댓글 작성
-            </button>
+            <div class="comment-submit-container">
+              <button
+                id="comment-submit-btn"
+                type="button"
+                class="btn btn-primary"
+              >
+                댓글 작성
+              </button>
+            </div>
           </form>
         </div>
       </div>

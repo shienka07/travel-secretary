@@ -7,8 +7,8 @@ import {
   folderName,
 } from "./config.js";
 
-const editBtn = document.querySelector("#edit-btn");
-const deleteBtn = document.querySelector("#delete-btn");
+
+import { loadComments } from "./comment.js";
 
 async function getUserInfo() {
   const { data: userInfo, error } = await supabase.auth.getUser();

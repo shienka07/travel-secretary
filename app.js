@@ -3,7 +3,6 @@ import { checkLogin, logout, getProfile, getNickname, getImagePath } from "./js/
   if(bool){
     var data = await getProfile();
   }
-  
   async function updateLoginUI(isLoggedIn) {
     const afterLoginDiv = document.getElementById("afterlogin");
     afterLoginDiv.replaceChildren(); // 기존 요소 초기화

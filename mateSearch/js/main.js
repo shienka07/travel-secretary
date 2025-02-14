@@ -7,7 +7,7 @@ import {
 } from "./config.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
-import { checkLogin } from "../../js/auth.js";
+import { checkLogin, getProfile, logout } from "../../js/auth.js";
 
 let allPostings = []; // 모든 게시글 데이터를 저장할 변수 (필터링 위해)
 
@@ -158,7 +158,7 @@ function displayPostings(postings) {
       card.appendChild(cardFooter);
       // ------------------------------------------------------------✅ 경로 확인 필요
       const titleLink = document.createElement("a");
-      titleLink.href = `/travel-secretary/mateSearch/detail.html?id=${posting.id}`;
+      titleLink.href = `./detail.html?id=${posting.id}`;
       titleLink.classList.add("card-title-link");
       titleLink.style.textDecoration = "none";
 
@@ -328,6 +328,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       "https://aibe-chill-team.github.io/travel-secretary/";
     alert("로그인이 필요합니다");
   }
+
+  const username = localStorage.getItem("username") || "Guest";
+  document.getElementById("username").textContent = username + " 님";
+
+  if (localStorage.getItem("profile_img")) {
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      localStorage.getItem("profile_img");
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  } else {
+    const data = await getProfile();
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      data.image_url;
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  }
+
+  document.getElementById("logout").addEventListener("click", async (event) => {
+    event.preventDefault();
+    await logout();
+    window.location.href = "../index.html";
+  });
 
   fetchMatePostingsWithStyles(); // 게시글 목록 및 스타일 정보 가져오는 함수 호출
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");

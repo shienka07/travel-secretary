@@ -270,6 +270,7 @@ document.addEventListener("DOMContentLoaded", function () {
     locationsPopup.style.display = "block"; // 팝업 보이기
     locationsPopupOverlay.style.display = "block"; // 오버레이 보이기
     locationsPopupBtn.style.display = "block"; // 팝업 닫기 보이기
+    showToast("로딩중입니다. 잠시 기다려주십요.", "success");
   }
 
   // 두 번째 기능 (마크다운 파싱 + 로컬 스토리지 활용)
@@ -614,7 +615,9 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
     const fifthAI = async (fourthResponse) => {
-      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
+      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마십시오.
+      예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
+      예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마십시오.
 ${fourthResponse}`;
       return await callModel000(prompt);
     };

@@ -7,6 +7,9 @@ import {
 } from "./config.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
+import { checkLogin } from "../../js/auth.js";
+
+
 let allPostings = []; // 모든 게시글 데이터를 저장할 변수 (필터링 위해)
 
 async function fetchMatePostingsWithStyles() {
@@ -156,7 +159,7 @@ function displayPostings(postings) {
       card.appendChild(cardFooter);
       // ------------------------------------------------------------✅ 경로 확인 필요
       const titleLink = document.createElement("a");
-      titleLink.href = `./detail.html?id=${posting.id}`;
+      titleLink.href = `/travel-secretary/mateSearch/detail.html?id=${posting.id}`;
       titleLink.classList.add("card-title-link");
       titleLink.style.textDecoration = "none";
 
@@ -272,7 +275,7 @@ function filterPosting(postings, filters) {
       }
     }
 
-    // 여행 스타일 필터 (수정 후 - every() 로 변경)
+    // 여행 스타일 필터
     if (filters.styles && filters.styles.length > 0) {
       console.log(
         "styles 필터:",
@@ -283,12 +286,7 @@ function filterPosting(postings, filters) {
       const postingStyles = posting.styles.map(
         (style) => style.style_id.style_name
       );
-      if (
-        !filters.styles.every((filterStyle) =>
-          postingStyles.includes(filterStyle)
-        )
-      ) {
-        // every() 로 변경
+      if (!filters.styles.some((style) => postingStyles.includes(style))) {
         return false;
       }
     }
@@ -309,7 +307,6 @@ function filterPosting(postings, filters) {
     if (!isOpenStatusChecked && !isClosedStatusChecked) {
       return true; //  모집 상태 필터 무시 (둘 다 체크 X)
     }
-
     if (isOpenStatusChecked && !posting.state) {
       return false;
     }
@@ -322,7 +319,14 @@ function filterPosting(postings, filters) {
 }
 
 // 페이지 로드 시 게시글 목록 불러오기
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const islogined = await checkLogin()
+  if (!islogined){
+    
+      window.location.href = "https://aibe-chill-team.github.io/travel-secretary/";
+      alert("로그인이 필요합니다");
+  }
+  
   fetchMatePostingsWithStyles(); // 게시글 목록 및 스타일 정보 가져오는 함수 호출
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");
 

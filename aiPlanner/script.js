@@ -114,31 +114,40 @@ document.addEventListener("DOMContentLoaded", function () {
   const listItems = document.getElementById("listItems");
   const mapPopup = document.getElementById("map");
 
+  // supabase
+  const supabaseUrl = "https://frqevnyaghrnmtccnerc.supabase.co";
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ";
+  const tableName = "travel_planner";
+
   function saveMarkdown() {
     const markdown = localStorage.getItem("markdown");
     if (markdown !== null) {
-      // **********************
+      // ********************** 11111
       // 마크다운을 데이터베이스에 저장
+      // 방문장소를 데이터베이스에 저장
+      // 좌표를 데이터베이스에 저장
+      // 제목을 데이터베이스에 저장 (${travelDays}일간의 ${destination} ${travelTheme} 여행)
       // **********************
     } else {
       showToast("저장할 내용이 없습니다.", "danger");
     }
   }
 
-  // 리스트 아이템 데이터
-  // *************
-  // DB에서 불러와야함
-  // *************
-  const items = [
-    // 예시
-    { text: "리스트 1" },
-    { text: "리스트 2" },
-    { text: "리스트 3" },
-    { text: "리스트 4" },
-  ];
-
   listModal.addEventListener("shown.bs.modal", () => {
     listItems.innerHTML = ""; // 기존 리스트 초기화
+
+    // 리스트 아이템 데이터
+    // *************
+    // DB에서 제목과 id 불러오기
+    // *************
+    const items = [
+      // 예시
+      { text: "제목 1", id: "id 1" },
+      { text: "제목 2", id: "id 2" },
+      { text: "제목 3", id: "id 3" },
+      { text: "제목 4", id: "id 4" },
+    ];
 
     items.forEach((item) => {
       const li = document.createElement("li");
@@ -159,9 +168,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // 불러오기 버튼 클릭 시
       loadButton.addEventListener("click", () => {
         // *********************
-        // DB 내 해당 데이터 불러오기
-        // 불러온 데이터 출력
-        // addMsg(불러온 데이터)
+        // item.id
+        // DB 내 해당 데이터(마크다운, 방문장소, 좌표) 불러오기
+        // 방문장소, 좌표 로컬스토리지에 저장하기
+        // 불러온 마크다운 출력
+        // addMsg(불러온 마크다운)
         // *********************
         alert("불러오기");
       });
@@ -179,6 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // 삭제 버튼 클릭 시
       deleteButton.addEventListener("click", () => {
         // ******************
+        // item.id
         // DB 내 해당 데이터 삭제
         // ******************
         alert("삭제");
@@ -190,9 +202,6 @@ document.addEventListener("DOMContentLoaded", function () {
       listItems.appendChild(li);
     });
   });
-
-  const loadButton = document.querySelector(".loadButton");
-  const deleteButton = document.querySelector(".deleteButton");
 
   saveBtn.addEventListener("click", saveMarkdown);
 
@@ -252,8 +261,6 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("입력 필드를 채워주세요!", "danger");
       return;
     }
-
-    const othersInput = document.querySelector('input[name="others"]');
 
     // 버튼 비활성화
     submitBtn.disabled = true;

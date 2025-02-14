@@ -1,5 +1,5 @@
-import { checkLogin, logout, getProfile } from "../js/auth";
 
+import { checkLogin, logout, getProfile } from "../js/auth.js";
 
 const islogined = await checkLogin();
   if (!islogined) {

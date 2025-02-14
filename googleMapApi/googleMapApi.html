@@ -10,12 +10,6 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
-    <script src="./js/googleMapApi.js"></script>
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
-      async
-      defer
-    ></script>
     <style>
       #map {
         width: 100%;
@@ -71,95 +65,13 @@
       }
     </style>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="../font.css" />
-    <link rel="stylesheet" href="./css/comment.css" />
   </head>
   <body>
-    <nav>
-      <div class="container">
-        <header
-          class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
-        >
-          <div class="col-md-3 mb-2 mb-md-0">
-            <a
-              href="../index.html"
-              class="dd-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"
-            >
-              <img
-                src="https://github.com/AIBE-chill-TEAM/travel-secretary/blob/dev/assets/logo.png?raw=true"
-                style="width: 40px"
-              />
-
-            <span class="fs-4">여행 비서</span>
-          </a>
-          </div>
-
-          <ul
-            class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0"
-          >
-            <li>
-              <a
-                href="https://aibe-chill-team.github.io/travel-secretary"
-                class="nav-link px-2 link-secondary"
-                >메인</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://aibe-chill-team.github.io/travel-secretary/mateSearch/"
-                class="nav-link px-2 link-secondary"
-                >동행 구하기</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://aibe-chill-team.github.io/travel-secretary/aiPlanner/"
-                class="nav-link px-2 link-secondary"
-                >AI 여행 일정</a
-              >
-            </li>
-          </ul>
-
-          <div class="col-md-3 text-end">
-            <div class="flex-shrink-0 dropdown">
-              <a
-                href="#"
-                class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
-                data-bs-toggle="dropdown"
-                aria-expanded="true"
-              >
-                <img
-                  id="profile"
-                  src=""
-                  alt="Profile Image"
-                  width="32"
-                  height="32"
-                  class="rounded-circle"
-                />
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end text-small shadow">
-                <li><a class="dropdown-item" href="#" id="username"></a></li>
-                <hr class="dropdown-divider" />
-                <li>
-                  <a
-                    class="dropdown-item"
-                    href="https://aibe-chill-team.github.io/travel-secretary/account/myprofile.html"
-                    >마이 프로필</a
-                  >
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#">작성 글(수정 예정)</a>
-                </li>
-                <hr class="dropdown-divider" />
-                <li>
-                  <a class="dropdown-item" href="" id="logout">로그아웃</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </header>
-      </div>
-    </nav>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
     <div class="container mt-5">
       <div id="detail-box" class="card shadow-sm">
         <div id="detail-image-area">
@@ -184,14 +96,6 @@
               <button
                 type="button"
                 class="btn btn-primary btn-sm"
-                id="complete-btn"
-                hidden
-              >
-                모집완료
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
                 id="edit-btn"
                 hidden
               >
@@ -209,8 +113,7 @@
           </div>
 
           <div class="d-flex align-items-center mb-3">
-            <div id="detail-author-image-area"></div>
-            <!-- <i class="bi bi-person-circle me-2" style="font-size: 1.5rem"></i> -->
+            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem"></i>
             <p class="card-text mb-0" id="detail-author-info">
               <span id="detail-author-username"></span>
               | <span id="detail-author-gender"></span> |
@@ -289,9 +192,6 @@
               <button class="draw-route-btn" onclick="drawDayRoutes()">
                 선택 날짜 경로 그리기
               </button>
-              <!-- 저장 버튼 추가 -->
-  <button id="saveRouteBtn" class="btn btn-success">경로 저장</button>
-</div>
 
               <p class="card-text" id="detail-content">
                 <!-- 게시글 내용이 여기에 들어갑니다. -->
@@ -310,7 +210,7 @@
           <p class="mb-0 text-end" id="detail-created-at"></p>
         </div>
 
-        <!-- 댓글 입력 폼 -->
+        <!-- ✅ 댓글 입력 폼 -->
         <div class="container mt-4">
           <h5>💬 댓글</h5>
           <div id="comments-container" class="mb-3">
@@ -324,21 +224,28 @@
               rows="3"
               placeholder="댓글을 입력하세요"
             ></textarea>
-            <div class="comment-submit-container">
-              <button
-                id="comment-submit-btn"
-                type="button"
-                class="btn btn-primary"
-              >
-                댓글 작성
-              </button>
-            </div>
+            <button
+              id="comment-submit-btn"
+              type="button"
+              class="btn btn-primary mt-2"
+            >
+              댓글 작성
+            </button>
           </form>
         </div>
       </div>
     </div>
 
-    <script></script>
+    <script>
+      // 지도 초기화 // 반드시 건드리지 말것
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 37.7749, lng: -122.4194 }, // 기본 위치
+          zoom: 13,
+        });
+        geocoder = new google.maps.Geocoder();
+      }
+    </script>
 
     <link
       rel="stylesheet"
@@ -349,7 +256,7 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
-
+    <script src="googleMapApi.js"></script>
     <script type="module" src="./js/detail.js"></script>
     <script type="module" src="./js/comment.js"></script>
   </body>

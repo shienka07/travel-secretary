@@ -87,6 +87,8 @@ async function fetchPostingDetail(postingId, userId) {
 		  content,
 		  created_at,
 		  image_url,
+      locations,
+      routes,
 		  state,
 		  styles: ${ptsTable} (  
 			style_id (
@@ -246,24 +248,26 @@ async function initializePage() {
   const username = localStorage.getItem("username") || "Guest";
   document.getElementById("username").textContent = username + " 님";
 
-  if(localStorage.getItem("profile_img"))
-    {
-        const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
+  if (localStorage.getItem("profile_img")) {
+    const profile_img =
+      "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+      localStorage.getItem("profile_img");
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  } else {
+    const data = await getProfile();
+
+    if (!data.image_url == "") {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+        data.image_url;
+    } else {
+      var profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
     }
-    else{
-        const data = await getProfile();
-        
-        if(!data.image_url == ""){
-            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
-        }
-        else{
-            var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
-        }
-        const profile = document.querySelector("#profile");
-        profile.src = profile_img;
-    }
+    const profile = document.querySelector("#profile");
+    profile.src = profile_img;
+  }
 
   document.getElementById("logout").addEventListener("click", async (event) => {
     event.preventDefault();
@@ -287,4 +291,36 @@ async function initializePage() {
   fetchPostingDetail(postingId, user.id);
 }
 
-document.addEventListener("DOMContentLoaded", initializePage);
+// 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// detail.js에 추가할 코드
+
+// 저장 버튼 이벤트 리스너 설정
+function setupRouteSaveButton() {
+  const saveRouteBtn = document.getElementById("saveRouteBtn");
+  if (saveRouteBtn) {
+    saveRouteBtn.addEventListener("click", handleRouteSave);
+  }
+}
+
+// initializePage 함수 내부에 추가할 코드
+async function initializePage() {
+  // ... 기존 코드 ...
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const postingId = urlParams.get("id");
+
+  if (!postingId) {
+    alert("잘못된 접근입니다.");
+    redirectToPage("/");
+    return;
+  }
+
+  setupRouteSaveButton(); // 저장 버튼 이벤트 리스너 설정
+  const user = await getUserInfo();
+  if (!user) return;
+
+  setupEventListeners(postingId);
+  await fetchPostingDetail(postingId, user.id);
+  await loadSavedRoutes(postingId); // 저장된 경로 데이터 로드
+}
+// 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 종료

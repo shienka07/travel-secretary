@@ -1,103 +1,3 @@
-// supabase
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-const supabaseUrl = "https://frqevnyaghrnmtccnerc.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const tableName = "travel_planner";
-
-// 삽입
-async function addDBData(userId, name, content, location, dailyPlaces) {
-  const { data, error } = await supabase.from(tableName).insert([
-    {
-      user_id: userId,
-      list_name: name,
-      list_content: content,
-      list_location: location,
-      list_daily_places: dailyPlaces,
-    },
-  ]);
-
-  if (error) {
-    console.error("❌ 데이터 삽입 실패:", error);
-  } else {
-    console.log("✅ 데이터 삽입 성공:", data);
-  }
-}
-
-// userId로 조회
-async function getDBDataByUserId(user_id) {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select("*")
-    .eq("user_id", user_id);
-
-  if (error) {
-    console.error("❌ 데이터 조회 실패:", error);
-  } else {
-    console.log("✅ 데이터 조회 성공:", data);
-  }
-}
-
-// id로 조회
-async function getDBDataById(id) {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select("*")
-    .eq("id", id);
-
-  if (error) {
-    console.error("❌ 데이터 조회 실패:", error);
-  } else {
-    console.log("✅ 데이터 조회 성공:", data);
-  }
-}
-
-// 로그인된 id 조회
-async function getId() {
-  const { data, error } = await supabase.auth.getUser(); // 로그인된 유저 정보 가져오기
-
-  if (error) {
-    console.error("❌ 유저 정보 가져오기 실패:", error);
-    return null; // 로그인되지 않은 경우 null 반환
-  }
-
-  if (!data || !data.user) {
-    console.log("❌ 로그인된 유저가 없습니다.");
-    return null; // 로그인된 유저가 없을 경우 null 반환
-  }
-
-  const { data: userInfo, error: userError } = await supabase
-    .from("userinfo")
-    .select("*")
-    .eq("id", data.user.id); // 로그인된 유저의 ID로 userinfo 테이블에서 조회
-
-  if (userError) {
-    console.error("❌ userinfo 테이블에서 유저 조회 실패:", userError);
-    return null;
-  }
-
-  if (userInfo && userInfo.length > 0) {
-    return userInfo[0].id; // 유저의 ID 반환
-  } else {
-    console.log("❌ 해당 ID의 유저 정보가 없습니다.");
-    return null;
-  }
-}
-
-// 삭제
-async function deleteDBData(id) {
-  const { data, error } = await supabase.from(tableName).delete().eq("id", id); // 특정 여행 계획 삭제
-
-  if (error) {
-    console.error("❌ 데이터 삭제 실패:", error);
-  } else {
-    console.log("✅ 데이터 삭제 성공:", data);
-  }
-}
-
 // 구글맵 API 키
 const googlemapAPiKey = "AIzaSyDv3p4H66gnGpN3DtDd7lpMWSkeOGiObUY";
 
@@ -214,19 +114,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const listItems = document.getElementById("listItems");
   const mapPopup = document.getElementById("map");
 
-  function saveMarkdown() {
-    const markdownDB = localStorage.getItem("markdown");
-    if (markdownDB !== null) {
-      const arrayDB = localStorage.getItem("array");
-      const locationDB = localStorage.getItem("location");
-      const submitDataDB = localStorage.getItem("submitData");
-      const nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
+  // supabase
+  const supabaseUrl = "https://frqevnyaghrnmtccnerc.supabase.co";
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZycWV2bnlhZ2hybm10Y2NuZXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNTk4MDIsImV4cCI6MjA1NDgzNTgwMn0.1ITu6ie5GxJE_mf_a-G5kblLoY_5kYStt6EBxf8drPQ";
+  const tableName = "travel_planner";
 
+  function saveMarkdown() {
+    const markdown = localStorage.getItem("markdown");
+    if (markdown !== null) {
+      // ********************** 11111
       // 마크다운을 데이터베이스에 저장
       // 방문장소를 데이터베이스에 저장
       // 좌표를 데이터베이스에 저장
       // 제목을 데이터베이스에 저장 (${travelDays}일간의 ${destination} ${travelTheme} 여행)
-      addDBData(getId(), nameDB, markdownDB, locationDB, arrayDB);
+      // **********************
     } else {
       showToast("저장할 내용이 없습니다.", "danger");
     }
@@ -236,17 +138,16 @@ document.addEventListener("DOMContentLoaded", function () {
     listItems.innerHTML = ""; // 기존 리스트 초기화
 
     // 리스트 아이템 데이터
-    // ************* 22222
+    // *************
     // DB에서 제목과 id 불러오기
     // *************
-    const items = JSON.parse(getDBDataByUserId(getId()));
-    // const items = [
-    //   // 예시
-    //   { text: "제목 1", id: "id 1" },
-    //   { text: "제목 2", id: "id 2" },
-    //   { text: "제목 3", id: "id 3" },
-    //   { text: "제목 4", id: "id 4" },
-    // ];
+    const items = [
+      // 예시
+      { text: "제목 1", id: "id 1" },
+      { text: "제목 2", id: "id 2" },
+      { text: "제목 3", id: "id 3" },
+      { text: "제목 4", id: "id 4" },
+    ];
 
     items.forEach((item) => {
       const li = document.createElement("li");
@@ -257,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const span = document.createElement("span");
       span.style.flexGrow = "1"; // span이 남은 공간을 모두 차지
-      span.textContent = item.list_name; // 리스트 텍스트 표시
+      span.textContent = item.text; // 리스트 텍스트 표시
 
       const loadButton = document.createElement("button");
       loadButton.textContent = "불러오기";
@@ -266,11 +167,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 불러오기 버튼 클릭 시
       loadButton.addEventListener("click", () => {
+        // *********************
+        // item.id
+        // DB 내 해당 데이터(마크다운, 방문장소, 좌표) 불러오기
         // 방문장소, 좌표 로컬스토리지에 저장하기
-        localStorage.setItem("", item.list_daily_places);
-        localStorage.setItem("", item.location);
+        // 불러온 마크다운 출력
         // addMsg(불러온 마크다운)
-        addMsg(item.list_content);
+        // *********************
+        alert("불러오기");
       });
 
       const deleteButton = document.createElement("button");
@@ -285,8 +189,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 삭제 버튼 클릭 시
       deleteButton.addEventListener("click", () => {
+        // ******************
+        // item.id
         // DB 내 해당 데이터 삭제
-        deleteDBData(item.id);
+        // ******************
+        alert("삭제");
       });
 
       li.appendChild(span);

@@ -6,7 +6,7 @@ import {
   matebucketName,
   folderName,
 } from "./config.js";
-
+import { loadComments } from "./comment.js";
 // const { userInfo, error: authError } = await supabase.auth.getUser();
 // console.log("userInfo", userInfo);
 
@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 3. 'id' 파라미터 값 추출
   const postingId = urlParams.get("id");
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
+
+  await loadComments(postingId);
 
   if (postingId) {
     console.log(

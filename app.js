@@ -43,7 +43,7 @@ import { checkLogin, logout, getProfile, getNickname, getImagePath } from "./js/
         const menuItems = [
             "user",
             "divider",
-            { text: "마이 프로필", href: "#" },
+            { text: "마이 프로필", href: "./account/myprofile.html" },
             { text: "작성 글", href: "#" },
             "divider",
             { text: "로그아웃", href: "#" }
@@ -114,8 +114,8 @@ async function load() {
   if (bool){
     
     if (!localStorage.getItem("username")){
-          const username = await getNickname();
-          localStorage.setItem("username", username);
+          localStorage.setItem("username", data.username);
+          localStorage.setItem("profile_img", data.image_url);
         }
 
     if (data.gender == null){

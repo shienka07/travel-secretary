@@ -16,10 +16,6 @@ const imageInput = document.querySelector("#imageUrl");
 
 // 게시글 작성 관련
 const postingService = {
-  // async loadDefaultImage() {
-  // const {data: image, error: loadError} = await supabase.storage
-  // .from(matebucketName).download()
-
   async checkAuth() {
     const { data: userInfo, error: authError } = await supabase.auth.getUser();
     if (authError) throw new Error("인증 오류 발생");
@@ -58,7 +54,12 @@ const postingService = {
 
       if (postingError) {
         console.error("게시글 작성 실패:", postingError);
-        alert("게시글 작성에 실패했습니다.");
+        // alert("게시글 작성에 실패했습니다.");
+        Swal.fire({
+          icon: "error",
+          text: "게시글 작성에 실패했습니다.",
+        });
+
         return;
       }
       return postingData.id;
@@ -105,7 +106,11 @@ const postingService = {
 
 function isValidDateRange(startDate, endDate) {
   if (!startDate || !endDate) {
-    alert("시작 날짜와 종료 날짜를 모두 입력해주세요.");
+    Swal.fire({
+      icon: "warning",
+      text: "시작 날짜와 종료 날짜를 모두 입력해주세요.",
+    });
+    // alert("시작 날짜와 종료 날짜를 모두 입력해주세요.");
     return false;
   }
 
@@ -117,19 +122,31 @@ function isValidDateRange(startDate, endDate) {
   const maxAllowedYear = currentYear + 2; // 최대 허용 년도를 현재 년도 + 2년으로 설정
 
   if (startDateObj > endDateObj) {
-    alert("종료 날짜는 시작 날짜 이후여야 합니다.");
+    // alert("종료 날짜는 시작 날짜 이후여야 합니다.");
+    Swal.fire({
+      icon: "warning",
+      text: "종료 날짜는 시작 날짜 이후여야 합니다.",
+    });
     return false;
   }
 
   if (startDateObj < today || endDateObj < today) {
-    alert("시작 날짜와 종료 날짜는 오늘 이후로 선택해주세요.");
+    // alert("시작 날짜와 종료 날짜는 오늘 이후로 선택해주세요.");
+    Swal.fire({
+      icon: "warning",
+      text: "시작 날짜와 종료 날짜는 오늘 이후로 선택해주세요.",
+    });
     return false;
   }
 
   if (endDateObj.getFullYear() > maxAllowedYear) {
-    alert(
-      `최대 허용 년도는 ${maxAllowedYear}년입니다. ${maxAllowedYear}년 이하로 선택해주세요.`
-    );
+    // alert(
+    //   `최대 허용 년도는 ${maxAllowedYear}년입니다. ${maxAllowedYear}년 이하로 선택해주세요.`
+    // );
+    Swal.fire({
+      icon: "warning",
+      text: `최대 허용 년도는 ${maxAllowedYear}년입니다. ${maxAllowedYear}년 이하로 선택해주세요.`,
+    });
     return false;
   }
 
@@ -138,6 +155,7 @@ function isValidDateRange(startDate, endDate) {
 
 // 폼 제출 처리
 async function handleSubmit(event) {
+  console.log("handleSubmit");
   event.preventDefault();
 
   const formData = new FormData(mateForm);
@@ -172,6 +190,7 @@ async function handleSubmit(event) {
 
     // 게시글 생성
     const postingId = await postingService.createPosting(postData);
+    console.log(postingId);
 
     // 여행 스타일 연결
     const styles = formData.getAll("styles");
@@ -179,11 +198,22 @@ async function handleSubmit(event) {
       await postingService.linkTravelStyles(postingId, styles);
     }
 
-    alert("게시글 작성 완료!");
+    // alert("게시글 작성 완료!");
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "게시글이 작성되었습니다.",
+      showConfirmButton: false,
+      timer: 1500,
+    });
     window.location.href = "./index.html"; // TODO
   } catch (error) {
     console.error("게시글 작성 중 오류:", error);
-    alert("게시글 작성 중 오류가 발생했습니다.");
+    // alert("게시글 작성 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "게시글 작성 중 오류가 발생했습니다.",
+    });
   }
 }
 
@@ -192,9 +222,13 @@ async function initializePosting() {
   try {
     const islogined = await checkLogin();
     if (!islogined) {
-      window.location.href =
-        "https://aibe-chill-team.github.io/travel-secretary/";
-      alert("로그인이 필요합니다");
+      Swal.fire({
+        icon: "warning",
+        text: "로그인이 필요합니다.",
+        confirmButtonText: "확인",
+      }).then(() => {
+        window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+      });
     }
 
     const username = localStorage.getItem("username") || "Guest";
@@ -229,14 +263,6 @@ async function initializePosting() {
         window.location.href = "../index.html";
       });
 
-    document
-      .getElementById("logout")
-      .addEventListener("click", async (event) => {
-        event.preventDefault();
-        await logout();
-        window.location.href = "../index.html";
-      });
-
     await postingService.checkAuth();
     await fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");
 
@@ -244,7 +270,11 @@ async function initializePosting() {
     cancelBtn.addEventListener("click", () => window.history.back());
   } catch (error) {
     console.error("초기화 오류:", error);
-    alert("페이지 로드 중 오류가 발생했습니다.");
+    // alert("페이지 로드 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "페이지 로드 중 오류가 발생했습니다.",
+    });
     window.location.href = "./index.html"; // TODO
   }
 }

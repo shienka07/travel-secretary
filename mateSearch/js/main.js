@@ -46,7 +46,11 @@ async function fetchMatePostingsWithStyles() {
 
     if (error) {
       console.error("게시글 목록 및 스타일 조회 실패:", error);
-      alert("게시글 목록을 불러오는 데 실패했습니다.");
+      // alert("게시글 목록을 불러오는 데 실패했습니다.");
+      Swal.fire({
+        icon: "error",
+        text: "게시글 목록을 불러오는 데 실패했습니다.",
+      });
       return;
     }
 
@@ -54,7 +58,11 @@ async function fetchMatePostingsWithStyles() {
     displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
   } catch (error) {
     console.error("게시글 목록 및 스타일 조회 중 오류:", error);
-    alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
+    // alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "게시글 목록을 불러오는 중 오류가 발생했습니다.",
+    });
   }
 }
 
@@ -316,9 +324,13 @@ function filterPosting(postings, filters) {
 document.addEventListener("DOMContentLoaded", async () => {
   const islogined = await checkLogin();
   if (!islogined) {
-    window.location.href =
-      "https://aibe-chill-team.github.io/travel-secretary/";
-    alert("로그인이 필요합니다");
+    Swal.fire({
+      icon: "warning",
+      text: "로그인이 필요합니다.",
+      confirmButtonText: "확인",
+    }).then(() => {
+      window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+    });
   }
 
   const username = localStorage.getItem("username") || "Guest";
@@ -355,7 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");
 
   document.querySelector("#writeBtn").addEventListener("click", () => {
-    console.log("write");
+    // console.log("write");
     window.location.href = "./write.html";
   });
 
@@ -376,7 +388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.querySelectorAll('#styleFilters input[type="checkbox"]:checked')
     ).map((checkbox) => checkbox.value);
 
-    // ✅ 예산 추가
+    // TODO: 예산 추가
 
     const filters = {
       locationType: locationTypeFilter,

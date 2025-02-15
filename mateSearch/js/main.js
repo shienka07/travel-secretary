@@ -42,11 +42,15 @@ async function fetchMatePostingsWithStyles() {
       )
     `
       )
-      .order("created_at", { ascending: false }); // 최신글 먼저
+      .order("id", { ascending: false }); // 최신글 먼저
 
     if (error) {
       console.error("게시글 목록 및 스타일 조회 실패:", error);
-      alert("게시글 목록을 불러오는 데 실패했습니다.");
+      // alert("게시글 목록을 불러오는 데 실패했습니다.");
+      Swal.fire({
+        icon: "error",
+        text: "게시글 목록을 불러오는 데 실패했습니다.",
+      });
       return;
     }
 
@@ -54,7 +58,11 @@ async function fetchMatePostingsWithStyles() {
     displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
   } catch (error) {
     console.error("게시글 목록 및 스타일 조회 중 오류:", error);
-    alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
+    // alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "게시글 목록을 불러오는 중 오류가 발생했습니다.",
+    });
   }
 }
 
@@ -95,46 +103,6 @@ function displayPostings(postings) {
       });
       imgArea.appendChild(imageElement);
 
-      // const cardBody = document.createElement("div");
-      // cardBody.classList.add("card-body");
-      // card.appendChild(cardBody);
-
-      // const infoArea = document.createElement("div");
-      // // infoArea.classList.add("info-area", "p-3");
-      // infoArea.classList.add("card-text");
-      // cardBody.appendChild(infoArea);
-
-      // const authorInfoElement = document.createElement("p");
-      // const genderText =
-      //   posting.userInfo?.gender === 1
-      //     ? "남성"
-      //     : posting.userInfo?.gender === 2
-      //     ? "여성"
-      //     : "미제공"; // 삼항 연산자
-      // authorInfoElement.innerHTML = `${genderText}  | 나이: ${
-      //   posting.userInfo?.age || "미제공"
-      // }`;
-      // infoArea.appendChild(authorInfoElement);
-
-      // const destinationElement = document.createElement("p");
-      // destinationElement.textContent = `여행지: ${posting.destination}`;
-      // infoArea.appendChild(destinationElement);
-
-      // const peopleElement = document.createElement("p");
-      // peopleElement.textContent = `모집인원수: ${posting.people} 명`;
-      // infoArea.appendChild(peopleElement);
-
-      // const budgetElement = document.createElement("p");
-      // const formattedBudget = posting.budget
-      //   ? parseInt(posting.budget).toLocaleString()
-      //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
-      // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
-      // infoArea.appendChild(budgetElement);
-
-      // const dateElement = document.createElement("p");
-      // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
-      // infoArea.appendChild(dateElement);
-
       const cardFooter = document.createElement("div");
       cardFooter.classList.add("card-footer", "p-3");
       card.appendChild(cardFooter);
@@ -147,11 +115,18 @@ function displayPostings(postings) {
       const statusText = posting.state ? "모집중" : "모집 완료";
       // const isDomesticText = posting.is_domestic ? "국내" : "해외";
       const destinationText = posting.destination;
+      const genderText =
+        posting.userInfo?.gender === 1
+          ? "남"
+          : posting.userInfo?.gender === 2
+          ? "여"
+          : "미제공";
+      const ageText = posting.userInfo?.age || "미제공";
 
       const titleFullElement = document.createElement("h6");
       titleFullElement.classList.add("mb-2");
       titleFullElement.style.fontWeight = 700;
-      titleFullElement.textContent = `[${statusText}] ${destinationText}`;
+      titleFullElement.textContent = `[${statusText}] ${destinationText} (${genderText}/${ageText})`;
 
       const MAX_LENGTH = 15;
       const titleElement = document.createElement("p");
@@ -160,16 +135,14 @@ function displayPostings(postings) {
         posting.title.length > MAX_LENGTH
           ? posting.title.substring(0, MAX_LENGTH) + "..."
           : posting.title;
-      // titleElement.textContent = posting.title;
-      // titleFullElement.appendChild(titleElement);
       titleLink.appendChild(titleFullElement);
       titleLink.appendChild(titleElement);
       cardFooter.appendChild(titleLink);
 
-      // const contentElement = document.createElement("p");
-      // contentElement.classList.add("card-text");
-      // contentElement.textContent = posting.content;
-      // cardFooter.appendChild(contentElement);
+      const textElement = document.createElement("p");
+      textElement.textContent = `${posting.start_date} ~ ${posting.end_date}`;
+      textElement.style.fontSize = "0.8em";
+      cardFooter.appendChild(textElement);
 
       const stylesElement = document.createElement("div");
       stylesElement.classList.add("styles-tags", "mt-3");
@@ -195,7 +168,7 @@ function filterPosting(postings, filters) {
   return postings.filter((posting) => {
     // 국내/국외 필터
     if (filters.locationType) {
-      console.log("locationType 필터:", filters.locationType);
+      // console.log("locationType 필터:", filters.locationType);
       if (filters.locationType === "domestic" && !posting.is_domestic) {
         return false;
       }
@@ -283,29 +256,25 @@ function filterPosting(postings, filters) {
     }
 
     // 모집 상태 필터
-    const isOpenStatusChecked =
-      document.getElementById("statusOpenFilter").checked;
-    const isClosedStatusChecked =
-      document.getElementById("statusClosedFilter").checked;
-    console.log(
-      "모집 상태 필터: 오픈:",
-      isOpenStatusChecked,
-      "마감:",
-      isClosedStatusChecked,
-      "게시글 상태:",
-      posting.state
-    );
-    if (!isOpenStatusChecked && !isClosedStatusChecked) {
-      return true; //  모집 상태 필터 무시 (둘 다 체크 X)
-    }
-    if (isOpenStatusChecked && !posting.state) {
-      return false;
-    }
-    if (isClosedStatusChecked && posting.state) {
-      return false;
-    }
-    if (isOpenStatusChecked && isClosedStatusChecked) {
-      return true; //
+    const stateFilter = filters.state; // "all", "true", "false" 중 하나
+
+    // console.log(
+    //   "모집 상태 필터: 선택된 값:",
+    //   stateFilter,
+    //   "게시글 상태:",
+    //   posting.state
+    // );
+
+    // if (stateFilter === "all") {
+    //   return true;
+    // } else if (stateFilter === "true") {
+    //   return posting.state === true;
+    // } else if (stateFilter === "false") {
+    //   return posting.state === false;
+    // }
+
+    if (stateFilter !== "all") {
+      return posting.state === (stateFilter === "true");
     }
 
     return true; // 모든 필터 통과 시 true 유지
@@ -316,9 +285,13 @@ function filterPosting(postings, filters) {
 document.addEventListener("DOMContentLoaded", async () => {
   const islogined = await checkLogin();
   if (!islogined) {
-    window.location.href =
-      "https://aibe-chill-team.github.io/travel-secretary/";
-    alert("로그인이 필요합니다");
+    Swal.fire({
+      icon: "warning",
+      text: "로그인이 필요합니다.",
+      confirmButtonText: "확인",
+    }).then(() => {
+      window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+    });
   }
 
   const username = localStorage.getItem("username") || "Guest";
@@ -355,28 +328,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   fetchTravelStylesAndDisplayCheckboxes("styleFilters");
 
   document.querySelector("#writeBtn").addEventListener("click", () => {
-    console.log("write");
+    // console.log("write");
     window.location.href = "./write.html";
   });
 
   const applyFiltersBtn = document.querySelector("#applyFiltersBtn");
   applyFiltersBtn.addEventListener("click", () => {
+    // const locationTypeFilter = document.querySelector(
+    //   'input[name="locationTypeFilter"]:checked'
+    // ).value;
     const locationTypeFilter = document.querySelector(
-      'input[name="locationTypeFilter"]:checked'
+      "#locationTypeFilter"
     ).value;
     const destinationFilter =
       document.querySelector("#destinationFilter").value;
     const minAgeFilter = document.querySelector("#ageFilterMin").value;
     const maxAgeFilter = document.querySelector("#ageFilterMax").value;
-    const genderFilter = document.querySelector(
-      'input[name="genderFilter"]:checked'
-    ).value;
+    // const genderFilter = document.querySelector(
+    //   'input[name="genderFilter"]:checked'
+    // ).value;
+    const genderFilter = document.querySelector("#genderFilter").value;
     const dateFilter = document.querySelector("#dateFilter").value;
     const styleFilters = Array.from(
       document.querySelectorAll('#styleFilters input[type="checkbox"]:checked')
     ).map((checkbox) => checkbox.value);
+    const stateFilter = document.querySelector("#stateFilter").value;
 
-    // ✅ 예산 추가
+    // TODO: 예산 추가
 
     const filters = {
       locationType: locationTypeFilter,
@@ -386,6 +364,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       gender: genderFilter,
       date: dateFilter,
       styles: styleFilters,
+      state: stateFilter,
     };
 
     const filteredPostings = filterPosting(allPostings, filters);
@@ -394,21 +373,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const resetFiltersBtn = document.querySelector("#resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", () => {
-    document.querySelector(
-      'input[name="locationTypeFilter"][value=""]'
-    ).checked = true;
+    // document.querySelector(
+    //   'input[name="locationTypeFilter"][value=""]'
+    // ).checked = true;
+    document.querySelector("#locationTypeFilter").value = "";
     document.querySelector("#destinationFilter").value = "";
     document.querySelector("#ageFilterMin").value = "";
     document.querySelector("#ageFilterMax").value = "";
-    document.querySelector(
-      'input[name="genderFilter"][value=""]'
-    ).checked = true;
+    // document.querySelector(
+    //   'input[name="genderFilter"][value=""]'
+    // ).checked = true;
+    document.querySelector("#genderFilter").value = "";
     document.querySelector("#dateFilter").value = "";
     document
       .querySelectorAll('#styleFilters input[type="checkbox"]')
       .forEach((checkbox) => (checkbox.checked = false));
-    document.querySelector("#statusOpenFilter").checked = false;
-    document.querySelector("#statusClosedFilter").checked = false;
+    document.querySelector("#stateFilter").value = "all";
 
     displayPostings(allPostings);
   });

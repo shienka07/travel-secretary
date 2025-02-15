@@ -23,10 +23,33 @@ function setupEventListeners(postingId) {
     redirectToPage(`./edit.html?id=${postingId}`)
   );
   deleteBtn.addEventListener("click", () => {
-    if (confirm("게시글을 삭제하시겠습니까?")) handleDelete(postingId);
+    Swal.fire({
+      // title: "게시글을 삭제하시겠습니까?",
+      text: "게시글을 삭제하시겠습니까?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDelete(postingId);
+      }
+    });
   });
+
   completeBtn.addEventListener("click", () => {
-    if (confirm("모집완료 처리하시겠습니까?")) handleComplete(postingId);
+    Swal.fire({
+      // title: "모집 완료 처리하시겠습니까?",
+      text: "모집 완료 처리하시겠습니까?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "확인",
+      cancelButtonText: "취소",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleComplete(postingId);
+      }
+    });
   });
 }
 
@@ -58,8 +81,17 @@ async function handleDelete(postingId) {
       console.error("게시글 삭제 실패: ", deleteError);
       return;
     }
-    console.log("게시글 삭제 성공: ", postingId);
-    redirectToPage("./index.html");
+    // console.log("게시글 삭제 성공: ", postingId);
+    // redirectToPage("./index.html");
+
+    Swal.fire({
+      icon: "success",
+      text: "게시글이 삭제되었습니다.", // 메시지
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      redirectToPage("./index.html");
+    });
   } catch (error) {
     console.error("게시글 삭제 중 오류: ", error);
   }
@@ -86,6 +118,7 @@ async function fetchPostingDetail(postingId, userId) {
 		  budget,
 		  content,
 		  created_at,
+      updated_at,
 		  image_url,
       locations,
       routes,
@@ -176,19 +209,6 @@ function displayDetails(posting) {
     imageElement.style.width = "300px";
     imageArea.appendChild(imageElement);
   }
-  // else {
-  //   imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
-  //   const placeholder = imageArea.querySelector(".image-placeholder");
-  //   placeholder.classList.add(
-  //     "bg-light",
-  //     "d-flex",
-  //     "justify-content-center",
-  //     "align-items-center",
-  //     "p-4"
-  //   );
-  //   placeholder.style.height = "150px";
-  //   placeholder.textContent = "No Image";
-  // }
 
   document.querySelector(
     "#detail-author-age"
@@ -198,7 +218,7 @@ function displayDetails(posting) {
   document.querySelector("#detail-people").textContent = `${posting.people} 명`;
 
   const formattedBudget = posting.budget
-    ? parseInt(posting.budget).toLocaleString()
+    ? parseInt(posting.budget).toLocaleString() + "만원"
     : "미정";
   document.querySelector("#detail-budget").textContent = formattedBudget;
 
@@ -217,8 +237,12 @@ function displayDetails(posting) {
     });
   }
 
-  document.querySelector("#detail-created-at").textContent =
-    getFormattedDateTime(posting.created_at);
+  const date = document.querySelector("#detail-created-at");
+  if (posting.created_at === posting.updated_at) {
+    date.textContent = getFormattedDateTime(posting.created_at);
+  } else {
+    date.textContent = getFormattedDateTime(posting.updated_at) + " 수정됨";
+  }
 }
 
 function getFormattedDateTime(dateString) {
@@ -241,9 +265,13 @@ function getFormattedDateTime(dateString) {
 async function initializePage() {
   const islogined = await checkLogin();
   if (!islogined) {
-    window.location.href = "../index.html";
-    // "https://aibe-chill-team.github.io/travel-secretary/";
-    alert("로그인이 필요합니다");
+    Swal.fire({
+      icon: "warning",
+      text: "로그인이 필요합니다.",
+      confirmButtonText: "확인",
+    }).then(() => {
+      window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+    });
   }
 
   const username = localStorage.getItem("username") || "Guest";
@@ -279,12 +307,21 @@ async function initializePage() {
   const urlParams = new URLSearchParams(window.location.search);
   const postingId = urlParams.get("id");
 
+  // if (!postingId) {
+  //   alert("잘못된 접근입니다.");
+  //   redirectToPage("../index.html"); // 수정
+  //   return;
+  // }
+  // console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
   if (!postingId) {
-    alert("잘못된 접근입니다.");
-    redirectToPage("../index.html"); // 수정
-    return;
+    Swal.fire({
+      icon: "warning",
+      title: "잘못된 접근입니다",
+      onfirmButtonText: "확인",
+    }).then(() => {
+      window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+    });
   }
-  console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)
   setupRouteSaveButton();
 
   const user = await getUserInfo();
@@ -353,11 +390,23 @@ async function handleRouteSave() {
 
     if (error) throw error;
 
-    alert("여행 경로가 성공적으로 저장되었습니다.");
+    // alert("여행 경로가 성공적으로 저장되었습니다.");
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "여행 경로가 성공적으로 저장되었습니다.",
+      showConfirmButton: false,
+      timer: 1500,
+    });
     console.log("저장된 데이터:", { locations, routes });
   } catch (error) {
     console.error("경로 저장 중 오류 발생:", error);
-    alert("경로 저장 중 오류가 발생했습니다: " + error.message);
+    // alert("경로 저장 중 오류가 발생했습니다: " + error.message);
+    Swal.fire({
+      icon: "error",
+      // title: "Oops...",
+      text: "경로 저장 중 오류가 발생했습니다",
+    });
   }
 }
 

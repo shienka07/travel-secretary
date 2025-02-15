@@ -209,8 +209,6 @@ async function handleSubmit(event, postId) {
       postData.image_url = await postingService.uploadImage(imageFile);
     } else if (isImageDeleted) {
       postData.image_url = DEFAULT_IMAGE_PATH; // 삭제가 확정될 때만 디폴트 이미지로
-    } else {
-      postData.image_url = posting.image_url; // 기존 이미지 유지
     }
 
     // 게시글 수정

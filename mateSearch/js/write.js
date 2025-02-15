@@ -202,11 +202,12 @@ async function handleSubmit(event) {
     Swal.fire({
       position: "center",
       icon: "success",
-      title: "게시글이 작성되었습니다.",
+      text: "게시글이 작성되었습니다.",
       showConfirmButton: false,
       timer: 1500,
+    }).then(() => {
+      window.location.href = "./index.html";
     });
-    window.location.href = "./index.html"; // TODO
   } catch (error) {
     console.error("게시글 작성 중 오류:", error);
     // alert("게시글 작성 중 오류가 발생했습니다.");
@@ -274,8 +275,9 @@ async function initializePosting() {
     Swal.fire({
       icon: "error",
       text: "페이지 로드 중 오류가 발생했습니다.",
+    }).then(() => {
+      window.location.href = "./index.html"; // TODO
     });
-    window.location.href = "./index.html"; // TODO
   }
 }
 

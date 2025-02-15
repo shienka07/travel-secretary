@@ -176,7 +176,6 @@ function displayDetails(posting) {
     imageElement.classList.add("img-fluid", "w-100");
     imageElement.style.maxHeight = "500px";
     imageElement.style.objectFit = "contain";
-    // imageElement.style.backgroundColor = "#f8f9fa";
     imageArea.appendChild(imageElement);
   }
   // else {

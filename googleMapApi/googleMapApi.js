@@ -1,35 +1,78 @@
+// googleMapApi.js
+
+// 전역 변수 선언
 let map;
 let geocoder;
 let markers = [];
-let polylines = []; // 각 날짜별 경로를 저장할 배열
-let dayCount = 1; // 초기 날짜 수
+let polylines = [];
+let dayCount = 1;
+let placesService;
+// 초기화 함수 (한 번만 정의)
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 37.7749, lng: -122.4194 },
+    zoom: 5,
+  });
+  geocoder = new google.maps.Geocoder();
+  // Places 서비스 초기화
+  placesService = new google.maps.places.PlacesService(map);
+}
 
-// 날짜별 섹션 토글
+// DOM 로드 시 이벤트 리스너 등록
+document.addEventListener("DOMContentLoaded", function () {
+  const addDayBtn = document.getElementById("addDayBtn");
+  if (addDayBtn) {
+    addDayBtn.addEventListener("click", function () {
+      dayCount++;
+      const daysContainer = document.getElementById("daysContainer");
+      const newDaySection = document.createElement("div");
+      newDaySection.className = "day-section";
+      newDaySection.innerHTML = `
+        <h3 onclick="toggleSection('day${dayCount}')">Day ${dayCount}</h3>
+        <div id="day${dayCount}" class="day-inputs">
+          <div class="place-input-container">
+            <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+            <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+          </div>
+          <button class="add-place-btn" onclick="addPlaceInput('day${dayCount}')">장소 추가</button>
+        </div>
+      `;
+      daysContainer.appendChild(newDaySection);
+    });
+  }
+
+  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  const routeSection = document.getElementById("routeSection");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      routeSection.style.display =
+        routeSection.style.display === "none" ? "block" : "none";
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", function () {
+        if (
+          routeSection.style.display === "none" ||
+          routeSection.style.display === ""
+        ) {
+          routeSection.style.display = "block";
+        } else {
+          routeSection.style.display = "none";
+        }
+      });
+    }
+  });
+});
+
 function toggleSection(dayId) {
   const section = document.getElementById(dayId);
   section.classList.toggle("hidden");
 }
 
-// 날짜 추가 버튼 클릭 시, 새로운 날짜 섹션 생성
-document.getElementById("addDayBtn").addEventListener("click", function () {
-  dayCount++;
-  const daysContainer = document.getElementById("daysContainer");
-  const newDaySection = document.createElement("div");
-  newDaySection.className = "day-section";
-  newDaySection.innerHTML = `
-    <h3 onclick="toggleSection('day${dayCount}')">Day ${dayCount}</h3>
-    <div id="day${dayCount}" class="day-inputs">
-      <div class="place-input-container">
-        <input type="text" class="place-input" placeholder="장소를 입력하세요" />
-        <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
-      </div>
-      <button class="add-place-btn" onclick="addPlaceInput('day${dayCount}')">장소 추가</button>
-    </div>
-  `;
-  daysContainer.appendChild(newDaySection);
-});
-
-// 장소 추가 버튼 클릭 시, 해당 Day에 새로운 입력 필드 추가
 function addPlaceInput(dayId) {
   const dayInputs = document.getElementById(dayId);
   const newInputContainer = document.createElement("div");
@@ -41,24 +84,32 @@ function addPlaceInput(dayId) {
   dayInputs.insertBefore(newInputContainer, dayInputs.lastElementChild);
 }
 
-// 장소 삭제 버튼 클릭 시, 해당 입력 필드 삭제
 function deletePlaceInput(button) {
   const inputContainer = button.parentElement;
   inputContainer.remove();
 }
 
-// 전체 경로 그리기
 function drawAllRoutes() {
-  clearMap(); // 지도 초기화
+  clearMap();
   const daySections = document.querySelectorAll(".day-inputs");
   daySections.forEach((section, dayIndex) => {
     drawRouteForDay(section, dayIndex);
   });
 }
 
-// 선택 날짜 경로 그리기
+function fitMapToMarkers() {
+  const bounds = new google.maps.LatLngBounds();
+  markers.forEach((marker) => bounds.extend(marker.getPosition()));
+  map.fitBounds(bounds);
+
+  // 줌 레벨이 너무 가깝거나 멀어지는 것을 방지
+  const zoom = map.getZoom();
+  if (zoom > 15) map.setZoom(15);
+  if (zoom < 7) map.setZoom(7);
+}
+
 function drawDayRoutes() {
-  clearMap(); // 지도 초기화
+  clearMap();
   const daySections = document.querySelectorAll(".day-inputs");
   daySections.forEach((section, dayIndex) => {
     if (!section.classList.contains("hidden")) {
@@ -67,14 +118,22 @@ function drawDayRoutes() {
   });
 }
 
-// 특정 Day의 경로 그리기
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 37.7749, lng: -122.4194 },
+    zoom: 13,
+  });
+  geocoder = new google.maps.Geocoder();
+  // Places 서비스 초기화
+  placesService = new google.maps.places.PlacesService(map);
+}
+
+// drawRouteForDay 함수 수정
 function drawRouteForDay(section, dayIndex) {
   const inputs = section.querySelectorAll(".place-input");
   const dayPlaces = [];
-
   let geocodePromises = [];
 
-  // 입력된 장소를 좌표로 변환
   inputs.forEach((input, placeIndex) => {
     const placeName = input.value.trim();
     if (placeName) {
@@ -82,7 +141,34 @@ function drawRouteForDay(section, dayIndex) {
         geocoder.geocode({ address: placeName }, function (results, status) {
           if (status === "OK") {
             const location = results[0].geometry.location;
-            resolve({ location, placeIndex });
+
+            // Places API로 장소 세부 정보 검색
+            const request = {
+              query: placeName,
+              fields: ["photos", "name", "formatted_address", "place_id"],
+            };
+
+            placesService.findPlaceFromQuery(
+              request,
+              (places, placesStatus) => {
+                if (
+                  placesStatus === google.maps.places.PlacesServiceStatus.OK &&
+                  places &&
+                  places.length > 0
+                ) {
+                  const place = places[0];
+                  resolve({
+                    location,
+                    placeIndex,
+                    photo: place.photos ? place.photos[0] : null,
+                    name: place.name,
+                    address: place.formatted_address,
+                  });
+                } else {
+                  resolve({ location, placeIndex });
+                }
+              }
+            );
           } else {
             reject("장소를 찾을 수 없습니다: " + placeName);
           }
@@ -92,41 +178,205 @@ function drawRouteForDay(section, dayIndex) {
     }
   });
 
-  // 모든 geocode 요청이 완료된 후 마커와 경로 그리기
   Promise.all(geocodePromises)
     .then((results) => {
-      // 인덱스 순서대로 정렬
       results.sort((a, b) => a.placeIndex - b.placeIndex);
 
-      // 정렬된 순서대로 마커와 경로 추가
       results.forEach((result, i) => {
-        const location = result.location;
         const marker = new google.maps.Marker({
           map: map,
-          position: location,
-          label: `Day ${dayIndex + 1}-${i + 1}`, // 마커에 날짜와 순서 표시
-          icon: getMarkerIcon(dayIndex), // 날짜별로 다른 마커 아이콘
+          position: result.location,
+          label: `Day ${dayIndex + 1}-${i + 1}`,
+          icon: getMarkerIcon(dayIndex),
         });
-        markers.push(marker);
-        dayPlaces.push(location);
 
-        // 지도 중심을 첫 번째 장소로 이동
+        // 정보창(InfoWindow) 생성
+        if (result.photo) {
+          const photoUrl = result.photo.getUrl({
+            maxWidth: 50,
+            maxHeight: 50,
+          });
+          const infowindow = new google.maps.InfoWindow({
+            content: `
+              <div style="
+                display: flex;
+                align-items: center;
+                background: white;
+                border-radius: 25px;
+                overflow: hidden;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                padding-right: 12px;
+              ">
+                <div style="
+                  width: 50px;
+                  height: 50px;
+                  overflow: hidden;
+                ">
+                  <img src="${photoUrl}" style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                  ">
+                </div>
+                <span style="
+                  margin-left: 8px;
+                  font-size: 12px;
+                  font-weight: 500;
+                  color: #333;
+                  white-space: nowrap;
+                  font-family: 'Arial', sans-serif;
+                ">${result.name}</span>
+              </div>
+            `,
+            pixelOffset: new google.maps.Size(0, -10),
+            disableAutoPan: true,
+          });
+
+          // 정보창 바로 표시
+          infowindow.open(map, marker);
+
+          // 마커 클릭시 상세 정보창 표시
+          marker.addListener("click", () => {
+            const detailWindow = new google.maps.InfoWindow({
+              content: `
+                <div style="
+                  max-width: 200px;
+                  background: white;
+                  border-radius: 8px;
+                  overflow: hidden;
+                  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                  font-family: 'Arial', sans-serif;
+                ">
+                  <img src="${result.photo.getUrl({
+                    maxWidth: 200,
+                    maxHeight: 150,
+                  })}" style="
+                    width: 100%;
+                    height: 150px;
+                    object-fit: cover;
+                  ">
+                  <div style="padding: 10px;">
+                    <h3 style="
+                      margin: 0;
+                      color: #333;
+                      font-size: 14px;
+                      font-weight: 600;
+                    ">${result.name}</h3>
+                    <p style="
+                      margin: 5px 0 0 0;
+                      color: #666;
+                      font-size: 12px;
+                      line-height: 1.3;
+                    ">${result.address}</p>
+                  </div>
+                </div>
+              `,
+            });
+            detailWindow.open(map, marker);
+          });
+        }
+        markers.push(marker);
+        dayPlaces.push(result.location);
+
         if (i === 0 && dayIndex === 0) {
-          map.setCenter(location);
+          map.setCenter(result.location);
         }
       });
 
-      // 경로 그리기
       if (dayPlaces.length >= 2) {
-        const polyline = new google.maps.Polyline({
+        // 메인 경로 - 두꺼운 선
+        const mainPolyline = new google.maps.Polyline({
           path: dayPlaces,
           geodesic: true,
-          strokeColor: getDayColor(dayIndex), // 날짜별로 다른 색상
-          strokeOpacity: 1.0,
-          strokeWeight: 2,
+          strokeColor: getDayColor(dayIndex),
+          strokeOpacity: 0.8, // 투명도를 0.4에서 0.8로 증가
+          strokeWeight: 4, // 선 굵기를 6에서 4로 조정
         });
-        polyline.setMap(map);
-        polylines.push(polyline);
+
+        // 경로 하이라이트 - 얇은 실선
+        const highlightPolyline = new google.maps.Polyline({
+          path: dayPlaces,
+          geodesic: true,
+          strokeColor: getDayColor(dayIndex),
+          strokeOpacity: 1,
+          strokeWeight: 3, // 선 굵기를 2에서 3으로 증가
+        });
+
+        // 애니메이션 효과를 위한 점선 경로
+        const dashedPolyline = new google.maps.Polyline({
+          path: dayPlaces,
+          geodesic: true,
+          strokeColor: getDayColor(dayIndex), // 흰색에서 해당 날짜 색상으로 변경
+          strokeOpacity: 1, // 투명도를 0.8에서 1로 증가
+          strokeWeight: 2,
+          icons: [
+            {
+              icon: {
+                path: "M 0,-1 0,1",
+                strokeOpacity: 1,
+                scale: 4, // 점선 크기를 3에서 4로 증가
+              },
+              offset: "0",
+              repeat: "20px", // 점선 간격을 15px에서 20px로 증가
+            },
+          ],
+        });
+
+        // 경로에 마우스 오버 효과 추가
+        mainPolyline.addListener("mouseover", function () {
+          this.setOptions({ strokeOpacity: 1 }); // 마우스 오버시 완전 불투명하게
+          highlightPolyline.setOptions({ strokeWeight: 4 });
+        });
+
+        mainPolyline.addListener("mouseout", function () {
+          this.setOptions({ strokeOpacity: 0.8 });
+          highlightPolyline.setOptions({ strokeWeight: 3 });
+        });
+
+        // 나머지 코드는 동일
+        let count = 0;
+        window.setInterval(() => {
+          count = (count + 1) % 200;
+          const icons = dashedPolyline.get("icons");
+          icons[0].offset = count / 2 + "%";
+          dashedPolyline.set("icons", icons);
+        }, 50);
+
+        mainPolyline.setMap(map);
+        highlightPolyline.setMap(map);
+        dashedPolyline.setMap(map);
+
+        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
+      }
+      if (markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach((marker) => bounds.extend(marker.getPosition()));
+
+        map.fitBounds(bounds);
+
+        google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+          if (this.getZoom() > 16) this.setZoom(16);
+          if (this.getZoom() < 7) this.setZoom(7);
+
+          const currentBounds = this.getBounds();
+          if (currentBounds) {
+            const ne = currentBounds.getNorthEast();
+            const sw = currentBounds.getSouthWest();
+            const latPadding = (ne.lat() - sw.lat()) * 0.1;
+            const lngPadding = (ne.lng() - sw.lng()) * 0.1;
+            const newBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(
+                sw.lat() - latPadding,
+                sw.lng() - lngPadding
+              ),
+              new google.maps.LatLng(
+                ne.lat() + latPadding,
+                ne.lng() + lngPadding
+              )
+            );
+            this.fitBounds(newBounds);
+          }
+        });
       }
     })
     .catch((error) => {
@@ -134,7 +384,6 @@ function drawRouteForDay(section, dayIndex) {
     });
 }
 
-// 지도 초기화 (마커와 경로 제거)
 function clearMap() {
   markers.forEach((marker) => marker.setMap(null));
   markers = [];
@@ -142,9 +391,8 @@ function clearMap() {
   polylines = [];
 }
 
-// 날짜별 마커 아이콘 반환
 function getMarkerIcon(dayIndex) {
-  const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
+  const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"];
   return {
     path: google.maps.SymbolPath.CIRCLE,
     fillColor: colors[dayIndex % colors.length],
@@ -154,24 +402,67 @@ function getMarkerIcon(dayIndex) {
   };
 }
 
-// 날짜별 경로 색상 반환
 function getDayColor(dayIndex) {
-  const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"]; // 색상 배열
+  const colors = [
+    "#FF6B6B", // 빨간색
+    "#4ECDC4", // 청록색
+    "#45B7D1", // 하늘색
+    "#96CEB4", // 민트색
+    "#FFEEAD", // 노란색
+    "#D4A5A5", // 분홍색
+    "#9B59B6", // 보라색
+    "#3498DB", // 파란색
+  ];
   return colors[dayIndex % colors.length];
 }
 
-// 토글 버튼 클릭 시, 여행 경로 안내 섹션 보이기/숨기기
-document
-  .getElementById("toggleRouteSectionBtn")
-  .addEventListener("click", function () {
-    const routeSection = document.getElementById("routeSection");
-    // 섹션이 보이면 숨기고, 숨겨져 있으면 보이게 함
-    if (
-      routeSection.style.display === "none" ||
-      routeSection.style.display === ""
-    ) {
-      routeSection.style.display = "block";
-    } else {
-      routeSection.style.display = "none";
+function displayRouteData(routes) {
+  const daysContainer = document.getElementById("daysContainer");
+  daysContainer.innerHTML = "";
+
+  routes.forEach((dayRoute) => {
+    const daySection = document.createElement("div");
+    daySection.className = "day-section";
+    daySection.innerHTML = `
+      <h3 onclick="toggleSection('day${dayRoute.day}')">Day ${dayRoute.day}</h3>
+      <div id="day${dayRoute.day}" class="day-inputs">
+        ${dayRoute.places
+          .map(
+            (place) => `
+          <div class="place-input-container">
+            <input type="text" class="place-input" value="${place}" />
+            <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+          </div>
+        `
+          )
+          .join("")}
+        <button class="add-place-btn" onclick="addPlaceInput('day${
+          dayRoute.day
+        }')">장소 추가</button>
+      </div>
+    `;
+    daysContainer.appendChild(daySection);
+  });
+}
+
+function collectRouteData() {
+  const routes = [];
+  const daySections = document.querySelectorAll(".day-section");
+
+  daySections.forEach((section, index) => {
+    const dayNumber = index + 1;
+    const inputs = section.querySelectorAll(".place-input");
+    const places = Array.from(inputs)
+      .map((input) => input.value.trim())
+      .filter((place) => place);
+
+    if (places.length > 0) {
+      routes.push({
+        day: dayNumber,
+        places: places,
+      });
     }
   });
+
+  return routes;
+}

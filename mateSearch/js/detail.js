@@ -81,8 +81,17 @@ async function handleDelete(postingId) {
       console.error("게시글 삭제 실패: ", deleteError);
       return;
     }
-    console.log("게시글 삭제 성공: ", postingId);
-    redirectToPage("./index.html");
+    // console.log("게시글 삭제 성공: ", postingId);
+    // redirectToPage("./index.html");
+
+    Swal.fire({
+      icon: "success",
+      text: "게시글이 삭제되었습니다.", // 메시지
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      redirectToPage("./index.html");
+    });
   } catch (error) {
     console.error("게시글 삭제 중 오류: ", error);
   }

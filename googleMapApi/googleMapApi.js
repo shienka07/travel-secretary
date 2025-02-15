@@ -41,6 +41,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  const routeSection = document.getElementById("routeSection");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      routeSection.style.display =
+        routeSection.style.display === "none" ? "block" : "none";
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     const toggleBtn = document.getElementById("toggleRouteSectionBtn");
     if (toggleBtn) {

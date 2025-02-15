@@ -307,12 +307,11 @@ async function updatePassword(newPassword) {
   });
 
   if (error) {
-    console.error('비밀번호 변경 오류:', error.message);
+    alert('비밀번호 변경 오류:', error.message);
     return;
   }
-
-  console.log('비밀번호가 성공적으로 변경되었습니다.');
-  window.location.href("./login.html")
+  await supabase.auth.signOut();
+  window.location.href="./login.html";
 }
 
 

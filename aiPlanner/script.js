@@ -6,8 +6,8 @@ const googlemapAPiKey = "AIzaSyAg8Mizg_fmz1cMBS3UDFLxOOOzlb0dujw";
 // 구글맵 장소 탐색
 // 비동기 textSearch, 좌표 지정하고 거리로 검색범위, 입력값 정확도(LLM으로 영문으로 된 지역명을 추가시킨 장소명 생성)
 let map;
+let infoWindow; // 하나의 InfoWindow만 사용
 
-// Google Maps API가 로드된 후 실행할 함수
 async function initMap(
   places = ["Googleplex"],
   latLngTxt = '{ "lat": 0, "lng": 0 }'
@@ -27,10 +27,11 @@ async function initMap(
 
   map = new Map(document.getElementById("map"), {
     center: latLng,
-    zoom: 12,
+    zoom: 15,
   });
 
   const service = new PlacesService(map);
+  infoWindow = new google.maps.InfoWindow(); // 하나의 InfoWindow만 생성
 
   if (!places || !Array.isArray(places) || places.length === 0) {
     console.error("장소 데이터가 없거나 올바르지 않습니다.");
@@ -56,11 +57,40 @@ async function initMap(
           ) {
             const result = results[0];
             const location = result.geometry.location;
+            const placeId = result.place_id;
+            const address = result.formatted_address || "주소 정보 없음";
+            const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
 
-            new google.maps.Marker({
+            // 사진 가져오기 (없으면 기본 이미지)
+            let photoUrl =
+              result.photos?.[0]?.getUrl() ||
+              "https://via.placeholder.com/250x150?text=No+Image";
+
+            const marker = new google.maps.Marker({
               map,
               position: location,
               title: result.name,
+            });
+
+            marker.addListener("click", () => {
+              infoWindow.setContent(`
+                <div class="card" style="width: 250px; border-radius: 8px; overflow: hidden;">
+                  <img src="${photoUrl}" class="card-img-top" alt="${
+                result.name
+              }" style="height: 150px; object-fit: cover;">
+                  <div class="card-body p-2">
+                    <h6 class="card-title text-center mb-1">${result.name}</h6>
+                    <p class="card-text text-muted small text-center">${address.replace(
+                      /, /g,
+                      "<br>"
+                    )}</p>
+                    <div class="text-center">
+                      <a href="${googleMapsUrl}" target="_blank" class="btn btn-primary btn-sm">Google 지도에서 보기</a>
+                    </div>
+                  </div>
+                </div>
+              `);
+              infoWindow.open(map, marker);
             });
 
             bounds.extend(location);
@@ -80,6 +110,11 @@ async function initMap(
 
   if (!bounds.isEmpty()) {
     map.fitBounds(bounds);
+    setTimeout(() => {
+      if (places.length == 1) {
+        map.setZoom(15);
+      }
+    }, 300);
   }
 }
 
@@ -107,15 +142,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const inputField = controllerForm.querySelector("input[name='destination']"); // 원하는 input 필드를 정확히 선택
   const submitBtn = controllerForm.querySelector("button[type='submit']");
   const box = document.getElementById("box");
-  const popup = document.getElementById("popup");
+  // const popup = document.getElementById("popup");
   const locationsPopup = document.getElementById("locationsPopup");
-  const popupOverlay = document.getElementById("popupOverlay");
+  // const popupOverlay = document.getElementById("popupOverlay");
   const locationsPopupOverlay = document.getElementById(
     "locationsPopupOverlay"
   );
-  const popupBtn = document.getElementById("closePopupBtn");
+  // const popupBtn = document.getElementById("closePopupBtn");
   const locationsPopupBtn = document.getElementById("locationsClosePopupBtn");
-  const mapIframe = document.getElementById("mapIframe");
+  // const mapIframe = document.getElementById("mapIframe");
   const saveBtn = document.getElementById("saveBtn");
   const listModal = document.getElementById("listModal");
   const listItems = document.getElementById("listItems");
@@ -127,7 +162,23 @@ document.addEventListener("DOMContentLoaded", function () {
       const arrayDB = localStorage.getItem("array");
       const locationDB = localStorage.getItem("location");
       const submitDataDB = JSON.parse(localStorage.getItem("submitData"));
-      const nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
+      let nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
+      Swal.fire({
+        title: "여행 플래너의 제목을 입력하세요",
+        input: "text",
+        inputPlaceholder: `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`,
+        inputValue: `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`, // 기본값 설정
+        confirmButtonText: "확인",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          nameDB =
+            result.value.trim() !== ""
+              ? result.value
+              : `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
+
+          console.log("입력된 값:", nameDB);
+        }
+      });
 
       console.log(nameDB);
       console.log(arrayDB);
@@ -139,6 +190,12 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((Id) => {
           if (Id) {
             addDBData(Id, nameDB, markdownDB, locationDB, arrayDB);
+            Swal.fire({
+              title: "저장 완료",
+              text: `제목: ${nameDB}`,
+              icon: "success", // 아이콘 변경 가능: success, error, warning, info, question
+              confirmButtonText: "확인",
+            });
           } else {
             console.log("로그인되지 않았거나 유저 정보가 없습니다.");
           }
@@ -157,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function () {
     getId()
       .then((Id) => {
         if (Id) {
-          getDBDataByUserId(Id)
+          getDBDataByUserId(getId())
             .then((items) => {
               console.log(items);
               items.forEach((item) => {
@@ -292,7 +349,6 @@ document.addEventListener("DOMContentLoaded", function () {
     locationsPopup.style.display = "block"; // 팝업 보이기
     locationsPopupOverlay.style.display = "block"; // 오버레이 보이기
     locationsPopupBtn.style.display = "block"; // 팝업 닫기 보이기
-    showToast("로딩중입니다. 잠시 기다려주십요.", "success");
   }
 
   // 두 번째 기능 (마크다운 파싱 + 로컬 스토리지 활용)
@@ -324,38 +380,40 @@ document.addEventListener("DOMContentLoaded", function () {
           const locationsArray = JSON.parse(localStorage.getItem("array"));
           console.log(locationsArray);
           locationsOpenPopup(locationsArray[mapUrl]);
+          showToast("로딩중입니다. 잠시 기다려주십요.", "success");
         });
       } else {
         link.addEventListener("click", (e) => {
           e.preventDefault(); // 기본 링크 동작을 막고
           const linkPlace = link.getAttribute("href");
           console.log(linkPlace);
-          const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlemapAPiKey}&q=${linkPlace}`; // API로 찾은 URL
-          openPopup(mapUrl); // 팝업 열기
+          locationsOpenPopup([linkPlace]);
+          // const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlemapAPiKey}&q=${linkPlace}`; // API로 찾은 URL
+          // openPopup(mapUrl); // 팝업 열기
         });
       }
     });
   };
 
-  // 팝업 열기
-  function openPopup(url) {
-    mapIframe.src = url; // URL을 iframe의 src로 설정
-    popup.style.display = "block"; // 팝업 보이기
-    popupOverlay.style.display = "block"; // 오버레이 보이기
-    popupBtn.style.display = "block"; // 팝업 닫기 보이기
-  }
+  // // 팝업 열기
+  // function openPopup(url) {
+  //   mapIframe.src = url; // URL을 iframe의 src로 설정
+  //   popup.style.display = "block"; // 팝업 보이기
+  //   popupOverlay.style.display = "block"; // 오버레이 보이기
+  //   popupBtn.style.display = "block"; // 팝업 닫기 보이기
+  // }
 
-  // 팝업 닫기
-  function closePopup() {
-    popup.style.display = "none"; // 팝업 숨기기
-    popupOverlay.style.display = "none"; // 오버레이 숨기기
-    popupBtn.style.display = "none"; // 팝업 닫기 숨기기
-    mapIframe.src = ""; // iframe 초기화
-  }
+  // // 팝업 닫기
+  // function closePopup() {
+  //   popup.style.display = "none"; // 팝업 숨기기
+  //   popupOverlay.style.display = "none"; // 오버레이 숨기기
+  //   popupBtn.style.display = "none"; // 팝업 닫기 숨기기
+  //   mapIframe.src = ""; // iframe 초기화
+  // }
 
-  // 팝업 오버레이 클릭 시 팝업 닫기
-  popupOverlay.addEventListener("click", closePopup);
-  popupBtn.addEventListener("click", closePopup);
+  // // 팝업 오버레이 클릭 시 팝업 닫기
+  // popupOverlay.addEventListener("click", closePopup);
+  // popupBtn.addEventListener("click", closePopup);
 
   // 팝업 닫기
   function locationsClosePopup() {
@@ -372,7 +430,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // submit 데이터 불러오기
   const submitDataStr = localStorage.getItem("submitData");
   if (submitDataStr !== null) {
-    const submitData = JSON.parse(submitDataStr); // CSV 형식이므로 쉼표로 분리
+    const submitData = JSON.parse(submitDataStr);
 
     const fieldNames = [
       "destination", // 여행 도시
@@ -640,9 +698,9 @@ document.addEventListener("DOMContentLoaded", function () {
     localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
     const fifthAI = async (fourthResponse) => {
-      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마십시오. 지역명을 포함하시오.
-      예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
-      마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마십시오.
+      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마세요. 장소명에 지역명을 포함하세요.
+      예시:["첫날장소1 지역", "첫날장소2 지역", "첫날장소3 지역"]|["둘째날장소1 지역", "둘째날장소2 지역", "둘째날장소3 지역", "둘째날장소4 지역"]|["셋째날장소1 지역", "셋째날장소2 지역"]
+      마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마세요.
 ${fourthResponse}`;
       return await callModel000(prompt);
     };

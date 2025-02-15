@@ -10,12 +10,49 @@ let placesService;
 // 초기화 함수 (한 번만 정의)
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 37.7749, lng: -122.4194 },
-    zoom: 5,
+    center: { lat: 37.5665, lng: 126.978 }, // 서울 중심으로 변경
+    zoom: 13,
   });
   geocoder = new google.maps.Geocoder();
-  // Places 서비스 초기화
   placesService = new google.maps.places.PlacesService(map);
+
+  // 지도 초기화 후 이벤트 리스너 설정
+  setupMapEventListeners();
+}
+
+function setupMapEventListeners() {
+  const addDayBtn = document.getElementById("addDayBtn");
+  if (addDayBtn) {
+    addDayBtn.addEventListener("click", function () {
+      dayCount++;
+      // ... 나머지 코드
+    });
+  }
+
+  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  const routeSection = document.getElementById("routeSection");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      routeSection.style.display =
+        routeSection.style.display === "none" ? "block" : "none";
+    });
+  }
+}
+
+// detail.js에 추가
+function handleRouteSave() {
+  try {
+    saveRouteToSupabase();
+  } catch (error) {
+    console.error("Route save failed:", error);
+  }
+}
+
+function setupRouteSaveButton() {
+  const saveRouteBtn = document.getElementById("saveRouteBtn");
+  if (saveRouteBtn) {
+    saveRouteBtn.addEventListener("click", handleRouteSave);
+  }
 }
 
 // DOM 로드 시 이벤트 리스너 등록
@@ -41,31 +78,31 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  const routeSection = document.getElementById("routeSection");
+  // const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  // const routeSection = document.getElementById("routeSection");
 
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", function () {
-      routeSection.style.display =
-        routeSection.style.display === "none" ? "block" : "none";
-    });
-  }
+  // if (toggleBtn) {
+  //   toggleBtn.addEventListener("click", function () {
+  //     routeSection.style.display =
+  //       routeSection.style.display === "none" ? "block" : "none";
+  //   });
+  // }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-    if (toggleBtn) {
-      toggleBtn.addEventListener("click", function () {
-        if (
-          routeSection.style.display === "none" ||
-          routeSection.style.display === ""
-        ) {
-          routeSection.style.display = "block";
-        } else {
-          routeSection.style.display = "none";
-        }
-      });
-    }
-  });
+  // document.addEventListener("DOMContentLoaded", function () {
+  //   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  //   if (toggleBtn) {
+  //     toggleBtn.addEventListener("click", function () {
+  //       if (
+  //         routeSection.style.display === "none" ||
+  //         routeSection.style.display === ""
+  //       ) {
+  //         routeSection.style.display = "block";
+  //       } else {
+  //         routeSection.style.display = "none";
+  //       }
+  //     });
+  //   }
+  // });
 });
 
 function toggleSection(dayId) {
@@ -95,6 +132,17 @@ function drawAllRoutes() {
   daySections.forEach((section, dayIndex) => {
     drawRouteForDay(section, dayIndex);
   });
+}
+
+function fitMapToMarkers() {
+  const bounds = new google.maps.LatLngBounds();
+  markers.forEach((marker) => bounds.extend(marker.getPosition()));
+  map.fitBounds(bounds);
+
+  // 줌 레벨이 너무 가깝거나 멀어지는 것을 방지
+  const zoom = map.getZoom();
+  if (zoom > 15) map.setZoom(15);
+  if (zoom < 7) map.setZoom(7);
 }
 
 function drawDayRoutes() {
@@ -167,68 +215,103 @@ function drawRouteForDay(section, dayIndex) {
           position: result.location,
           label: `Day ${dayIndex + 1}-${i + 1}`,
           icon: getMarkerIcon(dayIndex),
+          placeInfo: {
+            name: result.name || `Place ${i + 1}`,
+            address: result.address || "",
+            photo: result.photo
+              ? result.photo.getUrl({ maxWidth: 200, maxHeight: 200 })
+              : null,
+            dayIndex: dayIndex,
+            orderIndex: i,
+            placeId: result.place_id,
+          },
         });
 
         // 정보창(InfoWindow) 생성
         if (result.photo) {
           const photoUrl = result.photo.getUrl({
-            maxWidth: 150,
-            maxHeight: 150,
+            maxWidth: 50,
+            maxHeight: 50,
           });
           const infowindow = new google.maps.InfoWindow({
             content: `
               <div style="
-                max-width: 300px;
+                display: flex;
+                align-items: center;
                 background: white;
-                border-radius: 8px;
+                border-radius: 25px;
                 overflow: hidden;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                font-family: 'Arial', sans-serif;
+                padding-right: 12px;
               ">
-                <img src="${photoUrl}" style="
-                  width: 100%;
-                  height: 200px;
-                  object-fit: cover;
-                  border-bottom: 3px solid #f0f0f0;
+                <div style="
+                  width: 50px;
+                  height: 50px;
+                  overflow: hidden;
                 ">
-                <div style="padding: 15px;">
-                  <h3 style="
-                    margin: 0;
-                    color: #333;
-                    font-size: 16px;
-                    font-weight: 600;
-                  ">${result.name}</h3>
-                  <p style="
-                    margin: 8px 0 0 0;
-                    color: #666;
-                    font-size: 13px;
-                    line-height: 1.4;
-                  ">${result.address}</p>
-                  <div style="
-                    margin-top: 12px;
-                    padding-top: 12px;
-                    border-top: 1px solid #eee;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                  <img src="${photoUrl}" style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
                   ">
-                    <span style="
-                      background: #f8f8f8;
-                      padding: 4px 8px;
-                      border-radius: 4px;
-                      font-size: 12px;
-                      color: #555;
-                    ">Day ${dayIndex + 1} - Stop ${i + 1}</span>
-                  </div>
                 </div>
+                <span style="
+                  margin-left: 8px;
+                  font-size: 12px;
+                  font-weight: 500;
+                  color: #333;
+                  white-space: nowrap;
+                  font-family: 'Arial', sans-serif;
+                ">${result.name}</span>
               </div>
             `,
+            pixelOffset: new google.maps.Size(0, -10),
+            disableAutoPan: true,
           });
 
           // 정보창 바로 표시
           infowindow.open(map, marker);
-        }
 
+          // 마커 클릭시 상세 정보창 표시
+          marker.addListener("click", () => {
+            const detailWindow = new google.maps.InfoWindow({
+              content: `
+                <div style="
+                  max-width: 200px;
+                  background: white;
+                  border-radius: 8px;
+                  overflow: hidden;
+                  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                  font-family: 'Arial', sans-serif;
+                ">
+                  <img src="${result.photo.getUrl({
+                    maxWidth: 200,
+                    maxHeight: 150,
+                  })}" style="
+                    width: 100%;
+                    height: 150px;
+                    object-fit: cover;
+                  ">
+                  <div style="padding: 10px;">
+                    <h3 style="
+                      margin: 0;
+                      color: #333;
+                      font-size: 14px;
+                      font-weight: 600;
+                    ">${result.name}</h3>
+                    <p style="
+                      margin: 5px 0 0 0;
+                      color: #666;
+                      font-size: 12px;
+                      line-height: 1.3;
+                    ">${result.address}</p>
+                  </div>
+                </div>
+              `,
+            });
+            detailWindow.open(map, marker);
+          });
+        }
         markers.push(marker);
         dayPlaces.push(result.location);
 
@@ -238,15 +321,117 @@ function drawRouteForDay(section, dayIndex) {
       });
 
       if (dayPlaces.length >= 2) {
-        const polyline = new google.maps.Polyline({
+        // 메인 경로 - 두꺼운 선
+        const mainPolyline = new google.maps.Polyline({
           path: dayPlaces,
           geodesic: true,
           strokeColor: getDayColor(dayIndex),
-          strokeOpacity: 1.0,
-          strokeWeight: 2,
+          strokeOpacity: 0.8, // 투명도를 0.4에서 0.8로 증가
+          strokeWeight: 4, // 선 굵기를 6에서 4로 조정
+          dayIndex: dayIndex,
+          routeInfo: {
+            day: dayIndex + 1,
+            order: "main",
+            places: dayPlaces.map((place, idx) => ({
+              lat: place.lat(),
+              lng: place.lng(),
+              order: idx,
+            })),
+          },
         });
-        polyline.setMap(map);
-        polylines.push(polyline);
+
+        // 경로 하이라이트 - 얇은 실선
+        const highlightPolyline = new google.maps.Polyline({
+          path: dayPlaces,
+          geodesic: true,
+          strokeColor: getDayColor(dayIndex),
+          strokeOpacity: 1,
+          strokeWeight: 3, // 선 굵기를 2에서 3으로 증가
+        });
+
+        // 애니메이션 효과를 위한 점선 경로
+        const dashedPolyline = new google.maps.Polyline({
+          path: dayPlaces,
+          geodesic: true,
+          strokeColor: getDayColor(dayIndex), // 흰색에서 해당 날짜 색상으로 변경
+          strokeOpacity: 1, // 투명도를 0.8에서 1로 증가
+          strokeWeight: 2,
+          icons: [
+            {
+              icon: {
+                path: "M 0,-1 0,1",
+                strokeOpacity: 1,
+                scale: 4, // 점선 크기를 3에서 4로 증가
+              },
+              offset: "0",
+              repeat: "20px", // 점선 간격을 15px에서 20px로 증가
+            },
+          ],
+        });
+
+        // 폴리라인들을 배열에 추가
+        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
+
+        // 폴리라인들을 지도에 표시
+        mainPolyline.setMap(map);
+        highlightPolyline.setMap(map);
+        dashedPolyline.setMap(map);
+
+        // 경로에 마우스 오버 효과 추가
+        mainPolyline.addListener("mouseover", function () {
+          this.setOptions({ strokeOpacity: 1 }); // 마우스 오버시 완전 불투명하게
+          highlightPolyline.setOptions({ strokeWeight: 4 });
+        });
+
+        mainPolyline.addListener("mouseout", function () {
+          this.setOptions({ strokeOpacity: 0.8 });
+          highlightPolyline.setOptions({ strokeWeight: 3 });
+        });
+
+        // 나머지 코드는 동일
+        let count = 0;
+        window.setInterval(() => {
+          count = (count + 1) % 200;
+          const icons = dashedPolyline.get("icons");
+          icons[0].offset = count / 2 + "%";
+          dashedPolyline.set("icons", icons);
+        }, 50);
+
+        mainPolyline.setMap(map);
+        highlightPolyline.setMap(map);
+        dashedPolyline.setMap(map);
+
+        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
+      }
+      if (markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach((marker) => bounds.extend(marker.getPosition()));
+
+        map.fitBounds(bounds);
+
+        google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+          if (this.getZoom() > 16) this.setZoom(16);
+          if (this.getZoom() < 7) this.setZoom(7);
+
+          const currentBounds = this.getBounds();
+          if (currentBounds) {
+            const ne = currentBounds.getNorthEast();
+            const sw = currentBounds.getSouthWest();
+            const latPadding = (ne.lat() - sw.lat()) * 0.1;
+            const lngPadding = (ne.lng() - sw.lng()) * 0.1;
+            const newBounds = new google.maps.LatLngBounds(
+              new google.maps.LatLng(
+                sw.lat() - latPadding,
+                sw.lng() - lngPadding
+              ),
+              new google.maps.LatLng(
+                ne.lat() + latPadding,
+                ne.lng() + lngPadding
+              )
+            );
+            this.fitBounds(newBounds);
+          }
+        });
       }
     })
     .catch((error) => {
@@ -273,7 +458,16 @@ function getMarkerIcon(dayIndex) {
 }
 
 function getDayColor(dayIndex) {
-  const colors = ["#FF0000", "#00FF00", "#0000FF", "#FFA500", "#800080"];
+  const colors = [
+    "#FF6B6B", // 빨간색
+    "#4ECDC4", // 청록색
+    "#45B7D1", // 하늘색
+    "#96CEB4", // 민트색
+    "#FFEEAD", // 노란색
+    "#D4A5A5", // 분홍색
+    "#9B59B6", // 보라색
+    "#3498DB", // 파란색
+  ];
   return colors[dayIndex % colors.length];
 }
 
@@ -326,61 +520,4 @@ function collectRouteData() {
   });
 
   return routes;
-}
-
-// 경로 데이터 저장 이벤트 핸들러
-async function handleRouteSave() {
-  try {
-    const routeData = collectRouteData();
-    if (routeData.length === 0) {
-      alert("저장할 경로 데이터가 없습니다.");
-      return;
-    }
-
-    // URL에서 posting ID 가져오기
-    const urlParams = new URLSearchParams(window.location.search);
-    const postingId = urlParams.get("id");
-    if (!postingId) {
-      alert("게시글 ID를 찾을 수 없습니다.");
-      return;
-    }
-
-    // routes 컬럼 업데이트
-    const { error } = await supabase
-      .from("mate_posting")
-      .update({ routes: routeData })
-      .eq("id", postingId);
-
-    if (error) {
-      throw error;
-    }
-
-    alert("경로가 성공적으로 저장되었습니다.");
-    drawAllRoutes(); // 저장 후 경로 다시 그리기
-  } catch (error) {
-    console.error("경로 저장 중 오류 발생:", error);
-    alert("경로 저장 중 오류가 발생했습니다.");
-  }
-}
-
-// 저장된 경로 데이터 불러오기
-async function loadSavedRoutes(postingId) {
-  try {
-    const { data, error } = await supabase
-      .from("mate_posting")
-      .select("routes")
-      .eq("id", postingId)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (data && data.routes) {
-      displayRouteData(data.routes);
-      drawAllRoutes();
-    }
-  } catch (error) {
-    console.error("저장된 경로 불러오기 중 오류 발생:", error);
-  }
 }

@@ -307,3 +307,95 @@ function setupRouteSaveButton() {
 
 document.addEventListener("DOMContentLoaded", initializePage);
 // 지도 로직 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 종료
+// detail.js에 추가
+async function handleRouteSave() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const postingId = urlParams.get("id");
+
+    if (!postingId) {
+      throw new Error("게시글 ID를 찾을 수 없습니다.");
+    }
+
+    // 마커 위치 데이터 수집
+    const locations = markers.map((marker) => ({
+      lat: marker.getPosition().lat(),
+      lng: marker.getPosition().lng(),
+      label: marker.getLabel(),
+      placeInfo: marker.placeInfo || {},
+    }));
+
+    // 경로 데이터 수집
+    const routes = collectRouteData().map((dayRoute) => ({
+      day: dayRoute.day,
+      places: dayRoute.places,
+      path: polylines
+        .filter((line) => line.dayIndex === dayRoute.day - 1)
+        .map((line) =>
+          line
+            .getPath()
+            .getArray()
+            .map((point) => ({
+              lat: point.lat(),
+              lng: point.lng(),
+            }))
+        ),
+    }));
+
+    // Supabase 업데이트
+    const { data, error } = await supabase
+      .from(mateTable)
+      .update({
+        locations: locations,
+        routes: routes,
+      })
+      .eq("id", postingId);
+
+    if (error) throw error;
+
+    alert("여행 경로가 성공적으로 저장되었습니다.");
+    console.log("저장된 데이터:", { locations, routes });
+  } catch (error) {
+    console.error("경로 저장 중 오류 발생:", error);
+    alert("경로 저장 중 오류가 발생했습니다: " + error.message);
+  }
+}
+
+// 저장된 경로 데이터 로드
+async function loadSavedRoutes(postingId) {
+  try {
+    const { data, error } = await supabase
+      .from(mateTable)
+      .select("locations, routes")
+      .eq("id", postingId)
+      .single();
+
+    if (error) throw error;
+
+    if (data.locations && data.routes) {
+      // 기존 마커와 경로 초기화
+      clearMap();
+
+      // 저장된 마커 표시
+      data.locations.forEach((loc) => {
+        const position = new google.maps.LatLng(loc.lat, loc.lng);
+        const marker = new google.maps.Marker({
+          position: position,
+          map: map,
+          label: loc.label,
+          placeInfo: loc.placeInfo,
+          icon: getMarkerIcon(parseInt(loc.label.split("-")[0]) - 1),
+        });
+        markers.push(marker);
+      });
+
+      // 저장된 경로 표시
+      if (data.routes) {
+        displayRouteData(data.routes);
+        drawAllRoutes();
+      }
+    }
+  } catch (error) {
+    console.error("기존 경로 로드 중 오류:", error);
+  }
+}

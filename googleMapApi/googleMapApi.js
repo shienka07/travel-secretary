@@ -97,6 +97,17 @@ function drawAllRoutes() {
   });
 }
 
+function fitMapToMarkers() {
+  const bounds = new google.maps.LatLngBounds();
+  markers.forEach((marker) => bounds.extend(marker.getPosition()));
+  map.fitBounds(bounds);
+
+  // 줌 레벨이 너무 가깝거나 멀어지는 것을 방지
+  const zoom = map.getZoom();
+  if (zoom > 15) map.setZoom(15);
+  if (zoom < 7) map.setZoom(7);
+}
+
 function drawDayRoutes() {
   clearMap();
   const daySections = document.querySelectorAll(".day-inputs");
@@ -182,63 +193,88 @@ function drawRouteForDay(section, dayIndex) {
         // 정보창(InfoWindow) 생성
         if (result.photo) {
           const photoUrl = result.photo.getUrl({
-            maxWidth: 150,
-            maxHeight: 150,
+            maxWidth: 50,
+            maxHeight: 50,
           });
           const infowindow = new google.maps.InfoWindow({
             content: `
               <div style="
-                max-width: 300px;
+                display: flex;
+                align-items: center;
                 background: white;
-                border-radius: 8px;
+                border-radius: 25px;
                 overflow: hidden;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                font-family: 'Arial', sans-serif;
+                padding-right: 12px;
               ">
-                <img src="${photoUrl}" style="
-                  width: 100%;
-                  height: 200px;
-                  object-fit: cover;
-                  border-bottom: 3px solid #f0f0f0;
+                <div style="
+                  width: 50px;
+                  height: 50px;
+                  overflow: hidden;
                 ">
-                <div style="padding: 15px;">
-                  <h3 style="
-                    margin: 0;
-                    color: #333;
-                    font-size: 16px;
-                    font-weight: 600;
-                  ">${result.name}</h3>
-                  <p style="
-                    margin: 8px 0 0 0;
-                    color: #666;
-                    font-size: 13px;
-                    line-height: 1.4;
-                  ">${result.address}</p>
-                  <div style="
-                    margin-top: 12px;
-                    padding-top: 12px;
-                    border-top: 1px solid #eee;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                  <img src="${photoUrl}" style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
                   ">
-                    <span style="
-                      background: #f8f8f8;
-                      padding: 4px 8px;
-                      border-radius: 4px;
-                      font-size: 12px;
-                      color: #555;
-                    ">Day ${dayIndex + 1} - Stop ${i + 1}</span>
-                  </div>
                 </div>
+                <span style="
+                  margin-left: 8px;
+                  font-size: 12px;
+                  font-weight: 500;
+                  color: #333;
+                  white-space: nowrap;
+                  font-family: 'Arial', sans-serif;
+                ">${result.name}</span>
               </div>
             `,
+            pixelOffset: new google.maps.Size(0, -10),
+            disableAutoPan: true,
           });
 
           // 정보창 바로 표시
           infowindow.open(map, marker);
-        }
 
+          // 마커 클릭시 상세 정보창 표시
+          marker.addListener("click", () => {
+            const detailWindow = new google.maps.InfoWindow({
+              content: `
+                <div style="
+                  max-width: 200px;
+                  background: white;
+                  border-radius: 8px;
+                  overflow: hidden;
+                  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                  font-family: 'Arial', sans-serif;
+                ">
+                  <img src="${result.photo.getUrl({
+                    maxWidth: 200,
+                    maxHeight: 150,
+                  })}" style="
+                    width: 100%;
+                    height: 150px;
+                    object-fit: cover;
+                  ">
+                  <div style="padding: 10px;">
+                    <h3 style="
+                      margin: 0;
+                      color: #333;
+                      font-size: 14px;
+                      font-weight: 600;
+                    ">${result.name}</h3>
+                    <p style="
+                      margin: 5px 0 0 0;
+                      color: #666;
+                      font-size: 12px;
+                      line-height: 1.3;
+                    ">${result.address}</p>
+                  </div>
+                </div>
+              `,
+            });
+            detailWindow.open(map, marker);
+          });
+        }
         markers.push(marker);
         dayPlaces.push(result.location);
 

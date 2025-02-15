@@ -51,10 +51,6 @@
   display: none;
 }
 
-#map {
-  width: 100%;
-  height: 500px;
-}
 .day-section {
   margin-bottom: 20px;
   border: 1px solid #ccc;

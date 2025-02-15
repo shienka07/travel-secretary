@@ -122,7 +122,6 @@ function displayPostings(postings) {
           ? "여"
           : "미제공";
       const ageText = posting.userInfo?.age || "미제공";
-      const dateText = `기간: ${posting.start_date} ~ ${posting.end_date}`;
 
       const titleFullElement = document.createElement("h6");
       titleFullElement.classList.add("mb-2");
@@ -136,15 +135,14 @@ function displayPostings(postings) {
         posting.title.length > MAX_LENGTH
           ? posting.title.substring(0, MAX_LENGTH) + "..."
           : posting.title;
-      // titleElement.textContent = posting.title;
-      // titleFullElement.appendChild(titleElement);
       titleLink.appendChild(titleFullElement);
       titleLink.appendChild(titleElement);
       cardFooter.appendChild(titleLink);
 
-      // const contentElement = document.createElement("p");
-      // contentElement.classList.add("card-text");
-      // contentElement.textContent = posting.content;
+      const textElement = document.createElement("p");
+      textElement.textContent = `${posting.start_date} ~ ${posting.end_date}`;
+      textElement.style.fontSize = "0.8em";
+      cardFooter.appendChild(textElement);
 
       const stylesElement = document.createElement("div");
       stylesElement.classList.add("styles-tags", "mt-3");
@@ -170,7 +168,7 @@ function filterPosting(postings, filters) {
   return postings.filter((posting) => {
     // 국내/국외 필터
     if (filters.locationType) {
-      console.log("locationType 필터:", filters.locationType);
+      // console.log("locationType 필터:", filters.locationType);
       if (filters.locationType === "domestic" && !posting.is_domestic) {
         return false;
       }
@@ -336,16 +334,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const applyFiltersBtn = document.querySelector("#applyFiltersBtn");
   applyFiltersBtn.addEventListener("click", () => {
+    // const locationTypeFilter = document.querySelector(
+    //   'input[name="locationTypeFilter"]:checked'
+    // ).value;
     const locationTypeFilter = document.querySelector(
-      'input[name="locationTypeFilter"]:checked'
+      "#locationTypeFilter"
     ).value;
     const destinationFilter =
       document.querySelector("#destinationFilter").value;
     const minAgeFilter = document.querySelector("#ageFilterMin").value;
     const maxAgeFilter = document.querySelector("#ageFilterMax").value;
-    const genderFilter = document.querySelector(
-      'input[name="genderFilter"]:checked'
-    ).value;
+    // const genderFilter = document.querySelector(
+    //   'input[name="genderFilter"]:checked'
+    // ).value;
+    const genderFilter = document.querySelector("#genderFilter").value;
     const dateFilter = document.querySelector("#dateFilter").value;
     const styleFilters = Array.from(
       document.querySelectorAll('#styleFilters input[type="checkbox"]:checked')
@@ -371,15 +373,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const resetFiltersBtn = document.querySelector("#resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", () => {
-    document.querySelector(
-      'input[name="locationTypeFilter"][value=""]'
-    ).checked = true;
+    // document.querySelector(
+    //   'input[name="locationTypeFilter"][value=""]'
+    // ).checked = true;
+    document.querySelector("#locationTypeFilter").value = "";
     document.querySelector("#destinationFilter").value = "";
     document.querySelector("#ageFilterMin").value = "";
     document.querySelector("#ageFilterMax").value = "";
-    document.querySelector(
-      'input[name="genderFilter"][value=""]'
-    ).checked = true;
+    // document.querySelector(
+    //   'input[name="genderFilter"][value=""]'
+    // ).checked = true;
+    document.querySelector("#genderFilter").value = "";
     document.querySelector("#dateFilter").value = "";
     document
       .querySelectorAll('#styleFilters input[type="checkbox"]')

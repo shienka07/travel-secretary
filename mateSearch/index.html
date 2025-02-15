@@ -107,7 +107,7 @@
       <div class="row gx-md-5">
         <div class="col-md-3">
           <div class="filter-area p-3 border bg-light rounded">
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <div class="form-check">
                 <input
                   class="form-check-input"
@@ -145,6 +145,18 @@
                   >국외</label
                 >
               </div>
+            </div> -->
+            <div class="mb-3">
+              <label class="form-label">국내/해외</label>
+              <select
+                class="form-select"
+                name="locationTypeFilter"
+                id="locationTypeFilter"
+              >
+                <option value="">전체</option>
+                <option value="domestic">국내</option>
+                <option value="international">해외</option>
+              </select>
             </div>
 
             <div class="mb-3">
@@ -183,7 +195,7 @@
               </div>
             </div>
 
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <label class="form-label">성별</label>
               <div class="form-check">
                 <input
@@ -216,6 +228,15 @@
                 />
                 <label class="form-check-label" for="genderFemale">여성</label>
               </div>
+            </div> -->
+
+            <div class="mb-3">
+              <label class="form-label">성별</label>
+              <select class="form-select" name="genderFilter" id="genderFilter">
+                <option value="" selected>전체</option>
+                <option value="1">남성</option>
+                <option value="2">여성</option>
+              </select>
             </div>
 
             <div class="mb-3">

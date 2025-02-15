@@ -51,7 +51,23 @@ async function fetchMatePostingsWithStyles() {
     }
 
     allPostings = postings || [];
-    displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const postIdsParam = urlParams.get('postIds');
+  
+    let postArrayFromUrl = [];
+
+    if (postIdsParam) {
+        postArrayFromUrl = postIdsParam.split(',').map(item => item.trim());
+        const sortedPostings = postArrayFromUrl.map(id =>
+          postings.find(post => Number(post.id) === Number(id))
+        );
+        displayPostings(sortedPostings);
+    }
+    else{
+      displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
+    }
+    
   } catch (error) {
     console.error("게시글 목록 및 스타일 조회 중 오류:", error);
     alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
@@ -361,6 +377,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const applyFiltersBtn = document.querySelector("#applyFiltersBtn");
   applyFiltersBtn.addEventListener("click", () => {
+    const baseUrl = "./index.html";
+    history.pushState({}, '', baseUrl);
+    
     const locationTypeFilter = document.querySelector(
       'input[name="locationTypeFilter"]:checked'
     ).value;
@@ -394,6 +413,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const resetFiltersBtn = document.querySelector("#resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", () => {
+    const baseUrl = "./index.html";
+    history.pushState({}, '', baseUrl);
+
     document.querySelector(
       'input[name="locationTypeFilter"][value=""]'
     ).checked = true;

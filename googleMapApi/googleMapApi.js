@@ -188,6 +188,16 @@ function drawRouteForDay(section, dayIndex) {
           position: result.location,
           label: `Day ${dayIndex + 1}-${i + 1}`,
           icon: getMarkerIcon(dayIndex),
+          placeInfo: {
+            name: result.name || `Place ${i + 1}`,
+            address: result.address || "",
+            photo: result.photo
+              ? result.photo.getUrl({ maxWidth: 200, maxHeight: 200 })
+              : null,
+            dayIndex: dayIndex,
+            orderIndex: i,
+            placeId: result.place_id,
+          },
         });
 
         // 정보창(InfoWindow) 생성
@@ -291,6 +301,16 @@ function drawRouteForDay(section, dayIndex) {
           strokeColor: getDayColor(dayIndex),
           strokeOpacity: 0.8, // 투명도를 0.4에서 0.8로 증가
           strokeWeight: 4, // 선 굵기를 6에서 4로 조정
+          dayIndex: dayIndex,
+          routeInfo: {
+            day: dayIndex + 1,
+            order: "main",
+            places: dayPlaces.map((place, idx) => ({
+              lat: place.lat(),
+              lng: place.lng(),
+              order: idx,
+            })),
+          },
         });
 
         // 경로 하이라이트 - 얇은 실선
@@ -321,6 +341,14 @@ function drawRouteForDay(section, dayIndex) {
             },
           ],
         });
+
+        // 폴리라인들을 배열에 추가
+        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
+
+        // 폴리라인들을 지도에 표시
+        mainPolyline.setMap(map);
+        highlightPolyline.setMap(map);
+        dashedPolyline.setMap(map);
 
         // 경로에 마우스 오버 효과 추가
         mainPolyline.addListener("mouseover", function () {

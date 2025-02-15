@@ -291,29 +291,25 @@ function filterPosting(postings, filters) {
     }
 
     // 모집 상태 필터
-    const isOpenStatusChecked =
-      document.getElementById("statusOpenFilter").checked;
-    const isClosedStatusChecked =
-      document.getElementById("statusClosedFilter").checked;
-    console.log(
-      "모집 상태 필터: 오픈:",
-      isOpenStatusChecked,
-      "마감:",
-      isClosedStatusChecked,
-      "게시글 상태:",
-      posting.state
-    );
-    if (!isOpenStatusChecked && !isClosedStatusChecked) {
-      return true; //  모집 상태 필터 무시 (둘 다 체크 X)
-    }
-    if (isOpenStatusChecked && !posting.state) {
-      return false;
-    }
-    if (isClosedStatusChecked && posting.state) {
-      return false;
-    }
-    if (isOpenStatusChecked && isClosedStatusChecked) {
-      return true; //
+    const stateFilter = filters.state; // "all", "true", "false" 중 하나
+
+    // console.log(
+    //   "모집 상태 필터: 선택된 값:",
+    //   stateFilter,
+    //   "게시글 상태:",
+    //   posting.state
+    // );
+
+    // if (stateFilter === "all") {
+    //   return true;
+    // } else if (stateFilter === "true") {
+    //   return posting.state === true;
+    // } else if (stateFilter === "false") {
+    //   return posting.state === false;
+    // }
+
+    if (stateFilter !== "all") {
+      return posting.state === (stateFilter === "true");
     }
 
     return true; // 모든 필터 통과 시 true 유지
@@ -387,6 +383,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const styleFilters = Array.from(
       document.querySelectorAll('#styleFilters input[type="checkbox"]:checked')
     ).map((checkbox) => checkbox.value);
+    const stateFilter = document.querySelector("#stateFilter").value;
 
     // TODO: 예산 추가
 
@@ -398,6 +395,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       gender: genderFilter,
       date: dateFilter,
       styles: styleFilters,
+      state: stateFilter,
     };
 
     const filteredPostings = filterPosting(allPostings, filters);
@@ -419,8 +417,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document
       .querySelectorAll('#styleFilters input[type="checkbox"]')
       .forEach((checkbox) => (checkbox.checked = false));
-    document.querySelector("#statusOpenFilter").checked = false;
-    document.querySelector("#statusClosedFilter").checked = false;
+    document.querySelector("#stateFilter").value = "all";
 
     displayPostings(allPostings);
   });

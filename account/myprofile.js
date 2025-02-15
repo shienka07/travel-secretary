@@ -31,8 +31,8 @@ async function setDefault() {
 
 setDefault();
 
-const nextBtn = document.querySelector("#nextBtn");
-nextBtn.addEventListener("click", async (event) => {
+const nextBtn = document.querySelector("#formData");
+nextBtn.addEventListener("submit", async (event) => {
     event.preventDefault();
     await setProfile();
 } )
@@ -47,16 +47,21 @@ async function setProfile() {
 
     phone_number = (phone_number === "") ? null : phone_number;
     live = (live === "") ? null : live;
-    if (!gender){
-    alert("성별을 선택해주세요")
-    return
-    }
-    else if(!age){
-    alert("나이를 작성해주세요")
-    return
-    }
-    await setProfile_auth(gender, phone_number,age,live);
-    window.location.href = "../index.html";
+
+    const bool = await setProfile_auth(gender, phone_number,age,live);
+    if(bool){
+        Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "프로필 수정 메인 페이지로 이동합니다.",
+        showConfirmButton: false,
+        timer: 1500
+        });
+        setTimeout(() => {
+        window.location.href = "../index.html";
+        }, 1500);
+}
+    
 }
 
 document.getElementById('phone_number').addEventListener('input', function(e) {
@@ -73,13 +78,16 @@ document.getElementById('phone_number').addEventListener('input', function(e) {
     }
 });
 
-
-
 document.addEventListener("DOMContentLoaded", async () => {
     const islogined = await checkLogin()
     if (!islogined){
-        window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-        alert("로그인이 필요합니다");
+        Swal.fire({
+        icon: "warning",
+        text: "로그인이 필요합니다.",
+        confirmButtonText: "확인",
+        }).then(() => {
+        window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+        });
     }
 
     const username = localStorage.getItem("username") || "Guest";

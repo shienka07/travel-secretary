@@ -7,8 +7,7 @@ async function login(email, password) {
     password,
   });
   if (error) {
-    alert("로그인 실패: " + error.message);
-    return;
+    return false;
   }
   window.location.href="../index.html";
 }
@@ -36,21 +35,19 @@ async function setProfile_auth(gender, phone_number, age, live = null) {
     .eq("id", data.user.id);
 
   if (error) {
-    alert(error.message);
-    return error;
+    return;
   }
+  return true;
 }
 
 async function signup(email, password, username) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) {
-    alert("회원가입 실패: " + error.message);
-    return;
+    return false;
   }
 
   const user = data.user;
   if (!user) {
-    alert("회원 정보를 가져오는데 실패했습니다.");
     return;
   }
 
@@ -58,11 +55,10 @@ async function signup(email, password, username) {
     .from("userinfo")
     .insert([{ id: user.id, email: user.email, username: username }]);
   if (insertError) {
-    alert("닉네임 등록 실패: " + insertError.message);
+    console.log("닉네임 등록 실패: " + insertError.message);
+    return;
   }
   await supabase.auth.signOut();
-  alert("회원가입 성공! 로그인 페이지로 이동합니다.");
-  window.location.href = "./login.html";
 }
 async function getNickname() {
   const { data } = await supabase.auth.getUser();
@@ -101,15 +97,12 @@ async function checkNickname(username) {
     .eq("username", username);
 
   if (error) {
-    alert("닉네임 확인 중 오류 발생: " + error.message);
     return;
   }
 
   if (data.length > 0) {
-    alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
     return false;
   } else {
-    alert("사용 가능한 닉네임입니다!");
     return true;
   }
 }
@@ -235,16 +228,19 @@ async function uploadImage_auth(filePath, imagefile) {
     .from("mate-bucket")
     .upload(filePath, imagefile);
   if (error) {
-    return error;
+    return;
   }
   const { data, error: auth } = await supabase.auth.getUser();
   const { error: insertError } = await supabase
     .from("userinfo")
     .update({ image_url: filePath })
     .eq("id", data.user.id);
-  if (error) {
-    return insertError;
+
+  if (insertError) {
+    return;
   }
+  
+  return true;
 }
 
 function getImagePath(url) {
@@ -296,7 +292,14 @@ async function resetPassword(email) {
     console.error('비밀번호 재설정 요청 오류:', error.message);
     return;
   }
-  alert("비밀번호 재설정 이메일이 전송되었습니다.")
+  
+  Swal.fire({
+    position: "center",
+    icon: "success",
+    title: "회원가입 성공! 로그인 페이지로 이동합니다.",
+    showConfirmButton: false,
+    timer: 1500
+  });
   console.log('비밀번호 재설정 이메일이 전송되었습니다.');
 }
 
@@ -307,7 +310,12 @@ async function updatePassword(newPassword) {
   });
 
   if (error) {
-    alert('비밀번호 변경 오류:', error.message);
+    console.log('비밀번호 변경 오류:', error.message);
+    Swal.fire({
+      icon: "error",
+      title: "오류",
+      text: "비밀번호 변경 오류",
+    });
     return;
   }
   await supabase.auth.signOut();

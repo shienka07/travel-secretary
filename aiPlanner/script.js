@@ -303,6 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // 팝업
     const links = p.querySelectorAll("a");
     links.forEach((link) => {
+      // 버튼 형식
+      link.classList.add("btn", "btn-secondary", "btn-sm", "px-1", "py-0");
+      link.style.fontSize = "inherit";
       if (link.getAttribute("href").includes("https://")) {
         // https://이 포함되면 새 창으로 열기
         link.addEventListener("click", (e) => {

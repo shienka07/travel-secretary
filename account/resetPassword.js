@@ -15,7 +15,5 @@ resetBtn.addEventListener("click", async (event) => {
         return
     }
 
-    const { error } = await updatePassword(password);
-
-    await login(username, password);
+    await updatePassword(password);
 });

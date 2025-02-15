@@ -515,20 +515,16 @@ async function triggerSwal() {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const postIdsParam = urlParams.get('postIds'); // URL에서 "postIds" 파라미터 값 가져오기
+  // const urlParams = new URLSearchParams(window.location.search);
+  // const postIdsParam = urlParams.get('postIds');
 
-  let postArrayFromUrl = [];
-  if (postIdsParam) {
-      postArrayFromUrl = postIdsParam.split(',').map(item => item.trim()); // 콤마로 분리하고 공백 제거
-      // 필요하다면 각 ID를 숫자로 변환 (원래 코드를 참고하여 Number()로 감싸기)
-      // postArrayFromUrl = postIdsParam.split(',').map(item => Number(item.trim()));
-  }
+  // let postArrayFromUrl = [];
+  // if (postIdsParam) {
+  //     postArrayFromUrl = postIdsParam.split(',').map(item => item.trim());
+  // }
 
-  console.log(postArrayFromUrl); // 예: ["123", "456", "789"] 또는 [123, 456, 789] (숫자 변환했을 경우)
+  //  displayRecommendPost(postArrayFromUrl);
 
-  // displayRecommendPost 함수 호출 시 postArrayFromUrl 사용
-  displayRecommendPost(postArrayFromUrl);
   document.querySelector("#testBtn").addEventListener("click", () => {
     triggerSwal();
     

@@ -289,7 +289,7 @@ async function setAnswer(text){
 
 async function resetPassword(email) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://aibe-chill-team.github.io/travel-secretary/account/resetPassowrd.html', // 비밀번호 변경 페이지 URL
+    redirectTo: 'https://aibe-chill-team.github.io/travel-secretary/account/resetPassword.html', // 비밀번호 변경 페이지 URL
   });
 
   if (error) {

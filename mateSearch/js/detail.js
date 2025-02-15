@@ -118,6 +118,7 @@ async function fetchPostingDetail(postingId, userId) {
 		  budget,
 		  content,
 		  created_at,
+      updated_at,
 		  image_url,
       locations,
       routes,
@@ -236,8 +237,12 @@ function displayDetails(posting) {
     });
   }
 
-  document.querySelector("#detail-created-at").textContent =
-    getFormattedDateTime(posting.created_at);
+  const date = document.querySelector("#detail-created-at");
+  if (posting.created_at === posting.updated_at) {
+    date.textContent = getFormattedDateTime(posting.created_at);
+  } else {
+    date.textContent = getFormattedDateTime(posting.updated_at) + " 수정됨";
+  }
 }
 
 function getFormattedDateTime(dateString) {

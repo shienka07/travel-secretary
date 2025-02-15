@@ -10,12 +10,49 @@ let placesService;
 // 초기화 함수 (한 번만 정의)
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 37.7749, lng: -122.4194 },
-    zoom: 5,
+    center: { lat: 37.5665, lng: 126.978 }, // 서울 중심으로 변경
+    zoom: 13,
   });
   geocoder = new google.maps.Geocoder();
-  // Places 서비스 초기화
   placesService = new google.maps.places.PlacesService(map);
+
+  // 지도 초기화 후 이벤트 리스너 설정
+  setupMapEventListeners();
+}
+
+function setupMapEventListeners() {
+  const addDayBtn = document.getElementById("addDayBtn");
+  if (addDayBtn) {
+    addDayBtn.addEventListener("click", function () {
+      dayCount++;
+      // ... 나머지 코드
+    });
+  }
+
+  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  const routeSection = document.getElementById("routeSection");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      routeSection.style.display =
+        routeSection.style.display === "none" ? "block" : "none";
+    });
+  }
+}
+
+// detail.js에 추가
+function handleRouteSave() {
+  try {
+    saveRouteToSupabase();
+  } catch (error) {
+    console.error("Route save failed:", error);
+  }
+}
+
+function setupRouteSaveButton() {
+  const saveRouteBtn = document.getElementById("saveRouteBtn");
+  if (saveRouteBtn) {
+    saveRouteBtn.addEventListener("click", handleRouteSave);
+  }
 }
 
 // DOM 로드 시 이벤트 리스너 등록

@@ -1,5 +1,5 @@
 
-import { getProfile, setProfile_auth, logout, uploadImage_auth, checkLogin} from "../js/auth.js"
+import { getProfile, setProfile_auth, logout, uploadImage_auth, checkLogin, setAnswer} from "../js/auth.js"
 
 async function setDefault() {
     const profile = await getProfile();
@@ -59,19 +59,21 @@ questionItems.forEach((item, index) => {
 
     const label1 = document.createElement("label");
     label1.className = "btn btn-outline-secondary";
+    label1.style = "width : 50%;"
     label1.setAttribute("for", `vbtn-radio1-${index}`);
     label1.textContent = item.answer1;
 
     const radio_check2 = document.createElement("input");
     radio_check2.type = "radio";
     radio_check2.className = "btn-check";
-    radio_check2.name = `vbtn-radio-${index}`;  
+    radio_check2.name = `vbtn-radio-${index}`; 
     radio_check2.value = item.answer2;
     radio_check2.id = `vbtn-radio2-${index}`;
     radio_check2.autocomplete = "off";
 
     const label2 = document.createElement("label");
     label2.className = "btn btn-outline-secondary"; 
+    label2.style = "width : 50%;"
     label2.setAttribute("for", `vbtn-radio2-${index}`);
     label2.textContent = item.answer2;
 
@@ -116,7 +118,10 @@ for (let i = 0; i < questionItems.length; i++) {
 
     const text = `${selectedValues.join(" ")}`;
 
-    
+    const error = await setAnswer(text);
+    if(error){
+        alert(error);
+    }
 
     form_container.removeChild(newForm);
     const spinnerdiv = document.createElement("div");

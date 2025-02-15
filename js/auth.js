@@ -271,6 +271,22 @@ async function fetchLatestPosts_auth() {
   }
 }
 
+async function setAnswer(text){
+    const { data, error: auth } = await supabase.auth.getUser();
+    if(auth){
+        return auth;
+    }
+
+    const { error: insertError } = await supabase
+        .from("userinfo")
+        .update({ answer: text })
+        .eq("id", data.user.id);
+
+  if (insertError) {
+    return insertError;
+  }
+}
+
 export {
   loadPosts,
   createPost,
@@ -290,5 +306,6 @@ export {
   getNickname,
   getProfile,
   setProfile_auth,
-  fetchLatestPosts_auth
+  fetchLatestPosts_auth,
+  setAnswer
 };

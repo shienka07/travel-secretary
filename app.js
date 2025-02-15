@@ -162,18 +162,18 @@ async function updateMainPage(posts) {
           .map(
             (group, index) => `
           <div class="carousel-item ${index === 0 ? "active" : ""}">
-            <div class="row g-4">
+            <div class="row g-4 justify-content-center"> <!-- justify-content-center 추가 -->
               ${group
                 .map(
                   (post) => `
-                <div class="col-md-4">
+                <div class="col-md-4" style="max-width: 400px;"> 
                   <div class="card h-100 shadow-sm border-0">
                     <div class="position-relative">
                       <img src="${post.processedImageUrl}" 
-                        class="card-img-top object-fit-cover"
-                        style="height: 225px;"
-                        alt="게시글 이미지"
-                        onerror="this.src='https://placehold.co/225x225'">
+                           class="card-img-top object-fit-cover"
+                           style="height: 225px;"
+                           alt="게시글 이미지"
+                           onerror="this.src='./default.jpg'">
                     </div>
                     <div class="card-body d-flex flex-column">
                       <h5 class="card-title fw-bold mb-3">${
@@ -185,7 +185,7 @@ async function updateMainPage(posts) {
                           : "내용 없음"
                       }</p>
                       <div class="d-flex justify-content-between align-items-center">
-                        <a href="detail.html?id=${
+                        <a href="./mateSearch/detail.html?id=${
                           post.id
                         }" class="btn btn-outline-secondary btn-sm px-3">View</a>
                         <small class="text-muted">${new Date(

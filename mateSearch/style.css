@@ -9,40 +9,209 @@
 
 .card-title-link:hover {
   color: #0056b3; /* hover 시 링크 색상 변경 (예시) */
-  /* text-decoration: underline; hover 시 밑줄 표시 (선택 사항) */
+  text-decoration: underline; /*hover 시 밑줄 표시 (선택 사항) */
 }
 
 /* write.css */
+.write-form {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(74, 144, 226, 0.08);
+  transition: all 0.3s ease;
+}
+
 .write-form .card {
-  border-radius: 15px; /* Card 둥글게 */
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  transition: none; /* 트랜지션 제거 */
+  height: 100%;
+  z-index: 1;
+}
+
+.write-form .card:hover {
+  transform: none; /* 호버 시 변형 제거 */
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05); /* 기존 그림자 유지 */
 }
 
 .write-form .form-label {
-  margin-bottom: 0.5rem; /* Label 아래 간격 */
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 0.75rem; /* Label 아래 간격 */
+}
+
+.write-form h2 {
+  background: linear-gradient(45deg, #2c3e50, #3498db);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: bold;
+  letter-spacing: -1px;
+}
+
+.write-form .lead {
+  color: #5a6a7a;
+  font-size: 1.1rem;
 }
 
 .write-form input[type="text"],
 .write-form input[type="date"],
 .write-form input[type="number"],
-.write-form textarea {
-  border-radius: 10px; /* 입력 필드 둥글게 */
+.write-form textarea,
+.write-form .input-group .form-control {
+  border-radius: 12px;
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  padding: 0.75rem 1rem;
+  transition: none !important;
+}
+
+.write-form input[type="text"]:focus,
+.write-form input[type="date"]:focus,
+.write-form input[type="number"]:focus,
+.write-form textarea:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+}
+
+.write-form input[type="text"]:hover,
+.write-form input[type="date"]:hover,
+.write-form input[type="number"]:hover,
+.write-form textarea:hover {
+  border-color: rgba(74, 144, 226, 0.2) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .write-form .form-check-inline .form-check-label {
   padding: 0.5rem 1rem;
-  border: 1px solid #ced4da; /* 체크박스 라벨 테두리 */
-  border-radius: 20px; /* 체크박스 라벨 둥글게 */
-  background-color: #f8f9fa; /* 체크박스 라벨 배경색 */
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  border-radius: 20px;
+  background-color: transparent;
+  color: #4a90e2;
+  transition: all 0.2s ease;
 }
 
 .write-form .form-check-inline .form-check-input:checked + .form-check-label {
-  background-color: #0b5ed7; /* 선택된 체크박스 라벨 배경색 */
-  color: white; /* 선택된 체크박스 라벨 글자색 */
-  border-color: #0a58ca; /* 선택된 체크박스 라벨 테두리 색 */
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+  border-color: #4a90e2;
+}
+
+.write-form .input-group-text {
+  background: transparent;
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  border-left: none;
+  color: #4a90e2;
 }
 
 .write-form textarea {
-  resize: vertical; /* textarea 높이만 리사이즈 가능하도록 */
+  resize: vertical;
+  min-height: 200px;
+}
+
+#style-checkboxes .form-check-input:checked {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+}
+
+.write-form .button-group {
+  display: flex;
+  gap: 15px;
+}
+
+.write-form .btn-primary {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.write-form .btn-primary:hover {
+  background: linear-gradient(45deg, #357abd, #2a6198);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+}
+
+.write-form .btn-secondary {
+  background: transparent;
+  border: 1.5px solid #4a90e2;
+  color: #4a90e2;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.write-form .btn-secondary:hover {
+  background: rgba(74, 144, 226, 0.05);
+  border-color: #357abd;
+  color: #357abd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+#style-checkboxes .form-check {
+  transition: all 0.2s ease;
+  border-radius: 20px;
+}
+
+#style-checkboxes .form-check:hover {
+  transform: translateY(-2px);
+}
+
+#style-checkboxes .form-check-label:hover {
+  cursor: pointer;
+}
+
+/*
+#style-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#style-checkboxes .form-check {
+  margin: 0;
+  padding: 0;
+}
+
+#style-checkboxes .form-check-input {
+  display: none;
+}
+
+#style-checkboxes .form-check-label {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: transparent;
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  color: #4a90e2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#style-checkboxes .form-check-input:checked + .form-check-label,
+#style-checkboxes .form-check-label.active {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+  border-color: #4a90e2;
+}
+*/
+
+@media (max-width: 768px) {
+  .write-form .button-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .write-form .btn-primary,
+  .write-form .btn-secondary {
+    width: 100%;
+  }
 }
 
 /* 지도  */

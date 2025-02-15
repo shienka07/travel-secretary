@@ -16,6 +16,10 @@ const imageInput = document.querySelector("#imageUrl");
 
 // 게시글 작성 관련
 const postingService = {
+  // async loadDefaultImage() {
+  // const {data: image, error: loadError} = await supabase.storage
+  // .from(matebucketName).download()
+
   async checkAuth() {
     const { data: userInfo, error: authError } = await supabase.auth.getUser();
     if (authError) throw new Error("인증 오류 발생");
@@ -23,7 +27,9 @@ const postingService = {
   },
 
   async uploadImage(file) {
-    if (!file) return null;
+    const DEFAULT_IMAGE_PATH = "/mate/default.png";
+
+    if (!file) return DEFAULT_IMAGE_PATH;
 
     const timestamp = new Date().getTime();
     const fileName = `post_image_${timestamp}_${file.name}`;
@@ -38,7 +44,7 @@ const postingService = {
       return image.path;
     } catch (error) {
       console.log("이미지 업로드 중 오류: ", error);
-      return;
+      return DEFAULT_IMAGE_PATH;
     }
   },
 
@@ -162,9 +168,7 @@ async function handleSubmit(event) {
 
     // 업로드
     const imageFile = imageInput.files[0];
-    if (imageFile) {
-      postData.image_url = await postingService.uploadImage(imageFile);
-    }
+    postData.image_url = await postingService.uploadImage(imageFile);
 
     // 게시글 생성
     const postingId = await postingService.createPosting(postData);
@@ -196,24 +200,26 @@ async function initializePosting() {
     const username = localStorage.getItem("username") || "Guest";
     document.getElementById("username").textContent = username + " 님";
 
-    if(localStorage.getItem("profile_img"))
-      {
-          const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
-          const profile = document.querySelector("#profile");
-          profile.src = profile_img;
+    if (localStorage.getItem("profile_img")) {
+      const profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+        localStorage.getItem("profile_img");
+      const profile = document.querySelector("#profile");
+      profile.src = profile_img;
+    } else {
+      const data = await getProfile();
+
+      if (!data.image_url == "") {
+        var profile_img =
+          "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+          data.image_url;
+      } else {
+        var profile_img =
+          "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
       }
-      else{
-          const data = await getProfile();
-          
-          if(!data.image_url == ""){
-              var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
-          }
-          else{
-              var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
-          }
-          const profile = document.querySelector("#profile");
-          profile.src = profile_img;
-      }
+      const profile = document.querySelector("#profile");
+      profile.src = profile_img;
+    }
 
     document
       .getElementById("logout")

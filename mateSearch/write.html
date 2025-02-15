@@ -29,8 +29,8 @@
                 style="width: 40px"
               />
 
-            <span class="fs-4">여행 비서</span>
-          </a>
+              <span class="fs-4">여행 비서</span>
+            </a>
           </div>
 
           <ul
@@ -123,7 +123,6 @@
                         name="isDomestic"
                         id="isDomestic"
                         value="true"
-                        checked
                       />
                       <label class="form-check-label" for="isDomestic"
                         >국내</label
@@ -143,17 +142,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6">
-                  <label for="title" class="form-label fw-bold">제목</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    name="title"
-                    id="title"
-                    placeholder="제목을 입력해주세요"
-                    required
-                  />
-                </div>
+
                 <div class="col-md-6">
                   <label for="destination" class="form-label fw-bold"
                     >여행 지역</label
@@ -183,6 +172,21 @@
                   />
                 </div>
                 <div class="col-md-6">
+                  <label for="budget" class="form-label fw-bold"
+                    >예산 (선택 사항)</label
+                  >
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="budget"
+                      id="budget"
+                      placeholder="예산 (선택 사항)"
+                    />
+                    <span class="input-group-text">원</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
                   <label for="startDate" class="form-label fw-bold"
                     >여행 시작일</label
                   >
@@ -206,21 +210,6 @@
                     required
                   />
                 </div>
-                <div class="col-md-12">
-                  <label for="budget" class="form-label fw-bold"
-                    >예산 (선택 사항)</label
-                  >
-                  <div class="input-group">
-                    <input
-                      type="number"
-                      class="form-control"
-                      name="budget"
-                      id="budget"
-                      placeholder="예산 (선택 사항)"
-                    />
-                    <span class="input-group-text">원</span>
-                  </div>
-                </div>
               </div>
             </section>
 
@@ -228,7 +217,17 @@
               <h5 class="mb-3 fw-bold">선호하는 여행 스타일</h5>
               <div class="d-flex flex-wrap gap-2" id="style-checkboxes"></div>
             </section>
-
+            <section class="mb-3">
+              <label for="title" class="form-label fw-bold">제목</label>
+              <input
+                type="text"
+                class="form-control"
+                name="title"
+                id="title"
+                placeholder="제목을 입력해주세요"
+                required
+              />
+            </section>
             <section class="mb-3">
               <h5 class="mb-3 fw-bold">추가 내용</h5>
               <div class="mb-3">

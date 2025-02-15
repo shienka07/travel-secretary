@@ -175,19 +175,20 @@ function displayDetails(posting) {
     imageElement.classList.add("card-img-top", "detail-image");
     imageElement.style.width = "300px";
     imageArea.appendChild(imageElement);
-  } else {
-    imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
-    const placeholder = imageArea.querySelector(".image-placeholder");
-    placeholder.classList.add(
-      "bg-light",
-      "d-flex",
-      "justify-content-center",
-      "align-items-center",
-      "p-4"
-    );
-    placeholder.style.height = "150px";
-    placeholder.textContent = "No Image";
   }
+  // else {
+  //   imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
+  //   const placeholder = imageArea.querySelector(".image-placeholder");
+  //   placeholder.classList.add(
+  //     "bg-light",
+  //     "d-flex",
+  //     "justify-content-center",
+  //     "align-items-center",
+  //     "p-4"
+  //   );
+  //   placeholder.style.height = "150px";
+  //   placeholder.textContent = "No Image";
+  // }
 
   document.querySelector(
     "#detail-author-age"
@@ -240,8 +241,8 @@ function getFormattedDateTime(dateString) {
 async function initializePage() {
   const islogined = await checkLogin();
   if (!islogined) {
-    window.location.href =
-      "https://aibe-chill-team.github.io/travel-secretary/";
+    window.location.href = "../index.html";
+    // "https://aibe-chill-team.github.io/travel-secretary/";
     alert("로그인이 필요합니다");
   }
 
@@ -280,7 +281,7 @@ async function initializePage() {
 
   if (!postingId) {
     alert("잘못된 접근입니다.");
-    redirectToPage("/");
+    redirectToPage("../index.html"); // 수정
     return;
   }
   console.log("postingId:", postingId); // 추출된 postingId 값 확인 (디버깅 용)

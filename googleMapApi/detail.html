@@ -10,9 +10,104 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
+    <script src="googleMapApi.js"></script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
+    
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../font.css" />
+    <link rel="stylesheet" href="./css/comment.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
+    <nav>
+      <div class="container">
+        <header
+          class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+        >
+          <div class="col-md-3 mb-2 mb-md-0">
+            <a
+              href="../index.html"
+              class="dd-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"
+            >
+              <img
+                src="https://github.com/AIBE-chill-TEAM/travel-secretary/blob/dev/assets/logo.png?raw=true"
+                style="width: 40px"
+              />
+
+            <span class="fs-4">여행 비서</span>
+          </a>
+          </div>
+
+          <ul
+            class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0"
+          >
+            <li>
+              <a
+                href="https://aibe-chill-team.github.io/travel-secretary"
+                class="nav-link px-2 link-secondary"
+                >메인</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://aibe-chill-team.github.io/travel-secretary/mateSearch/"
+                class="nav-link px-2 link-secondary"
+                >동행 구하기</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://aibe-chill-team.github.io/travel-secretary/aiPlanner/"
+                class="nav-link px-2 link-secondary"
+                >AI 여행 일정</a
+              >
+            </li>
+          </ul>
+
+          <div class="col-md-3 text-end">
+            <div class="flex-shrink-0 dropdown">
+              <a
+                href="#"
+                class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="true"
+              >
+                <img
+                  id="profile"
+                  src=""
+                  alt="Profile Image"
+                  width="32"
+                  height="32"
+                  class="rounded-circle"
+                />
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                <li><a class="dropdown-item" href="#" id="username"></a></li>
+                <hr class="dropdown-divider" />
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="https://aibe-chill-team.github.io/travel-secretary/account/myprofile.html"
+                    >마이 프로필</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#">작성 글(수정 예정)</a>
+                </li>
+                <hr class="dropdown-divider" />
+                <li>
+                  <a class="dropdown-item" href="" id="logout">로그아웃</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+      </div>
+    </nav>
     <div class="container mt-5">
       <div id="detail-box" class="card shadow-sm">
         <div id="detail-image-area">
@@ -37,6 +132,14 @@
               <button
                 type="button"
                 class="btn btn-primary btn-sm"
+                id="complete-btn"
+                hidden
+              >
+                모집완료
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
                 id="edit-btn"
                 hidden
               >
@@ -54,7 +157,8 @@
           </div>
 
           <div class="d-flex align-items-center mb-3">
-            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem"></i>
+            <div id="detail-author-image-area"></div>
+            <!-- <i class="bi bi-person-circle me-2" style="font-size: 1.5rem"></i> -->
             <p class="card-text mb-0" id="detail-author-info">
               <span id="detail-author-username"></span>
               | <span id="detail-author-gender"></span> |
@@ -89,11 +193,46 @@
             </p>
           </div>
 
-          <h2>여행 경로 등록</h2>
-          <button id="registerRouteBtn" class="btn btn-primary">
-            여행경로 등록하기
-          </button>
-          <div id="map"></div>
+          <div class="mt-4">
+            <h6 class="fw-bold mb-2">📝 여행 경로 안내</h6>
+
+           
+            <!-- 여행 경로 안내 섹션 -->
+            
+              <button id="toggleRouteSectionBtn" class="btn btn-secondary mb-3">
+                여행 경로 등록하기
+              </button>
+              
+              <div id="routeSection" style="display: none;">
+                <div id="daysContainer">
+                  <div class="day-section">
+                    <h3 onclick="toggleSection('day1')">Day 1</h3>
+                    <div id="day1" class="day-inputs">
+                      <div class="place-input-container">
+                        <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+                        <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+                      </div>
+                      <button class="add-place-btn" onclick="addPlaceInput('day1')">장소 추가</button>
+                    </div>
+                  </div>
+                </div>
+                <button id="addDayBtn">날짜 추가</button>
+                <button class="draw-route-btn" onclick="drawAllRoutes()"> 경로 그리기</button>
+             
+                <button id="saveRouteBtn" class="btn btn-success">경로 저장</button>
+              </div>
+
+              <p class="card-text" id="detail-content">
+                <!-- 게시글 내용이 여기에 들어갑니다. -->
+              </p>
+            </div>
+           <div class="map-container">
+  <div id="map"></div>
+  <div id="place-info" class="place-info hidden"></div>
+</div>
+            </div>
+          </div>
+
           <div class="styles-tags mt-3" id="detail-styles-tags">
             <!-- <span class="badge bg-secondary me-1 mb-1">#휴양</span>
             <span class="badge bg-secondary me-1 mb-1">#액티비티</span>
@@ -104,7 +243,7 @@
           <p class="mb-0 text-end" id="detail-created-at"></p>
         </div>
 
-        <!-- ✅ 댓글 입력 폼 -->
+        <!-- 댓글 입력 폼 -->
         <div class="container mt-4">
           <h5>💬 댓글</h5>
           <div id="comments-container" class="mb-3">
@@ -118,59 +257,21 @@
               rows="3"
               placeholder="댓글을 입력하세요"
             ></textarea>
-            <button
-              id="comment-submit-btn"
-              type="button"
-              class="btn btn-primary mt-2"
-            >
-              댓글 작성
-            </button>
+            <div class="comment-submit-container">
+              <button
+                id="comment-submit-btn"
+                type="button"
+                class="btn btn-primary"
+              >
+                댓글 작성
+              </button>
+            </div>
           </form>
         </div>
       </div>
     </div>
 
-    <script>
-      let map;
-      let markers = [];
-
-      function initMap() {
-        map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: 37.7749, lng: -122.4194 }, // 기본 위치
-          zoom: 13,
-        });
-      }
-
-      // 여행경로 등록 버튼 클릭 시 insertMap.html 페이지로 이동
-      document
-        .getElementById("registerRouteBtn")
-        .addEventListener("click", function () {
-          window.open("insertMap.html", "_blank", (width = "500px"));
-        });
-
-      // 지도 초기화
-      window.onload = initMap;
-
-      // 부모 창에서 메시지 받기
-      window.addEventListener("message", function (event) {
-        if (event.data.action === "addRoute") {
-          const route = event.data.route;
-          drawRoute(route);
-        }
-      });
-
-      // 경로 그리기 함수
-      function drawRoute(route) {
-        const polyline = new google.maps.Polyline({
-          path: route,
-          geodesic: true,
-          strokeColor: "#FF0000", // 경로 색상
-          strokeOpacity: 1.0,
-          strokeWeight: 2,
-        });
-        polyline.setMap(map);
-      }
-    </script>
+    <script></script>
 
     <link
       rel="stylesheet"
@@ -184,11 +285,6 @@
 
     <script type="module" src="./js/detail.js"></script>
     <script type="module" src="./js/comment.js"></script>
-
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places"
-      async
-      defer
-    ></script>
+    <script type="module" src="./js/saveRoute.js"></script>
   </body>
 </html>

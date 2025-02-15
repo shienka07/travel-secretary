@@ -156,53 +156,54 @@ document.addEventListener("DOMContentLoaded", function () {
   const listItems = document.getElementById("listItems");
   const mapPopup = document.getElementById("map");
 
-  function saveMarkdown() {
+  async function saveMarkdown() {
     const markdownDB = localStorage.getItem("markdown");
     if (markdownDB !== null) {
       const arrayDB = localStorage.getItem("array");
       const locationDB = localStorage.getItem("location");
       const submitDataDB = JSON.parse(localStorage.getItem("submitData"));
-      let nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
-      Swal.fire({
+
+      // Swal.fire를 호출하고 결과를 result에 담는다
+      const result = await Swal.fire({
         title: "여행 플래너의 제목을 입력하세요",
         input: "text",
         inputPlaceholder: `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`,
         inputValue: `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`, // 기본값 설정
         confirmButtonText: "확인",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          nameDB =
-            result.value.trim() !== ""
-              ? result.value
-              : `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`;
-
-          console.log("입력된 값:", nameDB);
-        }
       });
+
+      let nameDB = `${submitDataDB[1]}일간의 ${submitDataDB[0]} ${submitDataDB[2]} 여행`; // 기본값
+
+      // 결과가 존재하면 nameDB를 업데이트
+      if (result.isConfirmed) {
+        nameDB = result.value.trim() !== "" ? result.value : nameDB;
+      }
 
       console.log(nameDB);
       console.log(arrayDB);
+
+      // 마크다운과 기타 데이터 저장
       // 마크다운을 데이터베이스에 저장
       // 방문장소를 데이터베이스에 저장
       // 좌표를 데이터베이스에 저장
-      // 제목을 데이터베이스에 저장 (${travelDays}일간의 ${destination} ${travelTheme} 여행)
-      getId()
-        .then((Id) => {
-          if (Id) {
-            addDBData(Id, nameDB, markdownDB, locationDB, arrayDB);
-            Swal.fire({
-              title: "저장 완료",
-              text: `제목: ${nameDB}`,
-              icon: "success", // 아이콘 변경 가능: success, error, warning, info, question
-              confirmButtonText: "확인",
-            });
-          } else {
-            console.log("로그인되지 않았거나 유저 정보가 없습니다.");
-          }
-        })
-        .catch((error) => {
-          console.error("유저 ID 조회 실패:", error);
-        });
+      // 제목을 데이터베이스에 저장
+
+      try {
+        const Id = await getId();
+        if (Id) {
+          await addDBData(Id, nameDB, markdownDB, locationDB, arrayDB);
+          await Swal.fire({
+            title: "저장 완료",
+            text: `제목: ${nameDB}`,
+            icon: "success",
+            confirmButtonText: "확인",
+          });
+        } else {
+          console.log("로그인되지 않았거나 유저 정보가 없습니다.");
+        }
+      } catch (error) {
+        console.error("유저 ID 조회 실패:", error);
+      }
     } else {
       showToast("저장할 내용이 없습니다.", "danger");
     }
@@ -214,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
     getId()
       .then((Id) => {
         if (Id) {
-          getDBDataByUserId(getId())
+          getDBDataByUserId(Id)
             .then((items) => {
               console.log(items);
               items.forEach((item) => {

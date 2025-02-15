@@ -10,69 +10,18 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
-    <script src="./js/googleMapApi.js"></script>
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
-      async
-      defer
-    ></script>
-    <style>
-      #map {
-        width: 100%;
-        height: 500px;
-      }
-      .day-section {
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-      }
-      .day-section h3 {
-        margin: 0;
-        padding: 10px;
-        background-color: #f0f0f0;
-        cursor: pointer;
-      }
-      .place-input-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .place-input {
-        flex: 1;
-        padding: 5px;
-      }
-      .delete-place-btn {
-        margin-left: 10px;
-        background-color: #ff4d4d;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-      }
-      .hidden {
-        display: none;
-      }
-      .add-place-btn {
-        margin-bottom: 10px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-      }
-      .draw-route-btn {
-        background-color: #008cba;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        margin-right: 10px;
-      }
-    </style>
+    <script src="./js/googleMapApi.js"></script> 
+   
+    
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="../font.css" />
     <link rel="stylesheet" href="./css/comment.css" />
+    <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
+    async
+    defer
+  ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <nav>
@@ -248,56 +197,41 @@
           <div class="mt-4">
             <h6 class="fw-bold mb-2">📝 여행 경로 안내</h6>
 
-            <!-- 토글 버튼 추가 -->
-            <button id="toggleRouteSectionBtn" class="btn btn-secondary mb-3">
-              여행 경로 안내 숨기기/보이기
-            </button>
-
+           
             <!-- 여행 경로 안내 섹션 -->
-            <div id="routeSection">
-              <div id="daysContainer">
-                <div class="day-section">
-                  <h3 onclick="toggleSection('day1')">Day 1</h3>
-                  <div id="day1" class="day-inputs">
-                    <div class="place-input-container">
-                      <input
-                        type="text"
-                        class="place-input"
-                        placeholder="장소를 입력하세요"
-                      />
-                      <button
-                        class="delete-place-btn"
-                        onclick="deletePlaceInput(this)"
-                      >
-                        삭제
-                      </button>
+            
+              <button id="toggleRouteSectionBtn" class="btn btn-secondary mb-3">
+                여행 경로 등록하기
+              </button>
+              
+              <div id="routeSection" style="display: none;">
+                <div id="daysContainer">
+                  <div class="day-section">
+                    <h3 onclick="toggleSection('day1')">Day 1</h3>
+                    <div id="day1" class="day-inputs">
+                      <div class="place-input-container">
+                        <input type="text" class="place-input" placeholder="장소를 입력하세요" />
+                        <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
+                      </div>
+                      <button class="add-place-btn" onclick="addPlaceInput('day1')">장소 추가</button>
                     </div>
-                    <button
-                      class="add-place-btn"
-                      onclick="addPlaceInput('day1')"
-                    >
-                      장소 추가
-                    </button>
                   </div>
                 </div>
+                <button id="addDayBtn">날짜 추가</button>
+                <button class="draw-route-btn" onclick="drawAllRoutes()"> 경로 그리기</button>
+             
+                <button id="saveRouteBtn" class="btn btn-success">경로 저장</button>
               </div>
-              <button id="addDayBtn">날짜 추가</button>
-              <button class="draw-route-btn" onclick="drawAllRoutes()">
-                전체 경로 그리기
-              </button>
-
-              <button class="draw-route-btn" onclick="drawDayRoutes()">
-                선택 날짜 경로 그리기
-              </button>
-              <!-- 저장 버튼 추가 -->
-  <button id="saveRouteBtn" class="btn btn-success">경로 저장</button>
-</div>
 
               <p class="card-text" id="detail-content">
                 <!-- 게시글 내용이 여기에 들어갑니다. -->
               </p>
             </div>
-            <div id="map"></div>
+           <div class="map-container">
+  <div id="map"></div>
+  <div id="place-info" class="place-info hidden"></div>
+</div>
+            </div>
           </div>
 
           <div class="styles-tags mt-3" id="detail-styles-tags">
@@ -352,5 +286,6 @@
 
     <script type="module" src="./js/detail.js"></script>
     <script type="module" src="./js/comment.js"></script>
+    <script type="module" src="./js/saveRoute.js"></script>
   </body>
 </html>

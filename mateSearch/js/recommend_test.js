@@ -141,7 +141,7 @@ function createMatchingPrompt(data, userPrefer) {
   return prompt;
 }
 
-const GEMINI_API_KEY = localStorage.getItem("GEMINI_API_KEY");
+const GEMINI_API_KEY = localStorage.getItem("GEMINI_API_KEY")
 
 const callModel = async (
   prompt,
@@ -180,7 +180,7 @@ const callModel = async (
 
 const callModel2 = async (
   prompt,
-  modelName = "gemini-2.0-flash-thinking-exp-01-21",
+  modelName = "gemini-2.0-pro-exp-02-05",
   action = "generateContent",
   generationConfig = {}
   // autoSearch = true
@@ -279,13 +279,15 @@ async function exampleMatchingPromptUsage() {
   const parsedData = JSON.parse(match[0]);
   console.log(parsedData.ID)
   const postArray = parsedData.ID.split(",").map(item => item.trim());
+  if(postArray[0] == 0){
+    const error = new Error("매칭실패");
+    error.name = "MatchingError"; // 명시적으로 name 설정
+    throw error;
+  }
   displayRecommendPost(postArray)
 }
 
 async function displayRecommendPost(postArray) {
-  if(postArray[0] == 0){
-    return;
-  }
   const { data: postings, error } = await supabase
     .from(mateTable)
     .select(`
@@ -473,10 +475,12 @@ let timerInterval;
 
 async function triggerSwal() {
     Swal.fire({
-      title: "AI 매칭 진행 중입니다.",
-      html: "AI 매칭 이후 자동으로 닫힙니다... <b></b>",
-      timer: 30000,
+      title: "AI 자동 매칭 진행 중입니다.",
+      html: "매칭 이후 자동으로 닫힙니다... <b></b>",
+      timer: 40000,
       timerProgressBar: true,
+      allowOutsideClick: false, // ← 추가된 옵션
+      allowEscapeKey: false,    // ESC 키 방지 (선택사항)
       didOpen: async () => { // ✅ didOpen에서 비동기 작업 시작
         Swal.showLoading();
         const timer = Swal.getPopup().querySelector("b");
@@ -486,7 +490,16 @@ async function triggerSwal() {
           await exampleMatchingPromptUsage();
           Swal.close(); // 작업 완료 시 수동 종료
         } catch (error) {
-          Swal.fire("오류 발생!", error.message, "error");
+          if(error.name == "MatchingError"){
+            Swal.fire({
+              icon: "error",
+              title: "매칭 실패",
+              text: "조건에 맞는 여행 메이트를 찾지 못했습니다.",
+            });
+          }
+          else{
+            Swal.fire("오류 발생!", error.message, "error");
+          }
         }
       },
       willClose: () => {

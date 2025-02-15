@@ -9,12 +9,14 @@ import {
 } from "./config.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
-import { checkLogin,getProfile,logout } from "../../js/auth.js";
+import { checkLogin, getProfile, logout } from "../../js/auth.js";
 
 const form = document.querySelector("#editForm");
 const cancelBtn = document.querySelector("#cancelWriteBtn");
 const imageInput = document.querySelector("#imageUrl");
 const imagePreview = document.querySelector("#imagePreview");
+const DEFAULT_IMAGE_PATH = "/mate/default.png";
+let isImageDeleted = false;
 
 // 게시글 수정 관련
 const postingService = {
@@ -25,7 +27,7 @@ const postingService = {
   },
 
   async uploadImage(file) {
-    if (!file) return null;
+    if (!file) return DEFAULT_IMAGE_PATH;
 
     const timestamp = new Date().getTime();
     const fileName = `post_image_${timestamp}_${file.name}`;
@@ -115,10 +117,17 @@ const postingService = {
       throw error;
     }
   },
+  async getImage(image_url) {
+    const { data: imageUrlData } = await supabase.storage
+      .from(matebucketName)
+      .getPublicUrl(image_url);
+
+    return imageUrlData.publicUrl;
+  },
 };
 
 // 폼 데이터 채우기
-function fillFormData(posting, styles) {
+async function fillFormData(posting, styles) {
   form.querySelector('[name="title"]').value = posting.title;
   form.querySelector('[name="content"]').value = posting.content;
   form.querySelector('[name="startDate"]').value = posting.start_date;
@@ -136,10 +145,42 @@ function fillFormData(posting, styles) {
     if (checkbox) checkbox.checked = true;
   });
 
-  // 이미지 미리보기
-  //   if (posting.image_url && imagePreview) {
-  //     imagePreview.innerHTML = `<img src="${posting.image_url}" alt="Preview" style="max-width: 200px;">`;
-  //   }
+  if (posting.image_url != DEFAULT_IMAGE_PATH) {
+    const uploadImage = document.createElement("div");
+    uploadImage.classList.add("mb-3", "me-2");
+    uploadImage.textContent = "업로드된 이미지: ";
+    const image = document.createElement("img");
+    image.src = await postingService.getImage(posting.image_url);
+    image.style.maxWidth = "200px";
+    image.alt = "Preview";
+    image.style.verticalAlign = "text-top";
+
+    const deleteA = document.createElement("a");
+    deleteA.textContent = "삭제";
+    deleteA.href = "#";
+    deleteA.classList.add("btn", "btn-danger", "btn-sm");
+
+    deleteA.addEventListener("click", function (event) {
+      event.preventDefault();
+
+      uploadImage.style.display = "none"; // 숨기기만 하고 실제로 제거하지 않음
+      isImageDeleted = true;
+    });
+
+    // 취소 버튼에 대한 이벤트 리스너 추가
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        if (isImageDeleted) {
+          uploadImage.style.display = ""; // 이미지 다시 보이게
+          isImageDeleted = false;
+        }
+      });
+    }
+
+    uploadImage.appendChild(image);
+    uploadImage.appendChild(deleteA);
+    imagePreview.appendChild(uploadImage);
+  }
 }
 
 // 폼 제출 처리
@@ -166,6 +207,10 @@ async function handleSubmit(event, postId) {
     const imageFile = imageInput.files[0];
     if (imageFile) {
       postData.image_url = await postingService.uploadImage(imageFile);
+    } else if (isImageDeleted) {
+      postData.image_url = DEFAULT_IMAGE_PATH; // 삭제가 확정될 때만 디폴트 이미지로
+    } else {
+      postData.image_url = posting.image_url; // 기존 이미지 유지
     }
 
     // 게시글 수정
@@ -200,39 +245,44 @@ function handleImageChange(event) {
 // 초기화
 async function initializeEdit(postId) {
   try {
-    const islogined = await checkLogin()
-    if (!islogined){
-        window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-        alert("로그인이 필요합니다");
+    const islogined = await checkLogin();
+    if (!islogined) {
+      window.location.href =
+        "https://aibe-chill-team.github.io/travel-secretary/";
+      alert("로그인이 필요합니다");
     }
 
     const username = localStorage.getItem("username") || "Guest";
     document.getElementById("username").textContent = username + " 님";
 
-    if(localStorage.getItem("profile_img"))
-      {
-          const profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ localStorage.getItem("profile_img");
-          const profile = document.querySelector("#profile");
-          profile.src = profile_img;
-      }
-      else{
-          const data = await getProfile();
-          
-          if(!data.image_url == ""){
-              var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/"+ data.image_url;
-          }
-          else{
-              var profile_img = "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
-          }
-          const profile = document.querySelector("#profile");
-          profile.src = profile_img;
-      }
+    if (localStorage.getItem("profile_img")) {
+      const profile_img =
+        "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+        localStorage.getItem("profile_img");
+      const profile = document.querySelector("#profile");
+      profile.src = profile_img;
+    } else {
+      const data = await getProfile();
 
-    document.getElementById("logout").addEventListener("click", async (event) => {
+      if (!data.image_url == "") {
+        var profile_img =
+          "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/" +
+          data.image_url;
+      } else {
+        var profile_img =
+          "https://frqevnyaghrnmtccnerc.supabase.co/storage/v1/object/public/mate-bucket/profile/profile.jpg";
+      }
+      const profile = document.querySelector("#profile");
+      profile.src = profile_img;
+    }
+
+    document
+      .getElementById("logout")
+      .addEventListener("click", async (event) => {
         event.preventDefault();
         await logout();
-        window.location.href = "../index.html"
-    });
+        window.location.href = "../index.html";
+      });
 
     await postingService.checkAuth();
     await fetchTravelStylesAndDisplayCheckboxes("style-checkboxes");

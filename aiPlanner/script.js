@@ -74,7 +74,7 @@ async function initMap(
 
             marker.addListener("click", () => {
               infoWindow.setContent(`
-                <div class="card" style="width: 250px; border-radius: 8px; overflow: hidden;">
+                <div class="card" style="width: 100%; border-radius: 8px; overflow: hidden;">
                   <img src="${photoUrl}" class="card-img-top" alt="${
                 result.name
               }" style="height: 150px; object-fit: cover;">

@@ -11,6 +11,9 @@
     <!-- Axios CDN 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- 부트스트랩 -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -253,7 +256,7 @@
               class="text-center mt-2"
               style="font-size: small; color: rgb(55, 55, 55)"
             >
-              플래너 속 회색 버튼을 누르면 지도가 표시됩니다.
+              플래너 내 회색 버튼을 누르면 지도가 표시됩니다.
             </div>
           </div>
         </div>
@@ -286,10 +289,10 @@
     </div>
 
     <!-- 팝업 오버레이 -->
-    <div class="popup-overlay" id="popupOverlay"></div>
+    <!-- <div class="popup-overlay" id="popupOverlay"></div> -->
 
     <!-- 팝업 -->
-    <div class="popup" id="popup">
+    <!-- <div class="popup" id="popup">
       <iframe
         id="mapIframe"
         src=""
@@ -301,7 +304,7 @@
         referrerpolicy="no-referrer-when-downgrade"
       ></iframe>
       <button id="closePopupBtn" class="btn" style="display: none">닫기</button>
-    </div>
+    </div> -->
 
     <!-- 팝업 오버레이 -->
     <div class="popup-overlay" id="locationsPopupOverlay"></div>
@@ -351,7 +354,7 @@
 
     <!-- <div class="bottomBar"></div> -->
 
-    <!-- js -->
+    <!-- js  -->
     <script type="module" src="script2.js"></script>
     <script type="module" src="script.js"></script>
   </body>

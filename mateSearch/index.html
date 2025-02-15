@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="style.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  </head> 
+  </head>
   <body>
     <nav>
       <div class="container">
@@ -259,25 +259,33 @@
                 </label>
               </div>
             </div>
-            <button type="button" class="btn btn-primary" id="applyFiltersBtn">
-              필터 적용
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              id="resetFiltersBtn"
-            >
-              필터 초기화
-            </button>
+            <div class="btn-container">
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="applyFiltersBtn"
+              >
+                필터 적용
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="resetFiltersBtn"
+              >
+                필터 초기화
+              </button>
+            </div>
           </div>
         </div>
         <div class="col-md-9">
-          <button type="button" class="btn btn-secondary" id="writeBtn">
-            글작성
-          </button>
-          <button type="button" class="btn btn-secondary" id="testBtn">
-            테스트
-          </button>
+          <div class="button-container">
+            <button type="button" class="btn btn-secondary" id="writeBtn">
+              글작성
+            </button>
+            <button type="button" class="btn btn-secondary" id="testBtn">
+              테스트
+            </button>
+          </div>
           <div id="box" class="row"></div>
         </div>
       </div>
@@ -286,7 +294,7 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"
       ></script>
-      
+
       <script type="module" src="./js/main.js"></script>
       <script type="module" src="./js/recommend_test.js"></script>
     </div>

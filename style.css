@@ -133,7 +133,6 @@
   transition: all 0.3s ease;
 }
 
-/* 메인 섹션의 버튼들을 위한 전용 스타일 */
 .btn-main,
 .btn-main-outline {
   padding: 15px 40px;
@@ -143,6 +142,7 @@
   transition: all 0.2s ease;
   width: 230px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .btn-main {
@@ -244,6 +244,25 @@
   color: white;
 }
 
+.feature-card {
+  height: 100%; /* 카드 높이 동일하게 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feature-card p {
+  word-break: keep-all; /* 한글 단어 단위 개행 */
+  white-space: pre-line; /* 줄바꿈 보존 */
+}
+
+.feature-card h5 {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+  word-break: keep-all; /* 한글 단어 단위 개행 */
+  width: 100%; /* 너비 제한 */
+}
+
 /* 반응형 대응 */
 @media (max-width: 768px) {
   .btn-main,
@@ -251,14 +270,21 @@
     padding: 12px 30px;
     width: 200px;
     font-size: 1rem;
+    white-space: nowrap;
   }
 
   .display-4 {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    word-break: keep-all;
   }
 
   .lead {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    word-break: keep-all;
+  }
+
+  .badge {
+    font-size: 0.85rem;
   }
 
   .btn-lg {
@@ -267,5 +293,17 @@
 
   .custom-footer .col-md-4 {
     text-align: center;
+  }
+
+  .feature-card {
+    padding: 1.5rem !important; /* 모바일에서 패딩 조정 */
+  }
+
+  .feature-card p {
+    font-size: 0.875rem; /* 모바일에서 폰트 크기 조정 */
+  }
+
+  .feature-card h5 {
+    font-size: 1.1rem;
   }
 }

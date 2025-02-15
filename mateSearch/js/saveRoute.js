@@ -1,6 +1,6 @@
 // saveRoute.js
 
-import { supabase } from "../supabase.js";
+import { supabase } from "./supabase.js";
 
 async function saveRouteToSupabase() {
   try {

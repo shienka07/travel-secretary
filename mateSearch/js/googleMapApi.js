@@ -78,31 +78,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  const routeSection = document.getElementById("routeSection");
+  // const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  // const routeSection = document.getElementById("routeSection");
 
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", function () {
-      routeSection.style.display =
-        routeSection.style.display === "none" ? "block" : "none";
-    });
-  }
+  // if (toggleBtn) {
+  //   toggleBtn.addEventListener("click", function () {
+  //     routeSection.style.display =
+  //       routeSection.style.display === "none" ? "block" : "none";
+  //   });
+  // }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-    if (toggleBtn) {
-      toggleBtn.addEventListener("click", function () {
-        if (
-          routeSection.style.display === "none" ||
-          routeSection.style.display === ""
-        ) {
-          routeSection.style.display = "block";
-        } else {
-          routeSection.style.display = "none";
-        }
-      });
-    }
-  });
+  // document.addEventListener("DOMContentLoaded", function () {
+  //   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  //   if (toggleBtn) {
+  //     toggleBtn.addEventListener("click", function () {
+  //       if (
+  //         routeSection.style.display === "none" ||
+  //         routeSection.style.display === ""
+  //       ) {
+  //         routeSection.style.display = "block";
+  //       } else {
+  //         routeSection.style.display = "none";
+  //       }
+  //     });
+  //   }
+  // });
+
 });
 
 function toggleSection(dayId) {

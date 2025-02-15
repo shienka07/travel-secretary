@@ -223,6 +223,13 @@ async function exampleMatchingPromptUsage() {
   const locationTypeFilter = document.querySelector(
     'input[name="locationTypeFilter"]:checked'
   ).value;
+  let location = "";
+  if(locationTypeFilter == "domestic"){
+    location = "국내"
+  }
+  else if(locationTypeFilter == "international"){
+    location = "국외"
+  }
   const destinationFilter = document.querySelector("#destinationFilter").value;
   const minAgeFilter = document.querySelector("#ageFilterMin").value;
   const maxAgeFilter = document.querySelector("#ageFilterMax").value;
@@ -237,7 +244,7 @@ async function exampleMatchingPromptUsage() {
   // ✅ 예산 추가
   let gender = genderFilter == 1 ? "남성" : (genderFilter == 2 ? "여성" : "전체");
   const filters = {
-    locationType: locationTypeFilter,
+    locationType: location,
     destination: destinationFilter,
     minAge: minAgeFilter,
     maxAge: maxAgeFilter,
@@ -284,6 +291,12 @@ async function exampleMatchingPromptUsage() {
     error.name = "MatchingError"; // 명시적으로 name 설정
     throw error;
   }
+
+  const postIdsString = postArray.join(',');
+  const baseUrl = "./index.html"; // 게시물 목록 페이지 기본 URL (실제 URL에 맞게 수정)
+  const urlWithParams = `${baseUrl}?postIds=${postIdsString}`;
+  history.pushState({}, '', urlWithParams);
+
   displayRecommendPost(postArray)
 }
 
@@ -326,138 +339,130 @@ async function displayRecommendPost(postArray) {
   console.log("displayPostings 호출, 표시할 게시글 수:", postings.length);
 
   if (postings && postings.length > 0) {
-    sortedPostings.forEach((posting) => {
-      // Bootstrap 카드 컬럼 (md 사이즈 이상에서 3개씩 배치)
-      const colDiv = document.createElement("div");
-      colDiv.classList.add("col-md-4", "mb-4"); // col-md-4 클래스로 3개씩 배치, mb-4는 간격
-
-      const card = document.createElement("div");
-      card.classList.add("card");
-      colDiv.appendChild(card); // 컬럼 안에 카드 배치
-
-      const cardBody = document.createElement("div");
-      cardBody.classList.add("card-body");
-      card.appendChild(cardBody);
-
-      const row = document.createElement("div");
-      row.classList.add("row", "g-0");
-      cardBody.appendChild(row);
-
-      const imageCol = document.createElement("div");
-      imageCol.classList.add("col-md-4");
-      row.appendChild(imageCol);
-
-      const imageArea = document.createElement("div");
-      imageArea.classList.add("image-area", "p-3");
-      imageCol.appendChild(imageArea);
-
-      // storage에서 이미지 가져오기
-      if (posting.image_url) {
+      postings.forEach((posting) => {
+        // Bootstrap 카드 컬럼 (md 사이즈 이상에서 3개씩 배치)
+        const colDiv = document.createElement("div");
+        colDiv.classList.add("col-md-4", "mb-4"); // col-md-4 클래스로 3개씩 배치, mb-4는 간격
+  
+        const card = document.createElement("div");
+        card.classList.add("card");
+        colDiv.appendChild(card); // 컬럼 안에 카드 배치
+  
+        const imgArea = document.createElement("div");
+        imgArea.classList.add("position-relative");
+        card.appendChild(imgArea);
+  
         const { data: imageUrlData } = supabase.storage
           .from("mate-bucket")
           .getPublicUrl(posting.image_url);
-
         const imageElement = document.createElement("img");
         imageElement.src = imageUrlData.publicUrl;
+        imageElement.classList.add("card-img-top", "object-fit-cover");
+        imageElement.style = "height: 225px";
         imageElement.alt = "게시글 이미지";
-        imageElement.classList.add("img-fluid", "rounded");
-        imageArea.appendChild(imageElement);
-      } else {
-        imageArea.innerHTML = '<div class="image-placeholder rounded"></div>';
-        const placeholder = imageArea.querySelector(".image-placeholder");
-        placeholder.classList.add(
-          "bg-light",
-          "d-flex",
-          "justify-content-center",
-          "align-items-center",
-          "p-4"
-        );
-        placeholder.style.height = "150px";
-        placeholder.textContent = "No Image";
-      }
-
-      const infoCol = document.createElement("div");
-      infoCol.classList.add("col-md-8");
-      row.appendChild(infoCol);
-
-      const infoArea = document.createElement("div");
-      infoArea.classList.add("info-area", "p-3");
-      infoCol.appendChild(infoArea);
-
-      const authorInfoElement = document.createElement("p");
-      const genderText =
-      posting.userInfo?.gender === 1
-        ? "남성"
-        : posting.userInfo?.gender === 2
-        ? "여성"
-        : "전체";
-      authorInfoElement.innerHTML = `${genderText}  | 나이: ${
-        posting.userInfo?.age || "미제공"
-      }`;
-      infoArea.appendChild(authorInfoElement);
-
-      const destinationElement = document.createElement("p");
-      destinationElement.textContent = `여행지: ${posting.destination}`;
-      infoArea.appendChild(destinationElement);
-
-      const peopleElement = document.createElement("p");
-      peopleElement.textContent = `모집인원수: ${posting.people} 명`;
-      infoArea.appendChild(peopleElement);
-
-      // const budgetElement = document.createElement("p");
-      // const formattedBudget = posting.budget
-      //   ? parseInt(posting.budget).toLocaleString()
-      //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
-      // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
-      // infoArea.appendChild(budgetElement);
-
-      // const dateElement = document.createElement("p");
-      // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
-      // infoArea.appendChild(dateElement);
-
-      const cardFooter = document.createElement("div");
-      cardFooter.classList.add("card-footer", "p-3");
-      card.appendChild(cardFooter);
-      // ------------------------------------------------------------✅ 경로 확인 필요
-      const titleLink = document.createElement("a");
-      titleLink.href = `./detail.html?id=${posting.id}`;
-      titleLink.classList.add("card-title-link");
-      titleLink.style.textDecoration = "none";
-
-      const statusText = posting.state ? "[모집중]" : "[모집 완료]";
-
-      const titleFullElement = document.createElement("h5");
-      titleFullElement.classList.add("card-title", "mb-2");
-      titleFullElement.textContent = `${statusText} `;
-
-      const titleElement = document.createElement("span");
-      titleElement.textContent = posting.title;
-      titleFullElement.appendChild(titleElement);
-      titleLink.appendChild(titleFullElement);
-      cardFooter.appendChild(titleLink);
-
-      // const contentElement = document.createElement("p");
-      // contentElement.classList.add("card-text");
-      // contentElement.textContent = posting.content;
-      // cardFooter.appendChild(contentElement);
-
-      const stylesElement = document.createElement("div");
-      stylesElement.classList.add("styles-tags", "mt-3");
-      if (posting.styles && posting.styles.length > 0) {
-        posting.styles.forEach((style) => {
-          const styleTag = document.createElement("span");
-          styleTag.classList.add("badge", "bg-secondary", "me-1", "mb-1");
-          styleTag.textContent = `#${style.style_id.style_name}`;
-          stylesElement.appendChild(styleTag);
+  
+        // 커서 스타일 추가
+        imageElement.style.cursor = "pointer";
+  
+        // 클릭 이벤트 추가
+        imageElement.addEventListener("click", () => {
+          window.location.href = `./detail.html?id=${posting.id}`;
         });
-      }
-      cardFooter.appendChild(stylesElement);
-
-      box.appendChild(colDiv); // box에 컬럼(colDiv) 추가 (기존 card 대신)
-    });
-  } else {
-    box.textContent = "등록된 게시글이 없습니다.";
-  }
+        imgArea.appendChild(imageElement);
+  
+        // const cardBody = document.createElement("div");
+        // cardBody.classList.add("card-body");
+        // card.appendChild(cardBody);
+  
+        // const infoArea = document.createElement("div");
+        // // infoArea.classList.add("info-area", "p-3");
+        // infoArea.classList.add("card-text");
+        // cardBody.appendChild(infoArea);
+  
+        // const authorInfoElement = document.createElement("p");
+        // const genderText =
+        //   posting.userInfo?.gender === 1
+        //     ? "남성"
+        //     : posting.userInfo?.gender === 2
+        //     ? "여성"
+        //     : "미제공"; // 삼항 연산자
+        // authorInfoElement.innerHTML = `${genderText}  | 나이: ${
+        //   posting.userInfo?.age || "미제공"
+        // }`;
+        // infoArea.appendChild(authorInfoElement);
+  
+        // const destinationElement = document.createElement("p");
+        // destinationElement.textContent = `여행지: ${posting.destination}`;
+        // infoArea.appendChild(destinationElement);
+  
+        // const peopleElement = document.createElement("p");
+        // peopleElement.textContent = `모집인원수: ${posting.people} 명`;
+        // infoArea.appendChild(peopleElement);
+  
+        // const budgetElement = document.createElement("p");
+        // const formattedBudget = posting.budget
+        //   ? parseInt(posting.budget).toLocaleString()
+        //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
+        // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
+        // infoArea.appendChild(budgetElement);
+  
+        // const dateElement = document.createElement("p");
+        // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
+        // infoArea.appendChild(dateElement);
+  
+        const cardFooter = document.createElement("div");
+        cardFooter.classList.add("card-footer", "p-3");
+        card.appendChild(cardFooter);
+  
+        const titleLink = document.createElement("a");
+        titleLink.href = `./detail.html?id=${posting.id}`;
+        titleLink.classList.add("card-title-link");
+        titleLink.style.textDecoration = "none";
+  
+        const statusText = posting.state ? "모집중" : "모집 완료";
+        // const isDomesticText = posting.is_domestic ? "국내" : "해외";
+        const destinationText = posting.destination;
+  
+        const titleFullElement = document.createElement("h6");
+        titleFullElement.classList.add("mb-2");
+        titleFullElement.style.fontWeight = 700;
+        titleFullElement.textContent = `[${statusText}] ${destinationText}`;
+  
+        const MAX_LENGTH = 15;
+        const titleElement = document.createElement("p");
+        titleElement.style.fontWeight = 300;
+        titleElement.textContent =
+          posting.title.length > MAX_LENGTH
+            ? posting.title.substring(0, MAX_LENGTH) + "..."
+            : posting.title;
+        // titleElement.textContent = posting.title;
+        // titleFullElement.appendChild(titleElement);
+        titleLink.appendChild(titleFullElement);
+        titleLink.appendChild(titleElement);
+        cardFooter.appendChild(titleLink);
+  
+        // const contentElement = document.createElement("p");
+        // contentElement.classList.add("card-text");
+        // contentElement.textContent = posting.content;
+        // cardFooter.appendChild(contentElement);
+  
+        const stylesElement = document.createElement("div");
+        stylesElement.classList.add("styles-tags", "mt-3");
+        if (posting.styles && posting.styles.length > 0) {
+          posting.styles.forEach((style) => {
+            const styleTag = document.createElement("span");
+            styleTag.classList.add("badge", "bg-secondary", "me-1", "mb-1");
+            styleTag.textContent = `#${style.style_id.style_name}`;
+            stylesElement.appendChild(styleTag);
+          });
+        }
+        cardFooter.appendChild(stylesElement);
+  
+        box.appendChild(colDiv); // box에 컬럼(colDiv) 추가 (기존 card 대신)
+      });
+    } else {
+      box.textContent = "등록된 게시글이 없습니다.";
+    }
 }
 
 //   const extractedPostId = parsingMatching(matching);
@@ -510,7 +515,16 @@ async function triggerSwal() {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  
+  // const urlParams = new URLSearchParams(window.location.search);
+  // const postIdsParam = urlParams.get('postIds');
+
+  // let postArrayFromUrl = [];
+  // if (postIdsParam) {
+  //     postArrayFromUrl = postIdsParam.split(',').map(item => item.trim());
+  // }
+
+  //  displayRecommendPost(postArrayFromUrl);
+
   document.querySelector("#testBtn").addEventListener("click", () => {
     triggerSwal();
     

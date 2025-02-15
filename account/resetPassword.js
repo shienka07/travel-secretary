@@ -7,7 +7,7 @@ window.onload = async function() {
 
     if (!access_token) {
         alert('유효하지 않은 링크입니다.');
-        window.location.href = '/login.html';
+        window.location.href = './login.html';
         return;
     }
 
@@ -19,7 +19,7 @@ window.onload = async function() {
 
     if (error) {
         alert('세션 설정 실패: ' + error.message);
-        window.location.href = '/login.html';
+        window.location.href = './login.html';
     }
 };
 
@@ -33,7 +33,7 @@ resetBtn.addEventListener("click", async (event) => {
         alert("비밀번호를 입력해주세요")
         return;
     }
-    if(!password == password_confirm){
+    if(password !== password_confirm){
         alert("비밀번호가 일치하지 않습니다")
         return
     }

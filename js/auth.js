@@ -312,6 +312,7 @@ async function updatePassword(newPassword) {
   }
 
   console.log('비밀번호가 성공적으로 변경되었습니다.');
+  window.location.href("./login.html")
 }
 
 

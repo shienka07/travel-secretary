@@ -107,16 +107,6 @@ function drawDayRoutes() {
   });
 }
 
-function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 37.7749, lng: -122.4194 },
-    zoom: 13,
-  });
-  geocoder = new google.maps.Geocoder();
-  // Places 서비스 초기화
-  placesService = new google.maps.places.PlacesService(map);
-}
-
 // drawRouteForDay 함수 수정
 function drawRouteForDay(section, dayIndex) {
   const inputs = section.querySelectorAll(".place-input");

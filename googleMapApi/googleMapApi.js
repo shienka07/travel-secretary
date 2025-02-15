@@ -11,7 +11,7 @@ let placesService;
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 37.7749, lng: -122.4194 },
-    zoom: 10,
+    zoom: 5,
   });
   geocoder = new google.maps.Geocoder();
   // Places 서비스 초기화
@@ -134,7 +134,7 @@ function drawRouteForDay(section, dayIndex) {
             // Places API로 장소 세부 정보 검색
             const request = {
               query: placeName,
-              fields: ["photos", "name", "formatted_address"],
+              fields: ["photos", "name", "formatted_address", "place_id"],
             };
 
             placesService.findPlaceFromQuery(
@@ -182,8 +182,8 @@ function drawRouteForDay(section, dayIndex) {
         // 정보창(InfoWindow) 생성
         if (result.photo) {
           const photoUrl = result.photo.getUrl({
-            maxWidth: 20,
-            maxHeight: 20,
+            maxWidth: 150,
+            maxHeight: 150,
           });
           const infowindow = new google.maps.InfoWindow({
             content: `

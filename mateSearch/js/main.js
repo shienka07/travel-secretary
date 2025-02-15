@@ -42,7 +42,7 @@ async function fetchMatePostingsWithStyles() {
       )
     `
       )
-      .order("created_at", { ascending: false }); // 최신글 먼저
+      .order("id", { ascending: false }); // 최신글 먼저
 
     if (error) {
       console.error("게시글 목록 및 스타일 조회 실패:", error);
@@ -103,46 +103,6 @@ function displayPostings(postings) {
       });
       imgArea.appendChild(imageElement);
 
-      // const cardBody = document.createElement("div");
-      // cardBody.classList.add("card-body");
-      // card.appendChild(cardBody);
-
-      // const infoArea = document.createElement("div");
-      // // infoArea.classList.add("info-area", "p-3");
-      // infoArea.classList.add("card-text");
-      // cardBody.appendChild(infoArea);
-
-      // const authorInfoElement = document.createElement("p");
-      // const genderText =
-      //   posting.userInfo?.gender === 1
-      //     ? "남성"
-      //     : posting.userInfo?.gender === 2
-      //     ? "여성"
-      //     : "미제공"; // 삼항 연산자
-      // authorInfoElement.innerHTML = `${genderText}  | 나이: ${
-      //   posting.userInfo?.age || "미제공"
-      // }`;
-      // infoArea.appendChild(authorInfoElement);
-
-      // const destinationElement = document.createElement("p");
-      // destinationElement.textContent = `여행지: ${posting.destination}`;
-      // infoArea.appendChild(destinationElement);
-
-      // const peopleElement = document.createElement("p");
-      // peopleElement.textContent = `모집인원수: ${posting.people} 명`;
-      // infoArea.appendChild(peopleElement);
-
-      // const budgetElement = document.createElement("p");
-      // const formattedBudget = posting.budget
-      //   ? parseInt(posting.budget).toLocaleString()
-      //   : "미정"; // 숫자로 변환 후 포맷팅, 아니면 '미정'
-      // budgetElement.textContent = `예산: ${formattedBudget}`; // '원' 또는 통화 단위 추가 가능
-      // infoArea.appendChild(budgetElement);
-
-      // const dateElement = document.createElement("p");
-      // dateElement.textContent = `기간: ${posting.start_date} ~ ${posting.end_date}`;
-      // infoArea.appendChild(dateElement);
-
       const cardFooter = document.createElement("div");
       cardFooter.classList.add("card-footer", "p-3");
       card.appendChild(cardFooter);
@@ -155,11 +115,19 @@ function displayPostings(postings) {
       const statusText = posting.state ? "모집중" : "모집 완료";
       // const isDomesticText = posting.is_domestic ? "국내" : "해외";
       const destinationText = posting.destination;
+      const genderText =
+        posting.userInfo?.gender === 1
+          ? "남"
+          : posting.userInfo?.gender === 2
+          ? "여"
+          : "미제공";
+      const ageText = posting.userInfo?.age || "미제공";
+      const dateText = `기간: ${posting.start_date} ~ ${posting.end_date}`;
 
       const titleFullElement = document.createElement("h6");
       titleFullElement.classList.add("mb-2");
       titleFullElement.style.fontWeight = 700;
-      titleFullElement.textContent = `[${statusText}] ${destinationText}`;
+      titleFullElement.textContent = `[${statusText}] ${destinationText} (${genderText}/${ageText})`;
 
       const MAX_LENGTH = 15;
       const titleElement = document.createElement("p");
@@ -177,7 +145,6 @@ function displayPostings(postings) {
       // const contentElement = document.createElement("p");
       // contentElement.classList.add("card-text");
       // contentElement.textContent = posting.content;
-      // cardFooter.appendChild(contentElement);
 
       const stylesElement = document.createElement("div");
       stylesElement.classList.add("styles-tags", "mt-3");

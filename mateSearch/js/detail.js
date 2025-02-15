@@ -217,7 +217,7 @@ function displayDetails(posting) {
   document.querySelector("#detail-people").textContent = `${posting.people} 명`;
 
   const formattedBudget = posting.budget
-    ? parseInt(posting.budget).toLocaleString()
+    ? parseInt(posting.budget).toLocaleString() + "만원"
     : "미정";
   document.querySelector("#detail-budget").textContent = formattedBudget;
 

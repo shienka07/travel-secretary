@@ -287,6 +287,34 @@ async function setAnswer(text){
   }
 }
 
+async function resetPassword(email) {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://aibe-chill-team.github.io/travel-secretary/account/resetPassowrd.html', // 비밀번호 변경 페이지 URL
+  });
+
+  if (error) {
+    console.error('비밀번호 재설정 요청 오류:', error.message);
+    return;
+  }
+
+  console.log('비밀번호 재설정 이메일이 전송되었습니다.');
+}
+
+
+async function updatePassword(newPassword) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error('비밀번호 변경 오류:', error.message);
+    return;
+  }
+
+  console.log('비밀번호가 성공적으로 변경되었습니다.');
+}
+
+
 export {
   loadPosts,
   createPost,
@@ -307,5 +335,7 @@ export {
   getProfile,
   setProfile_auth,
   fetchLatestPosts_auth,
-  setAnswer
+  setAnswer,
+  updatePassword,
+  resetPassword
 };

@@ -227,6 +227,12 @@
   gap: 0.5rem;
 }
 
+.form-check-input:checked {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+  box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+}
+
 @media (max-width: 768px) {
   .filter-area {
     margin-bottom: 2rem;

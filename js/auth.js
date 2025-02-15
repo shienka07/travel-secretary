@@ -218,14 +218,14 @@ async function createPost_Recommend_auth(title, content, url, place) {
 }
 
 async function loadPosts_Recommend_auth() {
-  // posts 테이블과 userinfo 테이블을 조인하여 username 가져오기
-  const { data: posts, error } = await supabase
-    .from("posts_recommend")
-    .select(`*, userinfo : userinfo(username)`)
-    .order("id", { ascending: false });
-  if (error) {
-    return error;
-  }
+    // posts 테이블과 userinfo 테이블을 조인하여 username 가져오기
+    const { data: posts, error } = await supabase
+      .from('posts_recommend')
+      .select(`*, userinfo : userinfo(username)`)
+      .order('id', { ascending: false });
+    if (error){
+      return error;
+    }
 
   return posts;
 }
@@ -271,6 +271,22 @@ async function fetchLatestPosts_auth() {
   }
 }
 
+async function setAnswer(text){
+    const { data, error: auth } = await supabase.auth.getUser();
+    if(auth){
+        return auth;
+    }
+
+    const { error: insertError } = await supabase
+        .from("userinfo")
+        .update({ answer: text })
+        .eq("id", data.user.id);
+
+  if (insertError) {
+    return insertError;
+  }
+}
+
 export {
   loadPosts,
   createPost,
@@ -290,5 +306,6 @@ export {
   getNickname,
   getProfile,
   setProfile_auth,
-  fetchLatestPosts_auth
+  fetchLatestPosts_auth,
+  setAnswer
 };

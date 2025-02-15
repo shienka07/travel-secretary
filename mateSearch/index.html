@@ -10,33 +10,11 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="../font.css" />
-    <style>
-      .image-area .image-placeholder {
-        height: 150px; /* placeholder 높이 CSS로 설정 (JS 코드에서 삭제 가능) */
-      }
-
-      .image-area {
-        padding: 1rem; /* 이미지 영역 padding 조정 (예시) */
-      }
-
-      .info-area {
-        padding: 1.5rem; /* 정보 영역 padding 조정 (예시) */
-      }
-
-      .card-footer {
-        padding: 1.25rem 1.5rem; /* card-footer padding 조정 (예시) */
-      }
-      .card-title-link {
-        color: inherit; /* 링크 색상을 부모 요소(card-footer)의 색상으로 상속 */
-        display: block; /* 링크를 block 요소로 만들어 카드 footer 전체 영역 클릭 가능하도록 함 (선택 사항) */
-      }
-
-      .card-title-link:hover {
-        color: #0056b3; /* hover 시 링크 색상 변경 (예시) */
-        /* text-decoration: underline; hover 시 밑줄 표시 (선택 사항) */
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
     <nav>
@@ -53,8 +31,8 @@
                 src="https://github.com/AIBE-chill-TEAM/travel-secretary/blob/dev/assets/logo.png?raw=true"
                 style="width: 40px"
               />
-            <span class="fs-4">여행 비서</span>
-          </a>
+              <span class="fs-4">여행 비서</span>
+            </a>
           </div>
 
           <ul
@@ -297,6 +275,9 @@
           <button type="button" class="btn btn-secondary" id="writeBtn">
             글작성
           </button>
+          <button type="button" class="btn btn-secondary" id="testBtn">
+            테스트
+          </button>
           <div id="box" class="row"></div>
         </div>
       </div>
@@ -307,6 +288,7 @@
       ></script>
 
       <script type="module" src="./js/main.js"></script>
+      <script type="module" src="./js/recommend_test.js"></script>
     </div>
   </body>
 </html>

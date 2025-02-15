@@ -4,9 +4,9 @@ import { addDBData, getDBDataByUserId, getId, deleteDBData } from "./db.js";
 // 구글맵 API 키
 const googlemapAPiKey = "AIzaSyAg8Mizg_fmz1cMBS3UDFLxOOOzlb0dujw";
 // 구글맵 장소 탐색
-// 비동기 textSearch, 좌표 지정하고 거리로 검색범위, 입력값 정확도(LLM으로 영문으로 된 지역명을 추가시킨 장소명 생성)
+// 비동기 findPlaceFromQuery, 좌표 지정하고 거리로 검색범위
 let map;
-let infoWindow; // 하나의 InfoWindow만 사용
+let infoWindow;
 
 async function initMap(
   places = ["Googleplex"],
@@ -31,7 +31,7 @@ async function initMap(
   });
 
   const service = new PlacesService(map);
-  infoWindow = new google.maps.InfoWindow(); // 하나의 InfoWindow만 생성
+  infoWindow = new google.maps.InfoWindow();
 
   if (!places || !Array.isArray(places) || places.length === 0) {
     console.error("장소 데이터가 없거나 올바르지 않습니다.");
@@ -39,17 +39,21 @@ async function initMap(
   }
 
   let bounds = new google.maps.LatLngBounds();
+  let completedSearches = 0;
 
   for (const place of places) {
     try {
       const request = {
         query: place,
-        location: latLng,
-        radius: 50000, // 50km
+        fields: ["name", "geometry", "formatted_address", "place_id", "photos"],
+        locationBias: {
+          center: latLng,
+          radius: 50000,
+        },
       };
 
       await new Promise((resolve) => {
-        service.textSearch(request, (results, status) => {
+        service.findPlaceFromQuery(request, (results, status) => {
           if (
             status === google.maps.places.PlacesServiceStatus.OK &&
             results &&
@@ -58,63 +62,99 @@ async function initMap(
             const result = results[0];
             const location = result.geometry.location;
             const placeId = result.place_id;
-            const address = result.formatted_address || "주소 정보 없음";
-            const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
 
-            // 사진 가져오기 (없으면 기본 이미지)
-            let photoUrl =
-              result.photos?.[0]?.getUrl() ||
-              "https://via.placeholder.com/250x150?text=No+Image";
+            service.getDetails(
+              {
+                placeId: placeId,
+                fields: ["name", "formatted_address", "photos"],
+              },
+              (placeResult, detailStatus) => {
+                if (
+                  detailStatus === google.maps.places.PlacesServiceStatus.OK
+                ) {
+                  const address =
+                    placeResult.formatted_address || "주소 정보 없음";
+                  const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+                  const hasPhotos =
+                    placeResult.photos && placeResult.photos.length > 0;
 
-            const marker = new google.maps.Marker({
-              map,
-              position: location,
-              title: result.name,
-            });
+                  const marker = new google.maps.Marker({
+                    map,
+                    position: location,
+                    title: placeResult.name,
+                  });
 
-            marker.addListener("click", () => {
-              infoWindow.setContent(`
-                <div class="card" style="width: 100%; border-radius: 8px; overflow: hidden;">
-                  <img src="${photoUrl}" class="card-img-top" alt="${
-                result.name
-              }" style="height: 150px; object-fit: cover;">
-                  <div class="card-body p-2">
-                    <h6 class="card-title text-center mb-1">${result.name}</h6>
-                    <p class="card-text text-muted small text-center">${address.replace(
-                      /, /g,
-                      "<br>"
-                    )}</p>
-                    <div class="text-center">
-                      <a href="${googleMapsUrl}" target="_blank" class="btn btn-primary btn-sm">Google 지도에서 보기</a>
-                    </div>
-                  </div>
-                </div>
-              `);
-              infoWindow.open(map, marker);
-            });
+                  marker.addListener("click", () => {
+                    const photoSection = hasPhotos
+                      ? `
+                      <div class="card-img-top" style="height: 150px; overflow: hidden;">
+                        <img src="${placeResult.photos[0].getUrl()}" 
+                          alt="${placeResult.name}" 
+                          style="width: 100%; height: 100%; object-fit: cover;">
+                      </div>
+                    `
+                      : "";
 
-            bounds.extend(location);
-            console.log(
-              `Found place: ${result.name} for search term: ${place}`
+                    infoWindow.setContent(`
+                      <div class="card" style="width: 100%; border-radius: 8px; overflow: hidden;">
+                        ${photoSection}
+                        <div class="card-body p-2">
+                          <h6 class="card-title text-center mb-1" style="font-size: 14px; margin-top: ${
+                            hasPhotos ? "0" : "8px"
+                          }">
+                            ${placeResult.name}
+                          </h6>
+                          <p class="card-text text-muted small text-center" style="font-size: 12px; margin: 8px 0">
+                            ${address.replace(/, /g, "<br>")}
+                          </p>
+                          <div class="text-center" style="margin-bottom: 8px">
+                            <a href="${googleMapsUrl}" target="_blank" 
+                              class="btn btn-primary btn-sm" style="font-size: 12px">
+                              Google 지도에서 보기
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    `);
+                    infoWindow.open(map, marker);
+                  });
+
+                  bounds.extend(location);
+                  completedSearches++;
+
+                  if (completedSearches === places.length) {
+                    if (!bounds.isEmpty()) {
+                      map.fitBounds(bounds);
+
+                      if (places.length === 1) {
+                        google.maps.event.addListenerOnce(
+                          map,
+                          "bounds_changed",
+                          () => {
+                            map.setZoom(15);
+                          }
+                        );
+                      }
+                    }
+                  }
+
+                  console.log(
+                    `Found place: ${placeResult.name} for search term: ${place}`
+                  );
+                }
+              }
             );
           } else {
             console.warn(`검색 실패 - 장소: ${place}, 상태: ${status}`);
+            completedSearches++;
           }
           resolve();
         });
       });
     } catch (error) {
       console.error(`Error searching for ${place}:`, error);
+      completedSearches++;
     }
-  }
-
-  if (!bounds.isEmpty()) {
-    map.fitBounds(bounds);
-    setTimeout(() => {
-      if (places.length == 1) {
-        map.setZoom(15);
-      }
-    }, 300);
   }
 }
 
@@ -245,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   localStorage.setItem("array", item.list_daily_places);
                   localStorage.setItem("location", item.list_location);
                   localStorage.setItem("markdown", item.list_content);
-                  box.innerHTML = "";
+                  // box.innerHTML = "";
                   // addMsg(불러온 마크다운)
                   addMsg(item.list_content);
                   Swal.fire({
@@ -394,6 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 두 번째 기능 (마크다운 파싱 + 로컬 스토리지 활용)
   const addMsg = (msg) => {
     const p = document.createElement("p");
+    box.innerHTML = "";
     p.innerHTML = `<pre>${marked.parse(msg)}</pre>`; // 마크다운 파싱
     box.appendChild(p);
     // 팝업
@@ -638,6 +679,7 @@ document.addEventListener("DOMContentLoaded", function () {
 장소는 HTML a 태그 형식을 사용하여 href에 URL을 작성하지 않고 href에 장소명을 영문으로 표기
 예시: **<a href="장소명 영문">장소명</a>**
 예시: **<a href="Eiffel Tower">에펠탑</a>**
+href에 들어가는 장소명은 구글맵에 검색할 수 있도록 구체적으로 작성
 장소가 아닌 경우 URL으로 제공
 상세 일정에 Day 1, Day 2, Day 3, ... 또한 HTML a 태그 형식을 사용하여 href에 URL을 작성하지 않고 href에 Day 1, Day 2, Day 3, ... 을 표기
 예시: **<a href="Day 1">Day 1</a>**
@@ -760,8 +802,8 @@ document.addEventListener("DOMContentLoaded", function () {
       localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
       const fifthAI = async (fourthResponse) => {
-        const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마세요. 장소명에 지역명을 포함하세요. 장소가 **한국일 경우** 영어가 아닌 한글로 작성하세요.
-예시:["첫날장소1 지역", "첫날장소2 지역", "첫날장소3 지역"]|["둘째날장소1 지역", "둘째날장소2 지역", "둘째날장소3 지역", "둘째날장소4 지역"]|["셋째날장소1 지역", "셋째날장소2 지역"]
+        const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마세요. 장소명은 구글맵에 검색할 수 있도록 구체적으로 작성하세요.
+예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
 마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마세요.
 ${fourthResponse}`;
         return await callModel000(prompt);

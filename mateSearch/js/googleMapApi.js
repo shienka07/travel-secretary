@@ -6,14 +6,16 @@ let geocoder;
 let markers = [];
 let polylines = [];
 let dayCount = 1;
-
+let placesService;
 // 초기화 함수 (한 번만 정의)
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 37.7749, lng: -122.4194 },
-    zoom: 13,
+    zoom: 10,
   });
   geocoder = new google.maps.Geocoder();
+  // Places 서비스 초기화
+  placesService = new google.maps.places.PlacesService(map);
 }
 
 // DOM 로드 시 이벤트 리스너 등록
@@ -39,20 +41,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", function () {
-      const routeSection = document.getElementById("routeSection");
-      if (
-        routeSection.style.display === "none" ||
-        routeSection.style.display === ""
-      ) {
-        routeSection.style.display = "block";
-      } else {
-        routeSection.style.display = "none";
-      }
-    });
-  }
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", function () {
+        if (
+          routeSection.style.display === "none" ||
+          routeSection.style.display === ""
+        ) {
+          routeSection.style.display = "block";
+        } else {
+          routeSection.style.display = "none";
+        }
+      });
+    }
+  });
 });
 
 function toggleSection(dayId) {
@@ -94,6 +97,17 @@ function drawDayRoutes() {
   });
 }
 
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 37.7749, lng: -122.4194 },
+    zoom: 13,
+  });
+  geocoder = new google.maps.Geocoder();
+  // Places 서비스 초기화
+  placesService = new google.maps.places.PlacesService(map);
+}
+
+// drawRouteForDay 함수 수정
 function drawRouteForDay(section, dayIndex) {
   const inputs = section.querySelectorAll(".place-input");
   const dayPlaces = [];
@@ -106,7 +120,34 @@ function drawRouteForDay(section, dayIndex) {
         geocoder.geocode({ address: placeName }, function (results, status) {
           if (status === "OK") {
             const location = results[0].geometry.location;
-            resolve({ location, placeIndex });
+
+            // Places API로 장소 세부 정보 검색
+            const request = {
+              query: placeName,
+              fields: ["photos", "name", "formatted_address"],
+            };
+
+            placesService.findPlaceFromQuery(
+              request,
+              (places, placesStatus) => {
+                if (
+                  placesStatus === google.maps.places.PlacesServiceStatus.OK &&
+                  places &&
+                  places.length > 0
+                ) {
+                  const place = places[0];
+                  resolve({
+                    location,
+                    placeIndex,
+                    photo: place.photos ? place.photos[0] : null,
+                    name: place.name,
+                    address: place.formatted_address,
+                  });
+                } else {
+                  resolve({ location, placeIndex });
+                }
+              }
+            );
           } else {
             reject("장소를 찾을 수 없습니다: " + placeName);
           }
@@ -121,18 +162,78 @@ function drawRouteForDay(section, dayIndex) {
       results.sort((a, b) => a.placeIndex - b.placeIndex);
 
       results.forEach((result, i) => {
-        const location = result.location;
         const marker = new google.maps.Marker({
           map: map,
-          position: location,
+          position: result.location,
           label: `Day ${dayIndex + 1}-${i + 1}`,
           icon: getMarkerIcon(dayIndex),
         });
+
+        // 정보창(InfoWindow) 생성
+        if (result.photo) {
+          const photoUrl = result.photo.getUrl({
+            maxWidth: 20,
+            maxHeight: 20,
+          });
+          const infowindow = new google.maps.InfoWindow({
+            content: `
+              <div style="
+                max-width: 300px;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                font-family: 'Arial', sans-serif;
+              ">
+                <img src="${photoUrl}" style="
+                  width: 100%;
+                  height: 200px;
+                  object-fit: cover;
+                  border-bottom: 3px solid #f0f0f0;
+                ">
+                <div style="padding: 15px;">
+                  <h3 style="
+                    margin: 0;
+                    color: #333;
+                    font-size: 16px;
+                    font-weight: 600;
+                  ">${result.name}</h3>
+                  <p style="
+                    margin: 8px 0 0 0;
+                    color: #666;
+                    font-size: 13px;
+                    line-height: 1.4;
+                  ">${result.address}</p>
+                  <div style="
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 1px solid #eee;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  ">
+                    <span style="
+                      background: #f8f8f8;
+                      padding: 4px 8px;
+                      border-radius: 4px;
+                      font-size: 12px;
+                      color: #555;
+                    ">Day ${dayIndex + 1} - Stop ${i + 1}</span>
+                  </div>
+                </div>
+              </div>
+            `,
+          });
+
+          // 정보창 바로 표시
+          infowindow.open(map, marker);
+        }
+
         markers.push(marker);
-        dayPlaces.push(location);
+        dayPlaces.push(result.location);
 
         if (i === 0 && dayIndex === 0) {
-          map.setCenter(location);
+          map.setCenter(result.location);
         }
       });
 

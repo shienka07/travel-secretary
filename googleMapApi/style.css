@@ -38,17 +38,6 @@
 .btn {
   margin: 10px;
 }
-/* 저장 버튼 스타일링 */
-#save-btn {
-  background-color: #28a745;
-  border-color: #28a745;
-  margin-left: 5px;
-}
-
-#save-btn:hover {
-  background-color: #218838;
-  border-color: #1e7e34;
-}
 
 /* 로딩 상태 표시 */
 .save-loading {
@@ -60,4 +49,30 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   display: none;
+}
+
+#map {
+  width: 100%;
+  height: 500px;
+}
+.day-section {
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}
+.day-section h3 {
+  margin: 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+.place-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.place-input {
+  flex: 1;
+  padding: 5px;
 }

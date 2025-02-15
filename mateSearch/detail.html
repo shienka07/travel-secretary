@@ -10,66 +10,13 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
-    <script src="./js/googleMapApi.js"></script>
+    <script src="googleMapApi.js"></script>
     <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjJeFd04uDAsqYthhLNFEfZd4UzJDb9Tw&libraries=places&callback=initMap"
       async
       defer
     ></script>
-    <style>
-      #map {
-        width: 100%;
-        height: 500px;
-      }
-      .day-section {
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-      }
-      .day-section h3 {
-        margin: 0;
-        padding: 10px;
-        background-color: #f0f0f0;
-        cursor: pointer;
-      }
-      .place-input-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .place-input {
-        flex: 1;
-        padding: 5px;
-      }
-      .delete-place-btn {
-        margin-left: 10px;
-        background-color: #ff4d4d;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-      }
-      .hidden {
-        display: none;
-      }
-      .add-place-btn {
-        margin-bottom: 10px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-      }
-      .draw-route-btn {
-        background-color: #008cba;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        margin-right: 10px;
-      }
-    </style>
+    
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="../font.css" />
     <link rel="stylesheet" href="./css/comment.css" />
@@ -286,9 +233,7 @@
                 전체 경로 그리기
               </button>
 
-              <button class="draw-route-btn" onclick="drawDayRoutes()">
-                선택 날짜 경로 그리기
-              </button>
+             
               <!-- 저장 버튼 추가 -->
   <button id="saveRouteBtn" class="btn btn-success">경로 저장</button>
 </div>

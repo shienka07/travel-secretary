@@ -1,4 +1,4 @@
-import {login, checkLogin} from "../js/auth.js"
+import {login, checkLogin, resetPassword} from "../js/auth.js"
 
 const loginBtn = document.querySelector("#loginBtn");
 
@@ -8,8 +8,6 @@ loginBtn.addEventListener("click", async (event) => {
     const password = document.querySelector("#password").value;
 
     await login(username, password);
- 
-    
 });
 
 const islogined = await checkLogin()
@@ -17,9 +15,9 @@ if (islogined){
     window.location.href = "../index.html"
 }
 
-const resetPassword = document.querySelector("#resetPassword");
+const reset = document.querySelector("#resetPassword");
 
-resetPassword.addEventListener("click", async (event) => {
+reset.addEventListener("click", async (event) => {
     event.preventDefault();
     const container = document.querySelector(".login-container");
     container.innerHTML = `
@@ -48,6 +46,12 @@ resetPassword.addEventListener("click", async (event) => {
     const resetBtn = document.querySelector("#resetBtn");
     resetBtn.addEventListener("click", async (event)=> {
         event.preventDefault();
-        
+        const email = document.querySelector("#username").value;
+        if(!email){
+            alert("이메일을 입력해주세요")
+            return;
+        }
+        resetPassword(email);
+
     })
 })

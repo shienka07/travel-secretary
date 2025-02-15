@@ -296,7 +296,7 @@ async function resetPassword(email) {
     console.error('비밀번호 재설정 요청 오류:', error.message);
     return;
   }
-
+  alert("비밀번호 재설정 이메일이 전송되었습니다.")
   console.log('비밀번호 재설정 이메일이 전송되었습니다.');
 }
 

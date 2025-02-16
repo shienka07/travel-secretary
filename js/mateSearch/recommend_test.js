@@ -330,7 +330,7 @@ async function triggerSwal() {
     Swal.fire({
       title: "AI 자동 매칭 진행 중입니다.",
       html: "매칭 이후 자동으로 닫힙니다... <b></b>",
-      timer: 40000,
+      timer: 60000,
       timerProgressBar: true,
       allowOutsideClick: false, // ← 추가된 옵션
       allowEscapeKey: false,    // ESC 키 방지 (선택사항)

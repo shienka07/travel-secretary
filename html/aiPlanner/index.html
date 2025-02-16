@@ -51,9 +51,7 @@
             class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0"
           >
             <li>
-              <a
-                href="../../index.html"
-                class="nav-link px-2 link-secondary"
+              <a href="../../index.html" class="nav-link px-2 link-secondary"
                 >메인</a
               >
             </li>
@@ -65,9 +63,7 @@
               >
             </li>
             <li>
-              <a
-                href="./index.html"
-                class="nav-link px-2 link-secondary"
+              <a href="./index.html" class="nav-link px-2 link-secondary"
                 >AI 여행 일정</a
               >
             </li>
@@ -94,9 +90,7 @@
                 <li><a class="dropdown-item" href="#" id="username"></a></li>
                 <hr class="dropdown-divider" />
                 <li>
-                  <a
-                    class="dropdown-item"
-                    href="../account/myprofile.html"
+                  <a class="dropdown-item" href="../account/myprofile.html"
                     >마이 프로필</a
                   >
                 </li>
@@ -120,7 +114,7 @@
             <form id="controller">
               <div class="row">
                 <div class="col-12 mb-2">
-                  <label class="form-label">여행지 :</label>
+                  <label class="form-label">여행지 *</label>
                   <input
                     name="destination"
                     type="text"
@@ -133,7 +127,7 @@
 
               <div class="row">
                 <div class="col-6 mb-2">
-                  <label class="form-label">여행 일수 :</label>
+                  <label class="form-label">여행 일수 *</label>
                   <input
                     name="travelDays"
                     type="number"
@@ -143,7 +137,7 @@
                   />
                 </div>
                 <div class="col-6 mb-2">
-                  <label class="form-label">테마 :</label>
+                  <label class="form-label">테마 *</label>
                   <input
                     name="travelTheme"
                     type="text"
@@ -156,7 +150,7 @@
 
               <div class="row">
                 <div class="col-6 mb-2">
-                  <label class="form-label">시작 시간 :</label>
+                  <label class="form-label">시작 시간 *</label>
                   <input
                     name="travelStart"
                     type="time"
@@ -165,7 +159,7 @@
                   />
                 </div>
                 <div class="col-6 mb-2">
-                  <label class="form-label">종료 시간 :</label>
+                  <label class="form-label">종료 시간 *</label>
                   <input
                     name="travelEnd"
                     type="time"
@@ -176,7 +170,7 @@
               </div>
               <div class="row">
                 <div class="col-6 mb-2">
-                  <label class="form-label">동행 :</label>
+                  <label class="form-label">동행</label>
                   <input
                     name="companion"
                     type="text"
@@ -185,7 +179,7 @@
                   />
                 </div>
                 <div class="col-6 mb-2">
-                  <label class="form-label">1인당 예산 :</label>
+                  <label class="form-label">1인당 예산 *</label>
                   <input
                     name="budget"
                     type="text"
@@ -197,7 +191,7 @@
               </div>
               <div class="row">
                 <div class="col-6 mb-2">
-                  <label class="form-label">나이 :</label>
+                  <label class="form-label">나이 *</label>
                   <input
                     name="age"
                     type="number"
@@ -207,9 +201,10 @@
                   />
                 </div>
                 <div class="col-6 mb-2">
-                  <label class="form-label">성별 :</label>
+                  <label class="form-label">성별</label>
                   <select name="gender" class="form-control">
                     <option disabled selected>선택</option>
+                    <option value="혼성">혼성</option>
                     <option value="남성">남성</option>
                     <option value="여성">여성</option>
                   </select>
@@ -217,7 +212,7 @@
               </div>
               <div class="row">
                 <div class="col-12 mb-4">
-                  <label class="form-label">기타사항 :</label>
+                  <label class="form-label">기타사항</label>
                   <input
                     name="others"
                     type="text"

@@ -187,11 +187,14 @@
 #style-checkboxes .form-check-label:hover {
   cursor: pointer;
 }
-
+/* 
 .write-form .form-check-input[type="radio"],
 #style-checkboxes .form-check-input {
-  opacity: 0;
+   -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
+ */
 
 /*
 #style-checkboxes {
@@ -848,37 +851,37 @@
   position: relative;
   top: 0;
 
-.custom-marker {
-  position: relative;
-  cursor: pointer;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-}
+  .custom-marker {
+    position: relative;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
 
-.custom-marker img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+  .custom-marker img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-.custom-marker .label {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #ff6b6b;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-}
+  .custom-marker .label {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+  }
 }

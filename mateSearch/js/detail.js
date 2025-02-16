@@ -196,8 +196,9 @@ function displayDetails(posting) {
 
   const imageArea = document.querySelector("#detail-image-area");
 
+  imageArea.innerHTML = "";
+
   if (posting.image_url) {
-    console.log("posting.image_url", posting.image_url);
     const { data: imageUrlData } = supabase.storage
       .from(matebucketName)
       .getPublicUrl(posting.image_url);
@@ -205,8 +206,9 @@ function displayDetails(posting) {
     const imageElement = document.createElement("img");
     imageElement.src = imageUrlData.publicUrl;
     imageElement.alt = "게시글 이미지";
-    imageElement.classList.add("card-img-top", "detail-image");
-    imageElement.style.width = "300px";
+    imageElement.classList.add("img-fluid", "w-100");
+    imageElement.style.maxHeight = "500px";
+    imageElement.style.objectFit = "contain";
     imageArea.appendChild(imageElement);
   }
 

@@ -118,7 +118,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: transparent; /* 비 웹킷 브라우저 지원 */
+  color: transparent;
 }
 
 .lead {
@@ -133,7 +133,6 @@
   transition: all 0.3s ease;
 }
 
-/* 메인 섹션의 버튼들을 위한 전용 스타일 */
 .btn-main,
 .btn-main-outline {
   padding: 15px 40px;
@@ -143,6 +142,7 @@
   transition: all 0.2s ease;
   width: 230px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .btn-main {
@@ -172,20 +172,55 @@
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
 }
 
+.btn-outline-primary,
+.btn-primary {
+  width: 100px;
+  text-align: center;
+  padding: 6px 0;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.btn-outline-primary {
+  border: 1.5px solid #4a90e2;
+  color: #4a90e2;
+  background: transparent;
+}
+
+.btn-outline-primary:hover {
+  background: rgba(74, 144, 226, 0.05);
+  border-color: #357abd;
+  color: #357abd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  border: 1.5px solid transparent;
+  color: white;
+  opacity: 0.9;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #357abd, #2a6198);
+  color: white;
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+}
+
 .feature-card {
   transition: all 0.3s ease;
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* .feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-} */
-
 .icon-wrapper {
   width: 60px;
   height: 60px;
-  background-color: #f8f9fa; /* 단순한 배경색으로 변경 */
+  background-color: #f8f9fa;
   border-radius: 30px;
   display: flex;
   align-items: center;
@@ -244,6 +279,29 @@
   color: white;
 }
 
+.feature-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feature-card p {
+  word-break: keep-all;
+  white-space: pre-line;
+}
+
+.feature-card h5 {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+  word-break: keep-all;
+  width: 100%;
+}
+
+.col-md-3.text-end {
+  min-width: fit-content;
+}
+
 /* 반응형 대응 */
 @media (max-width: 768px) {
   .btn-main,
@@ -251,14 +309,21 @@
     padding: 12px 30px;
     width: 200px;
     font-size: 1rem;
+    white-space: nowrap;
   }
 
   .display-4 {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    word-break: keep-all;
   }
 
   .lead {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    word-break: keep-all;
+  }
+
+  .badge {
+    font-size: 0.85rem;
   }
 
   .btn-lg {
@@ -267,5 +332,23 @@
 
   .custom-footer .col-md-4 {
     text-align: center;
+  }
+
+  .feature-card {
+    padding: 1.5rem !important;
+  }
+
+  .feature-card p {
+    font-size: 0.875rem;
+  }
+
+  .feature-card h5 {
+    font-size: 1.1rem;
+  }
+
+  .btn-outline-primary,
+  .btn-primary {
+    width: 90px;
+    margin: 0 2px;
   }
 }

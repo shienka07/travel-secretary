@@ -122,16 +122,16 @@ function drawAllRoutes() {
   });
 }
 
-function fitMapToMarkers() {
-  const bounds = new google.maps.LatLngBounds();
-  markers.forEach((marker) => bounds.extend(marker.getPosition()));
-  map.fitBounds(bounds);
+// function fitMapToMarkers() {
+//   const bounds = new google.maps.LatLngBounds();
+//   markers.forEach((marker) => bounds.extend(marker.getPosition()));
+//   map.fitBounds(bounds);
 
-  // 줌 레벨이 너무 가깝거나 멀어지는 것을 방지
-  const zoom = map.getZoom();
-  if (zoom > 15) map.setZoom(15);
-  if (zoom < 7) map.setZoom(7);
-}
+//   // 줌 레벨이 너무 가깝거나 멀어지는 것을 방지
+//   const zoom = map.getZoom();
+//   if (zoom > 15) map.setZoom(15);
+//   if (zoom < 7) map.setZoom(7);
+// }
 
 function drawDayRoutes() {
   clearMap();
@@ -411,20 +411,20 @@ function drawRouteForDay(section, dayIndex) {
           path: dayPlaces,
           geodesic: true,
           strokeColor: getDayColor(dayIndex),
-          strokeOpacity: 0.8,
-          strokeWeight: 3,
+          strokeOpacity: 1.0,
+          strokeWeight: 6,
           icons: [
             {
               icon: {
                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 5,
+                scale: 8,
                 strokeColor: getDayColor(dayIndex),
-                strokeWeight: 2,
+                strokeWeight: 4,
                 fillColor: getDayColor(dayIndex),
                 fillOpacity: 1,
               },
               offset: "50%",
-              repeat: "100px", // 화살표 간격
+              repeat: "120px", // 화살표 간격
             },
           ],
           dayIndex: dayIndex,
@@ -437,6 +437,23 @@ function drawRouteForDay(section, dayIndex) {
               order: idx,
             })),
           },
+        });
+
+        // 여기에 그림자 효과를 위한 새로운 코드 추가
+        const shadowPolyline = new google.maps.Polyline({
+          path: dayPlaces,
+          geodesic: true,
+          strokeColor: "#000000",
+          strokeOpacity: 0.2,
+          strokeWeight: 7,
+          offset: "2px",
+          zIndex: 1,
+        });
+        shadowPolyline.setMap(map);
+
+        // 메인 폴리라인의 zIndex 설정
+        arrowPolyline.setOptions({
+          zIndex: 2,
         });
         // 마우스 오버 효과
         arrowPolyline.addListener("mouseover", function () {
@@ -551,14 +568,14 @@ function getMarkerIcon(dayIndex) {
 
 function getDayColor(dayIndex) {
   const colors = [
-    "#FF6B6B", // 빨간색
-    "#4ECDC4", // 청록색
-    "#45B7D1", // 하늘색
-    "#96CEB4", // 민트색
-    "#FFEEAD", // 노란색
-    "#D4A5A5", // 분홍색
-    "#9B59B6", // 보라색
-    "#3498DB", // 파란색
+    "#FF3366", // 선명한 분홍
+    "#33CC33", // 선명한 초록
+    "#3366FF", // 선명한 파랑
+    "#FF9933", // 선명한 주황
+    "#9933FF", // 선명한 보라
+    "#33CCCC", // 선명한 청록
+    "#FF6633", // 선명한 주홍
+    "#6633FF", // 선명한 남색
   ];
   return colors[dayIndex % colors.length];
 }

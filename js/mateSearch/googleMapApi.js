@@ -18,32 +18,22 @@ style.textContent = `
     border-radius: 4px !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
     white-space: nowrap !important;
-    font-weight: bold !important;
   }
 
-  .circular-marker {
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important; /* 원형으로 만듦 */
-    border: 5px solid  !important; /* 흰색 테두리 */
-    object-fit: cover !important; /* 이미지를 원형 안에 맞추기 */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important; /* 그림자 */
-  }
-
-  .circular-marker:hover {
-    transform: scale(1.05) !important; /* 마우스 호버 시 약간 확대 */
-    outline: 4px solid rgba(0,0,0,0.4) !important; /* 호버 시 외곽선 강조 */
+  img.marker-photo {
+    border-radius: 50% !important;
+    border: 4px solid currentColor !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    background-color: white !important;
   }
 `;
 document.head.appendChild(style);
-
 function createMarkerOptions(result, dayIndex, placeIndex) {
-  // 기본 라벨 스타일
   const labelText = `Day${dayIndex + 1}-${placeIndex + 1}`;
   const labelStyle = {
     text: labelText,
     color: "#000000",
-    fontSize: "23px",
+    fontSize: "14px",
     fontWeight: "bold",
     className: "custom-marker-label",
   };
@@ -51,34 +41,21 @@ function createMarkerOptions(result, dayIndex, placeIndex) {
   // 사진이 있는 경우와 없는 경우의 아이콘 설정
   const icon = result.photo
     ? {
-        url: result.photo.getUrl({ maxWidth: 80, maxHeight: 80 }),
-        size: new google.maps.Size(70, 70),
-        scaledSize: new google.maps.Size(70, 70),
-        anchor: new google.maps.Point(35, 35),
-        labelOrigin: new google.maps.Point(35, -25),
-        className: "circular-marker",
-        // 향상된 테두리 스타일링
-        borderColor: getDayColor(dayIndex),
-        borderWidth: 10, // 더 두꺼운 테두리
-        borderStyle: "solid", // 솔리드 테두리
-        boxShadow: "0 4px 6px rgba(0,0,0,0.3)", // 더 강조된 그림자
+        url: result.photo.getUrl({ maxWidth: 100, maxHeight: 100 }),
+        size: new google.maps.Size(50, 50),
+        scaledSize: new google.maps.Size(50, 50),
+        anchor: new google.maps.Point(25, 25),
+        labelOrigin: new google.maps.Point(25, -25),
+        className: "marker-photo", // CSS 적용을 위한 클래스 추가
       }
     : {
         path: google.maps.SymbolPath.CIRCLE,
         fillColor: getDayColor(dayIndex),
         fillOpacity: 1,
-        strokeWeight: 5, // 더 두꺼운 테두리
-        strokeColor: "#FFFFFF", // 흰색 테두리로 대비 높이기
-        scale: 22,
-        labelOrigin: new google.maps.Point(0, -35),
-        // 그림자 효과 추가
-        shadow: {
-          path: google.maps.SymbolPath.CIRCLE,
-          strokeColor: "rgba(0,0,0,0.3)",
-          strokeWeight: 2,
-          fillOpacity: 0,
-          scale: 23,
-        },
+        strokeWeight: 4,
+        strokeColor: "#FFFFFF",
+        scale: 20,
+        labelOrigin: new google.maps.Point(0, -30),
       };
 
   return {
@@ -570,8 +547,7 @@ function drawRouteForDay(section, dayIndex, allLocations) {
                 scale: 8,
                 strokeColor: getDayColor(dayIndex),
               },
-              offset: "50%",
-              repeat: "120px",
+              offset: "100%",
             },
           ],
         });

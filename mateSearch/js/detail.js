@@ -369,26 +369,39 @@ async function loadSavedRoutes(postingId) {
       .select("locations, routes")
       .eq("id", postingId)
       .single();
-
     if (error) throw error;
-
     if (data.locations && data.routes) {
       // 기존 마커와 경로 초기화
       clearMap();
-
       // 저장된 마커 표시
       data.locations.forEach((loc) => {
         const position = new google.maps.LatLng(loc.lat, loc.lng);
+
+        // Add safety checks for label
+        const label =
+          typeof loc.label === "string"
+            ? loc.label
+            : `Day${loc.dayIndex + 1}-${loc.orderIndex + 1}`;
+
         const marker = new google.maps.Marker({
           position: position,
           map: map,
-          label: loc.label,
+          label: {
+            text: label,
+            color: "#FFFFFF",
+            fontSize: "11px",
+            fontWeight: "bold",
+            className: "marker-label",
+          },
           placeInfo: loc.placeInfo,
-          icon: getMarkerIcon(parseInt(loc.label.split("-")[0]) - 1),
+          icon: getMarkerIcon(
+            typeof label === "string"
+              ? parseInt(label.split("-")[0].replace("Day", "")) - 1
+              : loc.dayIndex
+          ),
         });
         markers.push(marker);
       });
-
       // 저장된 경로 표시
       if (data.routes) {
         displayRouteData(data.routes);

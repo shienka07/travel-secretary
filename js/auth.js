@@ -296,7 +296,7 @@ async function resetPassword(email) {
   Swal.fire({
     position: "center",
     icon: "success",
-    title: "회원가입 성공! 로그인 페이지로 이동합니다.",
+    title: "비밀번호 재설정\n 이메일이 전송되었습니다.",
     showConfirmButton: false,
     timer: 1500
   });

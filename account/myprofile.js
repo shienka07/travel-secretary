@@ -51,15 +51,14 @@ async function setProfile() {
     const bool = await setProfile_auth(gender, phone_number,age,live);
     if(bool){
         Swal.fire({
-        position: "top-end",
+        position: "center",
         icon: "success",
-        title: "프로필 수정 메인 페이지로 이동합니다.",
+        title: "프로필 수정\n 메인 페이지로 이동합니다.",
         showConfirmButton: false,
         timer: 1500
-        });
-        setTimeout(() => {
-        window.location.href = "../index.html";
-        }, 1500);
+        }).then(() => {
+            window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+          });
 }
     
 }

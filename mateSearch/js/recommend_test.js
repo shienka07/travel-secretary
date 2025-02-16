@@ -110,23 +110,22 @@ function createSummaryPrompt(postingsData) {
 
 async function exampleMatchingPromptUsage() {
   const postings = await fetchDataFromSupabase();
-  console.log("postings: ", postings);
 
   const locationTypeFilter = document.querySelector(
-    'input[name="locationTypeFilter"]:checked'
+    '#locationTypeFilter'
   ).value;
   let location = "";
   if(locationTypeFilter == "domestic"){
     location = "국내"
   }
   else if(locationTypeFilter == "international"){
-    location = "국외"
+    location = "해외"
   }
   const destinationFilter = document.querySelector("#destinationFilter").value;
   const minAgeFilter = document.querySelector("#ageFilterMin").value;
   const maxAgeFilter = document.querySelector("#ageFilterMax").value;
   const genderFilter = document.querySelector(
-    'input[name="genderFilter"]:checked'
+    '#genderFilter'
   ).value;
   const dateFilter = document.querySelector("#dateFilter").value;
   const styleFilters = Array.from(
@@ -234,14 +233,14 @@ async function displayRecommendPost(postArray) {
   console.log("displayPostings 호출, 표시할 게시글 수:", postings.length);
 
   if (postings && postings.length > 0) {
-      postings.forEach((posting) => {
-
+      sortedPostings.forEach((posting) => {
+        // Bootstrap 카드 컬럼 (md 사이즈 이상에서 3개씩 배치)
         const colDiv = document.createElement("div");
-        colDiv.classList.add("col-md-4", "mb-4");
+        colDiv.classList.add("col-md-4", "mb-4"); // col-md-4 클래스로 3개씩 배치, mb-4는 간격
   
         const card = document.createElement("div");
         card.classList.add("card");
-        colDiv.appendChild(card);
+        colDiv.appendChild(card); // 컬럼 안에 카드 배치
   
         const imgArea = document.createElement("div");
         imgArea.classList.add("position-relative");
@@ -256,8 +255,10 @@ async function displayRecommendPost(postArray) {
         imageElement.style = "height: 225px";
         imageElement.alt = "게시글 이미지";
   
+        // 커서 스타일 추가
         imageElement.style.cursor = "pointer";
   
+        // 클릭 이벤트 추가
         imageElement.addEventListener("click", () => {
           window.location.href = `./detail.html?id=${posting.id}`;
         });
@@ -273,12 +274,20 @@ async function displayRecommendPost(postArray) {
         titleLink.style.textDecoration = "none";
   
         const statusText = posting.state ? "모집중" : "모집 완료";
+        // const isDomesticText = posting.is_domestic ? "국내" : "해외";
         const destinationText = posting.destination;
+        const genderText =
+          posting.userInfo?.gender === 1
+            ? "남"
+            : posting.userInfo?.gender === 2
+            ? "여"
+            : "미제공";
+        const ageText = posting.userInfo?.age || "미제공";
   
         const titleFullElement = document.createElement("h6");
         titleFullElement.classList.add("mb-2");
         titleFullElement.style.fontWeight = 700;
-        titleFullElement.textContent = `[${statusText}] ${destinationText}`;
+        titleFullElement.textContent = `[${statusText}] ${destinationText} (${genderText}/${ageText})`;
   
         const MAX_LENGTH = 15;
         const titleElement = document.createElement("p");
@@ -287,10 +296,14 @@ async function displayRecommendPost(postArray) {
           posting.title.length > MAX_LENGTH
             ? posting.title.substring(0, MAX_LENGTH) + "..."
             : posting.title;
-
         titleLink.appendChild(titleFullElement);
         titleLink.appendChild(titleElement);
         cardFooter.appendChild(titleLink);
+  
+        const textElement = document.createElement("p");
+        textElement.textContent = `${posting.start_date} ~ ${posting.end_date}`;
+        textElement.style.fontSize = "0.8em";
+        cardFooter.appendChild(textElement);
   
         const stylesElement = document.createElement("div");
         stylesElement.classList.add("styles-tags", "mt-3");
@@ -338,7 +351,7 @@ async function triggerSwal() {
             });
           }
           else{
-            Swal.fire("오류 발생!", error.message, "error");
+            Swal.fire("오류 발생!", "오류가 발생했습니다. 재시도하십시오.");
           }
         }
       },

@@ -74,6 +74,10 @@ function addScrollToTopButtonStyle() {
   const style = document.createElement("style");
   style.innerHTML = `
 
+  .text-primary {
+  color: #4a90e2 !important;
+  }
+
   .custom-footer {
   background-color: #f8f9fa;
   border-top: 1px solid rgba(0, 0, 0, 0.05);

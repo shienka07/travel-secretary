@@ -151,42 +151,55 @@ function drawAllRoutes() {
 // }
 
 // 지도 경계를 모든 마커에 맞춰 조정
-// 지도 경계를 모든 마커에 맞춰 조정
+
 function fitMapToMarkers(locations) {
   if (locations.length === 0) return;
 
-  const bounds = new google.maps.LatLngBounds(); // 경계를 위한 LatLngBounds 객체 생성
-  locations.forEach((location) => bounds.extend(location)); // 모든 마커의 위치를 경계에 추가
+  const bounds = new google.maps.LatLngBounds();
+  locations.forEach((location) => bounds.extend(location));
 
-  map.fitBounds(bounds); // 경계 맞추기
+  // 북동쪽과 남서쪽 경계점 가져오기
+  const ne = bounds.getNorthEast();
+  const sw = bounds.getSouthWest();
 
-  // 지도 줌 레벨을 적절히 조정
+  // 위도와 경도의 차이 계산
+  const latDiff = Math.abs(ne.lat() - sw.lat());
+  const lngDiff = Math.abs(ne.lng() - sw.lng());
+
+  // 더 큰 여백을 주기 위해 경계 확장
+  const expandedBounds = new google.maps.LatLngBounds(
+    new google.maps.LatLng(
+      sw.lat() - latDiff * 0.1, // 10% 여백
+      sw.lng() - lngDiff * 0.1
+    ),
+    new google.maps.LatLng(ne.lat() + latDiff * 0.1, ne.lng() + lngDiff * 0.1)
+  );
+
+  map.fitBounds(expandedBounds);
+
+  // bounds_changed 이벤트가 발생한 후 줌 레벨 조정
   google.maps.event.addListenerOnce(map, "bounds_changed", function () {
-    const zoom = map.getZoom();
-    const latDiff = Math.abs(
-      bounds.getNorthEast().lat() - bounds.getSouthWest().lat()
-    );
-    const lngDiff = Math.abs(
-      bounds.getNorthEast().lng() - bounds.getSouthWest().lng()
-    );
+    let newZoom = map.getZoom();
 
-    // 거리 차이가 큰 경우 더 많이 축소
-    let adjustedZoom = zoom;
-
-    if (latDiff > 50 || lngDiff > 50) {
-      adjustedZoom = Math.min(zoom + 1, 4); // 대륙 간 이동 등 큰 차이에서 더 많이 축소
-    } else if (latDiff > 30 || lngDiff > 30) {
-      adjustedZoom = Math.min(zoom + 2, 6); // 큰 거리 차이에서 더 많이 축소
-    } else if (latDiff > 15 || lngDiff > 15) {
-      adjustedZoom = Math.min(zoom + 3, 8); // 보통 크기의 거리 차이에서 축소
+    // 거리에 따른 최대 줌 레벨 조정
+    if (latDiff > 150 || lngDiff > 150) {
+      newZoom = Math.min(newZoom, 2); // 대륙 간 거리
+    } else if (latDiff > 90 || lngDiff > 90) {
+      newZoom = Math.min(newZoom, 3); // 매우 큰 거리
+    } else if (latDiff > 45 || lngDiff > 45) {
+      newZoom = Math.min(newZoom, 4); // 큰 거리
+    } else if (latDiff > 20 || lngDiff > 20) {
+      newZoom = Math.min(newZoom, 5); // 중간 거리
+    } else if (latDiff > 5 || lngDiff > 5) {
+      newZoom = Math.min(newZoom, 7); // 작은 거리
+    } else {
+      newZoom = Math.min(newZoom, 10); // 매우 가까운 거리
     }
 
-    // 최소 줌 레벨 설정
-    if (adjustedZoom < 2) {
-      adjustedZoom = 2;
-    }
+    // 최소 줌 레벨 보장
+    if (newZoom < 2) newZoom = 2;
 
-    map.setZoom(adjustedZoom);
+    map.setZoom(newZoom);
   });
 }
 
@@ -250,9 +263,8 @@ function drawRouteForDay(section, dayIndex, allLocations) {
         geocoder.geocode({ address: placeName }, function (results, status) {
           if (status === "OK") {
             const location = results[0].geometry.location;
-            allLocations.push(location); // 모든 마커의 위치 추가
+            allLocations.push(location);
 
-            // Places API로 장소 세부 정보 검색
             const request = {
               query: placeName,
               fields: ["photos", "name", "formatted_address", "place_id"],
@@ -276,16 +288,13 @@ function drawRouteForDay(section, dayIndex, allLocations) {
                     placeId: place.place_id,
                   });
                 } else {
-                  resolve({ location, placeIndex });
+                  resolve({ location, placeIndex, name: placeName });
                 }
               }
             );
           } else {
-            Swal.fire({
-              icon: "error",
-              title: "Oops...",
-              text: "장소를 찾을 수 없습니다: " + placeName,
-            });
+            console.error("Geocode failed for:", placeName);
+            reject(new Error(`Geocoding failed for ${placeName}`));
           }
         });
       });
@@ -298,18 +307,6 @@ function drawRouteForDay(section, dayIndex, allLocations) {
       results.sort((a, b) => a.placeIndex - b.placeIndex);
 
       results.forEach((result, i) => {
-        // 커스텀 아이콘 생성
-        const icon = {
-          url: result.photo
-            ? result.photo.getUrl({ maxWidth: 50, maxHeight: 50 })
-            : null,
-          size: new google.maps.Size(50, 50),
-          scaledSize: new google.maps.Size(50, 50),
-          anchor: new google.maps.Point(25, 25),
-          labelOrigin: new google.maps.Point(25, -10),
-        };
-
-        // 기본 마커 옵션
         const markerOptions = {
           map: map,
           position: result.location,
@@ -321,7 +318,13 @@ function drawRouteForDay(section, dayIndex, allLocations) {
             className: "marker-label",
           },
           icon: result.photo
-            ? icon
+            ? {
+                url: result.photo.getUrl({ maxWidth: 50, maxHeight: 50 }),
+                size: new google.maps.Size(50, 50),
+                scaledSize: new google.maps.Size(50, 50),
+                anchor: new google.maps.Point(25, 25),
+                labelOrigin: new google.maps.Point(25, -10),
+              }
             : {
                 path: google.maps.SymbolPath.CIRCLE,
                 fillColor: getDayColor(dayIndex),
@@ -343,7 +346,7 @@ function drawRouteForDay(section, dayIndex, allLocations) {
 
         const marker = new google.maps.Marker(markerOptions);
 
-        // 마커 클릭 이벤트 핸들러
+        // 마커 클릭 이벤트 핸들러 추가
         marker.addListener("click", () => {
           const request = {
             placeId: result.placeId,
@@ -492,176 +495,48 @@ function drawRouteForDay(section, dayIndex, allLocations) {
 
         markers.push(marker);
         dayPlaces.push(result.location);
-
-        // 카메라 마커시작시점 고정
-        if (i === 0 && dayIndex === 0) {
-          map.setCenter(result.location);
-        }
       });
 
-      // 경로 그리기 코드 (polylines)는 그대로 유지
+      // 경로 그리기
       if (dayPlaces.length >= 2) {
-        // 화살표가 있는 단일 경로
-        const arrowPolyline = new google.maps.Polyline({
+        const polyline = new google.maps.Polyline({
           path: dayPlaces,
           geodesic: true,
           strokeColor: getDayColor(dayIndex),
           strokeOpacity: 1.0,
-          strokeWeight: 6,
+          strokeWeight: 3,
           icons: [
             {
               icon: {
                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
                 scale: 8,
                 strokeColor: getDayColor(dayIndex),
-                strokeWeight: 4,
-                fillColor: getDayColor(dayIndex),
-                fillOpacity: 1,
               },
               offset: "50%",
-              repeat: "120px", // 화살표 간격
+              repeat: "120px",
             },
           ],
-          dayIndex: dayIndex,
-          routeInfo: {
-            day: dayIndex + 1,
-            order: "main",
-            places: dayPlaces.map((place, idx) => ({
-              lat: place.lat(),
-              lng: place.lng(),
-              order: idx,
-            })),
-          },
         });
-
-        // 여기에 그림자 효과를 위한 새로운 코드 추가
-        const shadowPolyline = new google.maps.Polyline({
-          path: dayPlaces,
-          geodesic: true,
-          strokeColor: "#000000",
-          strokeOpacity: 0.2,
-          strokeWeight: 7,
-          offset: "2px",
-          zIndex: 1,
-        });
-        shadowPolyline.setMap(map);
-
-        // 메인 폴리라인의 zIndex 설정
-        arrowPolyline.setOptions({
-          zIndex: 2,
-        });
-        // 마우스 오버 효과
-        arrowPolyline.addListener("mouseover", function () {
-          this.setOptions({
-            strokeOpacity: 1,
-            strokeWeight: 4,
-          });
-        });
-
-        arrowPolyline.addListener("mouseout", function () {
-          this.setOptions({
-            strokeOpacity: 0.8,
-            strokeWeight: 3,
-          });
-        });
-
-        arrowPolyline.setMap(map);
-        polylines.push(arrowPolyline);
+        polyline.setMap(map);
+        polylines.push(polyline);
       }
-      if (markers.length > 0) {
-        if (markerClusterer) {
-          markerClusterer.clearMarkers();
-        }
 
-        markerClusterer = new markerClusterer.MarkerClusterer({
-          map,
-          markers,
-          algorithm: new markerClusterer.SuperClusterAlgorithm({
-            radius: 60,
-            maxZoom: 15,
-          }),
-          renderer: {
-            render: ({ count, position }) => {
-              return new google.maps.Marker({
-                position,
-                label: {
-                  text: String(count),
-                  color: "white",
-                  fontSize: "13px",
-                  fontWeight: "bold",
-                },
-                icon: {
-                  path: google.maps.SymbolPath.CIRCLE,
-                  fillColor: "#4285F4",
-                  fillOpacity: 0.9,
-                  strokeWeight: 2,
-                  strokeColor: "#FFFFFF",
-                  scale: count < 10 ? 20 : count < 100 ? 24 : 28,
-                },
-                zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
-              });
-            },
-          },
-        });
-      }
-      // 지도 경계 맞추기
-      if (markers.length > 0) {
-        const bounds = new google.maps.LatLngBounds();
+      // 모든 마커가 추가된 후 지도 경계 조정
+      const bounds = new google.maps.LatLngBounds();
+      markers.forEach((marker) => bounds.extend(marker.getPosition()));
+      map.fitBounds(bounds);
 
-        // 모든 마커의 위치를 경계에 추가
-        markers.forEach((marker) => {
-          bounds.extend(marker.getPosition());
-        });
-
-        // 중심점 계산
-        const center = bounds.getCenter();
-        map.setCenter(center);
-
-        // 경계에 여유 공간 추가하고 맞추기
-        const ne = bounds.getNorthEast();
-        const sw = bounds.getSouthWest();
-
-        // 위도/경도 차이 계산
-        const latDiff = Math.abs(ne.lat() - sw.lat());
-        const lngDiff = Math.abs(ne.lng() - sw.lng());
-
-        // 거리가 먼 경우(대륙간 이동 등) 더 많은 여백 추가
-        const padding = latDiff > 50 || lngDiff > 50 ? 0.3 : 0.2; // 50도 이상 차이나면 30% 여백, 아니면 20% 여백
-
-        const newBounds = new google.maps.LatLngBounds(
-          new google.maps.LatLng(
-            sw.lat() - latDiff * padding,
-            sw.lng() - lngDiff * padding
-          ),
-          new google.maps.LatLng(
-            ne.lat() + latDiff * padding,
-            ne.lng() + lngDiff * padding
-          )
-        );
-
-        map.fitBounds(newBounds);
-
-        // 줌 레벨 자동 조정
-        google.maps.event.addListenerOnce(map, "bounds_changed", function () {
-          const zoom = map.getZoom();
-
-          // 대륙간 이동의 경우 최소 줌 레벨 조정
-          if (latDiff > 50 || lngDiff > 50) {
-            if (zoom > 4) map.setZoom(4); // 대륙간 이동시 더 넓은 시야
-          } else {
-            if (zoom > 16) map.setZoom(16); // 일반적인 경우
-          }
-
-          // 최소 줌 레벨 설정
-          if (zoom < 2) map.setZoom(2);
-        });
-      }
+      // 줌 레벨 자동 조정
+      google.maps.event.addListenerOnce(map, "bounds_changed", function () {
+        const zoom = map.getZoom();
+        if (zoom > 16) map.setZoom(16);
+        if (zoom < 2) map.setZoom(2);
+      });
     })
     .catch((error) => {
-      console.log(error);
+      console.error("Error in drawRouteForDay:", error);
     });
 }
-
 function createMarkerIcon(photo) {
   const iconUrl = photo
     ? photo.getUrl({ maxWidth: 50, maxHeight: 50 })

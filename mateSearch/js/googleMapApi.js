@@ -214,7 +214,11 @@ function drawRouteForDay(section, dayIndex) {
               }
             );
           } else {
-            reject("장소를 찾을 수 없습니다: " + placeName);
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "장소를 찾을 수 없습니다: " + placeName,
+            });
           }
         });
       });

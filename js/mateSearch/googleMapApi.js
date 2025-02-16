@@ -151,11 +151,12 @@ function drawAllRoutes() {
 // }
 
 // 지도 경계를 모든 마커에 맞춰 조정
+// 지도 경계를 모든 마커에 맞춰 조정
 function fitMapToMarkers(locations) {
   if (locations.length === 0) return;
 
-  const bounds = new google.maps.LatLngBounds();
-  locations.forEach((location) => bounds.extend(location));
+  const bounds = new google.maps.LatLngBounds(); // 경계를 위한 LatLngBounds 객체 생성
+  locations.forEach((location) => bounds.extend(location)); // 모든 마커의 위치를 경계에 추가
 
   map.fitBounds(bounds); // 경계 맞추기
 
@@ -169,30 +170,70 @@ function fitMapToMarkers(locations) {
       bounds.getNorthEast().lng() - bounds.getSouthWest().lng()
     );
 
-    // 중심을 경계의 중간으로 설정
-    const center = bounds.getCenter();
-    map.setCenter(center);
+    // 거리 차이가 큰 경우 더 많이 축소
+    let adjustedZoom = zoom;
 
-    // 줌 레벨을 자동으로 조정
     if (latDiff > 50 || lngDiff > 50) {
-      if (zoom > 4) map.setZoom(4); // 대륙 간 이동 시 더 넓은 시야
-    } else {
-      if (zoom > 16) map.setZoom(16); // 일반적인 경우
+      adjustedZoom = Math.min(zoom + 1, 4); // 대륙 간 이동 등 큰 차이에서 더 많이 축소
+    } else if (latDiff > 30 || lngDiff > 30) {
+      adjustedZoom = Math.min(zoom + 2, 6); // 큰 거리 차이에서 더 많이 축소
+    } else if (latDiff > 15 || lngDiff > 15) {
+      adjustedZoom = Math.min(zoom + 3, 8); // 보통 크기의 거리 차이에서 축소
     }
 
     // 최소 줌 레벨 설정
-    if (zoom < 2) map.setZoom(2);
+    if (adjustedZoom < 2) {
+      adjustedZoom = 2;
+    }
+
+    map.setZoom(adjustedZoom);
   });
 }
 
-function drawDayRoutes() {
+function drawAllRoutes() {
   clearMap();
   const daySections = document.querySelectorAll(".day-inputs");
-  daySections.forEach((section, dayIndex) => {
-    if (!section.classList.contains("hidden")) {
-      drawRouteForDay(section, dayIndex);
-    }
+  let hasValidInputs = false;
+  const allLocations = []; // 모든 마커의 위치를 저장할 배열
+
+  daySections.forEach((section) => {
+    const inputs = section.querySelectorAll(".place-input");
+    inputs.forEach((input) => {
+      if (input.value.trim()) {
+        hasValidInputs = true;
+      }
+    });
   });
+
+  if (hasValidInputs) {
+    daySections.forEach((section, dayIndex) => {
+      drawRouteForDay(section, dayIndex, allLocations);
+    });
+    fitMapToMarkers(allLocations); // 모든 마커의 경계를 맞추기
+  }
+}
+
+function drawAllRoutes() {
+  clearMap();
+  const daySections = document.querySelectorAll(".day-inputs");
+  let hasValidInputs = false;
+  const allLocations = []; // 모든 마커의 위치를 저장할 배열
+
+  daySections.forEach((section) => {
+    const inputs = section.querySelectorAll(".place-input");
+    inputs.forEach((input) => {
+      if (input.value.trim()) {
+        hasValidInputs = true;
+      }
+    });
+  });
+
+  if (hasValidInputs) {
+    daySections.forEach((section, dayIndex) => {
+      drawRouteForDay(section, dayIndex, allLocations);
+    });
+    fitMapToMarkers(allLocations); // 모든 마커의 경계를 맞추기
+  }
 }
 
 // drawRouteForDay 함수 수정
@@ -451,6 +492,7 @@ function drawRouteForDay(section, dayIndex, allLocations) {
 
         markers.push(marker);
         dayPlaces.push(result.location);
+
         // 카메라 마커시작시점 고정
         if (i === 0 && dayIndex === 0) {
           map.setCenter(result.location);

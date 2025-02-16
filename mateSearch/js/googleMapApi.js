@@ -24,7 +24,6 @@ function setupMapEventListeners() {
   const addDayBtn = document.getElementById("addDayBtn");
   if (addDayBtn) {
     addDayBtn.addEventListener("click", function () {
-      dayCount++;
       // ... 나머지 코드
     });
   }
@@ -104,6 +103,21 @@ document.addEventListener("DOMContentLoaded", function () {
   //   }
   // });
 
+  // document.addEventListener("DOMContentLoaded", function () {
+  //   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
+  //   if (toggleBtn) {
+  //     toggleBtn.addEventListener("click", function () {
+  //       if (
+  //         routeSection.style.display === "none" ||
+  //         routeSection.style.display === ""
+  //       ) {
+  //         routeSection.style.display = "block";
+  //       } else {
+  //         routeSection.style.display = "none";
+  //       }
+  //     });
+  //   }
+  // });
 });
 
 function toggleSection(dayId) {
@@ -157,6 +171,7 @@ function drawDayRoutes() {
 }
 
 // drawRouteForDay 함수 수정
+// drawRouteForDay 함수 수정
 function drawRouteForDay(section, dayIndex) {
   const inputs = section.querySelectorAll(".place-input");
   const dayPlaces = [];
@@ -191,6 +206,7 @@ function drawRouteForDay(section, dayIndex) {
                     photo: place.photos ? place.photos[0] : null,
                     name: place.name,
                     address: place.formatted_address,
+                    placeId: place.place_id,
                   });
                 } else {
                   resolve({ location, placeIndex });
@@ -211,108 +227,198 @@ function drawRouteForDay(section, dayIndex) {
       results.sort((a, b) => a.placeIndex - b.placeIndex);
 
       results.forEach((result, i) => {
-        const marker = new google.maps.Marker({
+        // 커스텀 아이콘 생성
+        const icon = {
+          url: result.photo
+            ? result.photo.getUrl({ maxWidth: 50, maxHeight: 50 })
+            : null,
+          size: new google.maps.Size(50, 50),
+          scaledSize: new google.maps.Size(50, 50),
+          anchor: new google.maps.Point(25, 25),
+          labelOrigin: new google.maps.Point(25, -10),
+        };
+
+        // 기본 마커 옵션
+        const markerOptions = {
           map: map,
           position: result.location,
-          label: `Day ${dayIndex + 1}-${i + 1}`,
-          icon: getMarkerIcon(dayIndex),
+          label: {
+            text: `Day${dayIndex + 1}-${i + 1}`,
+            color: "#FFFFFF",
+            fontSize: "11px",
+            fontWeight: "bold",
+            className: "marker-label",
+          },
+          icon: result.photo
+            ? icon
+            : {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: getDayColor(dayIndex),
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: "#FFFFFF",
+                scale: 15,
+                labelOrigin: new google.maps.Point(0, -20),
+              },
           placeInfo: {
             name: result.name || `Place ${i + 1}`,
             address: result.address || "",
-            photo: result.photo
-              ? result.photo.getUrl({ maxWidth: 200, maxHeight: 200 })
-              : null,
+            photo: result.photo,
             dayIndex: dayIndex,
             orderIndex: i,
-            placeId: result.place_id,
+            placeId: result.placeId,
           },
+        };
+
+        const marker = new google.maps.Marker(markerOptions);
+
+        // 마커 클릭 이벤트 핸들러
+        marker.addListener("click", () => {
+          const request = {
+            placeId: result.placeId,
+            fields: [
+              "name",
+              "formatted_address",
+              "rating",
+              "formatted_phone_number",
+              "website",
+              "opening_hours",
+              "reviews",
+            ],
+          };
+
+          placesService.getDetails(request, (placeResult, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+              // Google Maps 링크 생성
+              const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${result.placeId}`;
+
+              // 영업시간 정보 포맷팅
+              let hoursHTML = "";
+              if (
+                placeResult.opening_hours &&
+                placeResult.opening_hours.weekday_text
+              ) {
+                hoursHTML = `
+                  <div style="margin-top: 8px;">
+                    <strong>영업시간:</strong><br>
+                    ${placeResult.opening_hours.weekday_text.join("<br>")}
+                  </div>
+                `;
+              }
+
+              // 리뷰 정보 포맷팅
+              let reviewsHTML = "";
+              if (placeResult.reviews && placeResult.reviews.length > 0) {
+                const review = placeResult.reviews[0];
+                reviewsHTML = `
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                    <strong>최근 리뷰:</strong><br>
+                    ⭐ ${review.rating}/5 - ${review.text.slice(0, 100)}...
+                  </div>
+                `;
+              }
+
+              const detailWindow = new google.maps.InfoWindow({
+                content: `
+                  <div style="
+                    max-width: 300px;
+                    background: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                    font-family: 'Arial', sans-serif;
+                  ">
+                    ${
+                      result.photo
+                        ? `
+                      <img src="${result.photo.getUrl({
+                        maxWidth: 300,
+                        maxHeight: 200,
+                      })}" style="
+                        width: 100%;
+                        height: 200px;
+                        object-fit: cover;
+                      ">
+                    `
+                        : ""
+                    }
+                    <div style="padding: 16px;">
+                      <h3 style="
+                        margin: 0;
+                        color: #333;
+                        font-size: 16px;
+                        font-weight: 600;
+                      ">${placeResult.name}</h3>
+                      
+                      <p style="
+                        margin: 8px 0;
+                        color: #666;
+                        font-size: 13px;
+                        line-height: 1.4;
+                      ">
+                        ${placeResult.formatted_address}
+                      </p>
+                      
+                      ${
+                        placeResult.rating
+                          ? `
+                        <div style="margin: 8px 0;">
+                          <strong>평점:</strong> ⭐ ${placeResult.rating}/5
+                        </div>
+                      `
+                          : ""
+                      }
+                      
+                      ${
+                        placeResult.formatted_phone_number
+                          ? `
+                        <div>
+                          <strong>전화:</strong> ${placeResult.formatted_phone_number}
+                        </div>
+                      `
+                          : ""
+                      }
+                      
+                      ${hoursHTML}
+                      ${reviewsHTML}
+                      
+                      <div style="
+                        margin-top: 16px;
+                        display: flex;
+                        gap: 8px;
+                      ">
+                        ${
+                          placeResult.website
+                            ? `
+                          <a href="${placeResult.website}" target="_blank" style="
+                            padding: 8px 16px;
+                            background: #4285f4;
+                            color: white;
+                            text-decoration: none;
+                            border-radius: 4px;
+                            font-size: 13px;
+                          ">웹사이트</a>
+                        `
+                            : ""
+                        }
+                        <a href="${mapsUrl}" target="_blank" style="
+                          padding: 8px 16px;
+                          background: #34a853;
+                          color: white;
+                          text-decoration: none;
+                          border-radius: 4px;
+                          font-size: 13px;
+                        ">Google Maps에서 보기</a>
+                      </div>
+                    </div>
+                  </div>
+                `,
+              });
+              detailWindow.open(map, marker);
+            }
+          });
         });
 
-        // 정보창(InfoWindow) 생성
-        if (result.photo) {
-          const photoUrl = result.photo.getUrl({
-            maxWidth: 50,
-            maxHeight: 50,
-          });
-          const infowindow = new google.maps.InfoWindow({
-            content: `
-              <div style="
-                display: flex;
-                align-items: center;
-                background: white;
-                border-radius: 25px;
-                overflow: hidden;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                padding-right: 12px;
-              ">
-                <div style="
-                  width: 50px;
-                  height: 50px;
-                  overflow: hidden;
-                ">
-                  <img src="${photoUrl}" style="
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                  ">
-                </div>
-                <span style="
-                  margin-left: 8px;
-                  font-size: 12px;
-                  font-weight: 500;
-                  color: #333;
-                  white-space: nowrap;
-                  font-family: 'Arial', sans-serif;
-                ">${result.name}</span>
-              </div>
-            `,
-            pixelOffset: new google.maps.Size(0, -10),
-            disableAutoPan: true,
-          });
-
-          // 정보창 바로 표시
-          infowindow.open(map, marker);
-
-          // 마커 클릭시 상세 정보창 표시
-          marker.addListener("click", () => {
-            const detailWindow = new google.maps.InfoWindow({
-              content: `
-                <div style="
-                  max-width: 200px;
-                  background: white;
-                  border-radius: 8px;
-                  overflow: hidden;
-                  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                  font-family: 'Arial', sans-serif;
-                ">
-                  <img src="${result.photo.getUrl({
-                    maxWidth: 200,
-                    maxHeight: 150,
-                  })}" style="
-                    width: 100%;
-                    height: 150px;
-                    object-fit: cover;
-                  ">
-                  <div style="padding: 10px;">
-                    <h3 style="
-                      margin: 0;
-                      color: #333;
-                      font-size: 14px;
-                      font-weight: 600;
-                    ">${result.name}</h3>
-                    <p style="
-                      margin: 5px 0 0 0;
-                      color: #666;
-                      font-size: 12px;
-                      line-height: 1.3;
-                    ">${result.address}</p>
-                  </div>
-                </div>
-              `,
-            });
-            detailWindow.open(map, marker);
-          });
-        }
         markers.push(marker);
         dayPlaces.push(result.location);
 
@@ -321,14 +427,29 @@ function drawRouteForDay(section, dayIndex) {
         }
       });
 
+      // 경로 그리기 코드 (polylines)는 그대로 유지
       if (dayPlaces.length >= 2) {
-        // 메인 경로 - 두꺼운 선
-        const mainPolyline = new google.maps.Polyline({
+        // 화살표가 있는 단일 경로
+        const arrowPolyline = new google.maps.Polyline({
           path: dayPlaces,
           geodesic: true,
           strokeColor: getDayColor(dayIndex),
-          strokeOpacity: 0.8, // 투명도를 0.4에서 0.8로 증가
-          strokeWeight: 4, // 선 굵기를 6에서 4로 조정
+          strokeOpacity: 0.8,
+          strokeWeight: 3,
+          icons: [
+            {
+              icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 5,
+                strokeColor: getDayColor(dayIndex),
+                strokeWeight: 2,
+                fillColor: getDayColor(dayIndex),
+                fillOpacity: 1,
+              },
+              offset: "50%",
+              repeat: "100px", // 화살표 간격
+            },
+          ],
           dayIndex: dayIndex,
           routeInfo: {
             day: dayIndex + 1,
@@ -340,70 +461,26 @@ function drawRouteForDay(section, dayIndex) {
             })),
           },
         });
-
-        // 경로 하이라이트 - 얇은 실선
-        const highlightPolyline = new google.maps.Polyline({
-          path: dayPlaces,
-          geodesic: true,
-          strokeColor: getDayColor(dayIndex),
-          strokeOpacity: 1,
-          strokeWeight: 3, // 선 굵기를 2에서 3으로 증가
+        // 마우스 오버 효과
+        arrowPolyline.addListener("mouseover", function () {
+          this.setOptions({
+            strokeOpacity: 1,
+            strokeWeight: 4,
+          });
         });
 
-        // 애니메이션 효과를 위한 점선 경로
-        const dashedPolyline = new google.maps.Polyline({
-          path: dayPlaces,
-          geodesic: true,
-          strokeColor: getDayColor(dayIndex), // 흰색에서 해당 날짜 색상으로 변경
-          strokeOpacity: 1, // 투명도를 0.8에서 1로 증가
-          strokeWeight: 2,
-          icons: [
-            {
-              icon: {
-                path: "M 0,-1 0,1",
-                strokeOpacity: 1,
-                scale: 4, // 점선 크기를 3에서 4로 증가
-              },
-              offset: "0",
-              repeat: "20px", // 점선 간격을 15px에서 20px로 증가
-            },
-          ],
+        arrowPolyline.addListener("mouseout", function () {
+          this.setOptions({
+            strokeOpacity: 0.8,
+            strokeWeight: 3,
+          });
         });
 
-        // 폴리라인들을 배열에 추가
-        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
-
-        // 폴리라인들을 지도에 표시
-        mainPolyline.setMap(map);
-        highlightPolyline.setMap(map);
-        dashedPolyline.setMap(map);
-
-        // 경로에 마우스 오버 효과 추가
-        mainPolyline.addListener("mouseover", function () {
-          this.setOptions({ strokeOpacity: 1 }); // 마우스 오버시 완전 불투명하게
-          highlightPolyline.setOptions({ strokeWeight: 4 });
-        });
-
-        mainPolyline.addListener("mouseout", function () {
-          this.setOptions({ strokeOpacity: 0.8 });
-          highlightPolyline.setOptions({ strokeWeight: 3 });
-        });
-
-        // 나머지 코드는 동일
-        let count = 0;
-        window.setInterval(() => {
-          count = (count + 1) % 200;
-          const icons = dashedPolyline.get("icons");
-          icons[0].offset = count / 2 + "%";
-          dashedPolyline.set("icons", icons);
-        }, 50);
-
-        mainPolyline.setMap(map);
-        highlightPolyline.setMap(map);
-        dashedPolyline.setMap(map);
-
-        polylines.push(mainPolyline, highlightPolyline, dashedPolyline);
+        arrowPolyline.setMap(map);
+        polylines.push(arrowPolyline);
       }
+
+      // 지도 경계 맞추기
       if (markers.length > 0) {
         const bounds = new google.maps.LatLngBounds();
         markers.forEach((marker) => bounds.extend(marker.getPosition()));
@@ -439,7 +516,44 @@ function drawRouteForDay(section, dayIndex) {
       alert(error);
     });
 }
+function createMarkerIcon(photo) {
+  const iconUrl = photo
+    ? photo.getUrl({ maxWidth: 50, maxHeight: 50 })
+    : "https://via.placeholder.com/50"; // 기본 이미지 URL
 
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: "#FF6B6B", // 색상 설정
+    fillOpacity: 1,
+    strokeWeight: 0,
+    scale: 8,
+    icon: {
+      url: iconUrl,
+      scaledSize: new google.maps.Size(50, 50), // 크기 설정
+    },
+  };
+}
+
+// 정보창 내용 생성
+function generateInfoWindowContent(result) {
+  return `
+    <div style="max-width: 200px;">
+      <img src="${
+        result.photo
+          ? result.photo.getUrl({ maxWidth: 200, maxHeight: 150 })
+          : "https://via.placeholder.com/200x150"
+      }" style="width: 100%; height: 150px; object-fit: cover;">
+      <div style="padding: 10px;">
+        <h3 style="margin: 0; color: #333; font-size: 14px; font-weight: 600;">${
+          result.name
+        }</h3>
+        <p style="margin: 5px 0 0 0; color: #666; font-size: 12px; line-height: 1.3;">${
+          result.address
+        }</p>
+      </div>
+    </div>
+  `;
+}
 function clearMap() {
   markers.forEach((marker) => marker.setMap(null));
   markers = [];

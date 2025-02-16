@@ -1,4 +1,4 @@
-import { supabase, mateTable, ptsTable, matebucketName } from "./config.js";
+import { supabase, mateTable, ptsTable, matebucketName } from "../supabase.js";
 
 import { checkLogin, getProfile, logout } from "../auth.js";
 

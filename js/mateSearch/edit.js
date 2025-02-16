@@ -6,7 +6,7 @@ import {
   ptsTable,
   matebucketName,
   folderName,
-} from "./config.js";
+} from "../supabase.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin, getProfile, logout } from "../auth.js";
@@ -301,7 +301,7 @@ async function initializeEdit(postId) {
           icon: "success",
           title: "로그아웃!\n메인 페이지로 이동합니다.",
           showConfirmButton: false,
-          timer: 1500
+          timer: 1500,
         }).then(() => {
           window.location.href = "../../index.html";
         });

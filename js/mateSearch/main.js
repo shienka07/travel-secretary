@@ -1,10 +1,4 @@
-import {
-  supabase,
-  mateTable,
-  tsTable,
-  ptsTable,
-  matebucketName,
-} from "./config.js";
+import { supabase, mateTable, ptsTable, matebucketName } from "../supabase.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin, getProfile, logout } from "../auth.js";
@@ -57,21 +51,19 @@ async function fetchMatePostingsWithStyles() {
     allPostings = postings || [];
 
     const urlParams = new URLSearchParams(window.location.search);
-    const postIdsParam = urlParams.get('postIds');
-  
+    const postIdsParam = urlParams.get("postIds");
+
     let postArrayFromUrl = [];
 
     if (postIdsParam) {
-        postArrayFromUrl = postIdsParam.split(',').map(item => item.trim());
-        const sortedPostings = postArrayFromUrl.map(id =>
-          postings.find(post => Number(post.id) === Number(id))
-        );
-        displayPostings(sortedPostings);
-    }
-    else{
+      postArrayFromUrl = postIdsParam.split(",").map((item) => item.trim());
+      const sortedPostings = postArrayFromUrl.map((id) =>
+        postings.find((post) => Number(post.id) === Number(id))
+      );
+      displayPostings(sortedPostings);
+    } else {
       displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
     }
-    
   } catch (error) {
     console.error("게시글 목록 및 스타일 조회 중 오류:", error);
     // alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
@@ -342,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       icon: "success",
       title: "로그아웃!\n메인 페이지로 이동합니다.",
       showConfirmButton: false,
-      timer: 1500
+      timer: 1500,
     }).then(() => {
       window.location.href = "../../index.html";
     });
@@ -359,8 +351,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyFiltersBtn = document.querySelector("#applyFiltersBtn");
   applyFiltersBtn.addEventListener("click", () => {
     const baseUrl = "./index.html";
-    history.pushState({}, '', baseUrl);
-    
+    history.pushState({}, "", baseUrl);
+
     const locationTypeFilter = document.querySelector(
       "#locationTypeFilter"
     ).value;
@@ -398,7 +390,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resetFiltersBtn = document.querySelector("#resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", () => {
     const baseUrl = "./index.html";
-    history.pushState({}, '', baseUrl);
+    history.pushState({}, "", baseUrl);
 
     // document.querySelector(
     //   'input[name="locationTypeFilter"][value=""]'
@@ -422,5 +414,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 window.addEventListener("popstate", function (event) {
-  location.reload();  // 페이지 강제 새로고침
+  location.reload(); // 페이지 강제 새로고침
 });

@@ -9,7 +9,7 @@ async function login(email, password) {
   if (error) {
     return false;
   }
-  window.location.href="../index.html";
+  window.location.href="../../index.html";
 }
 
 async function checkProfile() {
@@ -121,7 +121,6 @@ async function logout() {
   await supabase.auth.signOut();
   localStorage.removeItem("username");
   localStorage.removeItem("profile_img");
-  alert("로그아웃되었습니다.");
 }
 
 async function createPost(title, content) {
@@ -285,7 +284,7 @@ async function setAnswer(text){
 
 async function resetPassword(email) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://aibe-chill-team.github.io/travel-secretary/account/resetPassword.html', // 비밀번호 변경 페이지 URL
+    redirectTo: 'https://aibe-chill-team.github.io/travel-secretary/html/account/resetPassword.html', // 비밀번호 변경 페이지 URL
   });
 
   if (error) {

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 플래너</title>
+
+    <!-- Marked.js (Markdown Parsing) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Axios CDN 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- 부트스트랩 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/font.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- css -->
+    <link rel="stylesheet" href="../../css/aiPlanner/style.css" />
+
+    <script src="../../js/common.js"></script>
+  </head>
+  <body>
+    <nav>
+      <div class="container">
+        <header
+          class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+        >
+          <div class="col-md-3 mb-2 mb-md-0">
+            <a
+              href="../../index.html"
+              class="dd-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"
+            >
+              <img
+                src="https://github.com/AIBE-chill-TEAM/travel-secretary/blob/dev/assets/logo.png?raw=true"
+                style="width: 40px"
+              />
+
+              <span class="fs-4">여행 비서</span>
+            </a>
+          </div>
+
+          <ul
+            class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0"
+          >
+            <li>
+              <a href="../../index.html" class="nav-link px-2 link-secondary"
+                >메인</a
+              >
+            </li>
+            <li>
+              <a
+                href="../mateSearch/index.html"
+                class="nav-link px-2 link-secondary"
+                >동행 구하기</a
+              >
+            </li>
+            <li>
+              <a href="./index.html" class="nav-link px-2 link-secondary"
+                >AI 여행 일정</a
+              >
+            </li>
+          </ul>
+
+          <div class="col-md-3 text-end">
+            <div class="flex-shrink-0 dropdown">
+              <a
+                href="#"
+                class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="true"
+              >
+                <img
+                  id="profile"
+                  width="32"
+                  height="32"
+                  class="rounded-circle"
+                />
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                <li><a class="dropdown-item" id="username"></a></li>
+                <hr class="dropdown-divider" />
+                <li>
+                  <a class="dropdown-item" href="../account/myprofile.html"
+                    >마이 프로필</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="../account/characterai.html">AI 캐릭터 생성</a>
+                </li>
+                <hr class="dropdown-divider" />
+                <li>
+                  <a class="dropdown-item" href="" id="logout">로그아웃</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </header>
+      </div>
+    </nav>
+    <div class="container" id="notContainer">
+      <div class="row" id="bigBox">
+        <div class="col-xl-3 d-flex align-items-center justify-content-center">
+          <div class="mt-4 mb-4">
+            <form id="controller">
+              <div class="row">
+                <div class="col-12 mb-2">
+                  <label class="form-label">여행지 *</label>
+                  <input
+                    name="destination"
+                    type="text"
+                    class="form-control"
+                    placeholder="여행지 입력"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-2">
+                  <label class="form-label">여행 일수 *</label>
+                  <input
+                    name="travelDays"
+                    type="number"
+                    class="form-control"
+                    placeholder="일수 입력"
+                    required
+                  />
+                </div>
+                <div class="col-6 mb-2">
+                  <label class="form-label">테마 *</label>
+                  <input
+                    name="travelTheme"
+                    type="text"
+                    class="form-control"
+                    placeholder="예: 힐링, 액티비티"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-2">
+                  <label class="form-label">시작 시간 *</label>
+                  <input
+                    name="travelStart"
+                    type="time"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-6 mb-2">
+                  <label class="form-label">종료 시간 *</label>
+                  <input
+                    name="travelEnd"
+                    type="time"
+                    class="form-control"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6 mb-2">
+                  <label class="form-label">동행</label>
+                  <input
+                    name="companion"
+                    type="text"
+                    class="form-control"
+                    placeholder="예: 가족, 친구"
+                  />
+                </div>
+                <div class="col-6 mb-2">
+                  <label class="form-label">1인당 예산 *</label>
+                  <input
+                    name="budget"
+                    type="text"
+                    class="form-control"
+                    placeholder="단위 포함"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6 mb-2">
+                  <label class="form-label">나이 *</label>
+                  <input
+                    name="age"
+                    type="number"
+                    class="form-control"
+                    placeholder="나이 입력"
+                    required
+                  />
+                </div>
+                <div class="col-6 mb-2">
+                  <label class="form-label">성별</label>
+                  <select name="gender" class="form-control">
+                    <option disabled selected>선택</option>
+                    <option value="혼성">혼성</option>
+                    <option value="남성">남성</option>
+                    <option value="여성">여성</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-12 mb-4">
+                  <label class="form-label">기타사항</label>
+                  <input
+                    name="others"
+                    type="text"
+                    class="form-control"
+                    placeholder="기타사항"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                class="col-12 btn btn-success mb-2"
+                id="submitBtn"
+              >
+                제출
+              </button>
+              <div class="row">
+                <div class="col-6 pe-0">
+                  <button type="button" class="btn btn-success" id="saveBtn">
+                    저장
+                  </button>
+                </div>
+                <div class="col-6 ps-0">
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    id="listBtn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#listModal"
+                  >
+                    목록
+                  </button>
+                </div>
+              </div>
+            </form>
+            <div
+              class="text-center mt-2"
+              style="font-size: small; color: rgb(55, 55, 55)"
+            >
+              플래너 내 회색 버튼을 누르면 지도가 표시됩니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-9 mt-4 mb-4">
+          <!-- 결과를 표시할 #box 요소 -->
+          <div id="box" class="border border-3 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast 메시지 -->
+    <div
+      class="toast-container position-fixed top-50 start-50 translate-middle p-3"
+    >
+      <div
+        id="liveToast"
+        class="toast align-items-center text-white bg-success border-0"
+        role="alert"
+      >
+        <div class="d-flex">
+          <div class="toast-body">여행 플랜이 생성되었습니다!</div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 팝업 오버레이 -->
+    <!-- <div class="popup-overlay" id="popupOverlay"></div> -->
+
+    <!-- 팝업 -->
+    <!-- <div class="popup" id="popup">
+      <iframe
+        id="mapIframe"
+        src=""
+        width="600"
+        height="450"
+        style="border: 0"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+      <button id="closePopupBtn" class="btn" style="display: none">닫기</button>
+    </div> -->
+
+    <!-- 팝업 오버레이 -->
+    <div class="popup-overlay" id="locationsPopupOverlay"></div>
+
+    <!-- 여러 장소팝업 -->
+    <div class="locationsPopup" id="locationsPopup">
+      <div id="map"></div>
+      <button id="locationsClosePopupBtn" class="btn" style="display: none">
+        닫기
+      </button>
+    </div>
+
+    <!-- 목록 팝업 -->
+    <div
+      class="modal fade"
+      id="listModal"
+      tabindex="-1"
+      aria-labelledby="listModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="listModalLabel">목록</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <ul id="listItems"></ul>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- js  -->
+    <script type="module" src="../../js/aiPlanner/script2.js"></script>
+    <script type="module" src="../../js/aiPlanner/script.js"></script>
+  </body>
+</html>

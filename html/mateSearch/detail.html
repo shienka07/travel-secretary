@@ -19,7 +19,7 @@
     <script src="../../js/mateSearch/googleMapApi.js"></script>
     <script type="module" src="../../js/mateSearch/detail.js"></script>
     <script type="module" src="../../js/mateSearch/comment.js"></script>
-
+    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
     <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuo3l4espB6BtINgYw7UMwMaTNp9DFBqE&libraries=places&callback=initMap"
       async
@@ -51,16 +51,12 @@
             class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0"
           >
             <li>
-              <a
-                href="../../index.html"
-                class="nav-link px-2 link-secondary"
+              <a href="../../index.html" class="nav-link px-2 link-secondary"
                 >메인</a
               >
             </li>
             <li>
-              <a
-                href="./index.html"
-                class="nav-link px-2 link-secondary"
+              <a href="./index.html" class="nav-link px-2 link-secondary"
                 >동행 구하기</a
               >
             </li>
@@ -92,14 +88,14 @@
                 <li><a class="dropdown-item" id="username"></a></li>
                 <hr class="dropdown-divider" />
                 <li>
-                  <a
-                    class="dropdown-item"
-                    href="../account/myprofile.html"
+                  <a class="dropdown-item" href="../account/myprofile.html"
                     >마이 프로필</a
                   >
                 </li>
                 <li>
-                  <a class="dropdown-item" href="../account/characterai.html">AI 캐릭터 생성</a>
+                  <a class="dropdown-item" href="../account/characterai.html"
+                    >AI 캐릭터 생성</a
+                  >
                 </li>
                 <hr class="dropdown-divider" />
                 <li>
@@ -114,11 +110,7 @@
     <div class="container mt-5">
       <div class="d-flex justify-content-end mb-3">
         <div class="button-group">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            id="list-btn"
-          >
+          <button type="button" class="btn btn-secondary" id="list-btn">
             목록
           </button>
           <button
@@ -129,20 +121,10 @@
           >
             모집완료
           </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            id="edit-btn"
-            hidden
-          >
+          <button type="button" class="btn btn-primary" id="edit-btn" hidden>
             수정
           </button>
-          <button
-            type="button"
-            class="btn btn-danger"
-            id="delete-btn"
-            hidden
-          >
+          <button type="button" class="btn btn-danger" id="delete-btn" hidden>
             삭제
           </button>
         </div>
@@ -284,8 +266,6 @@
         </div>
       </div>
     </div>
-
-    <script></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link

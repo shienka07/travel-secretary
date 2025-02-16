@@ -8,6 +8,95 @@ let polylines = [];
 let markerClusterer;
 
 let placesService;
+
+const style = document.createElement("style");
+style.textContent = `
+  .custom-marker-label {
+    background-color: white !important;
+    padding: 4px 8px !important;
+    border: 2px solid #333 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+    white-space: nowrap !important;
+    font-weight: bold !important;
+  }
+
+  .circular-marker {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important; /* 원형으로 만듦 */
+    border: 5px solid  !important; /* 흰색 테두리 */
+    object-fit: cover !important; /* 이미지를 원형 안에 맞추기 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important; /* 그림자 */
+  }
+
+  .circular-marker:hover {
+    transform: scale(1.05) !important; /* 마우스 호버 시 약간 확대 */
+    outline: 4px solid rgba(0,0,0,0.4) !important; /* 호버 시 외곽선 강조 */
+  }
+`;
+document.head.appendChild(style);
+
+function createMarkerOptions(result, dayIndex, placeIndex) {
+  // 기본 라벨 스타일
+  const labelText = `Day${dayIndex + 1}-${placeIndex + 1}`;
+  const labelStyle = {
+    text: labelText,
+    color: "#000000",
+    fontSize: "23px",
+    fontWeight: "bold",
+    className: "custom-marker-label",
+  };
+
+  // 사진이 있는 경우와 없는 경우의 아이콘 설정
+  const icon = result.photo
+    ? {
+        url: result.photo.getUrl({ maxWidth: 80, maxHeight: 80 }),
+        size: new google.maps.Size(70, 70),
+        scaledSize: new google.maps.Size(70, 70),
+        anchor: new google.maps.Point(35, 35),
+        labelOrigin: new google.maps.Point(35, -25),
+        className: "circular-marker",
+        // 향상된 테두리 스타일링
+        borderColor: getDayColor(dayIndex),
+        borderWidth: 10, // 더 두꺼운 테두리
+        borderStyle: "solid", // 솔리드 테두리
+        boxShadow: "0 4px 6px rgba(0,0,0,0.3)", // 더 강조된 그림자
+      }
+    : {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: getDayColor(dayIndex),
+        fillOpacity: 1,
+        strokeWeight: 5, // 더 두꺼운 테두리
+        strokeColor: "#FFFFFF", // 흰색 테두리로 대비 높이기
+        scale: 22,
+        labelOrigin: new google.maps.Point(0, -35),
+        // 그림자 효과 추가
+        shadow: {
+          path: google.maps.SymbolPath.CIRCLE,
+          strokeColor: "rgba(0,0,0,0.3)",
+          strokeWeight: 2,
+          fillOpacity: 0,
+          scale: 23,
+        },
+      };
+
+  return {
+    map: map,
+    position: result.location,
+    label: labelStyle,
+    icon: icon,
+    placeInfo: {
+      name: result.name || `Place ${placeIndex + 1}`,
+      address: result.address || "",
+      photo: result.photo,
+      dayIndex: dayIndex,
+      orderIndex: placeIndex,
+      placeId: result.placeId,
+    },
+    zIndex: google.maps.Marker.MAX_ZINDEX + 1,
+  };
+}
 // 초기화 함수 (한 번만 정의)
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
@@ -288,13 +377,17 @@ function drawRouteForDay(section, dayIndex, allLocations) {
                     placeId: place.place_id,
                   });
                 } else {
-                  resolve({ location, placeIndex, name: placeName });
+                  resolve({ location, placeIndex });
                 }
               }
             );
           } else {
-            console.error("Geocode failed for:", placeName);
-            reject(new Error(`Geocoding failed for ${placeName}`));
+            reject("장소를 찾을 수 없습니다: " + placeName);
+            Swal.fire({
+              icon: "error",
+              // title: "Oops...",
+              text: "장소를 찾을 수 없습니다." + placeName,
+            });
           }
         });
       });
@@ -307,42 +400,7 @@ function drawRouteForDay(section, dayIndex, allLocations) {
       results.sort((a, b) => a.placeIndex - b.placeIndex);
 
       results.forEach((result, i) => {
-        const markerOptions = {
-          map: map,
-          position: result.location,
-          label: {
-            text: `Day${dayIndex + 1}-${i + 1}`,
-            color: "#FFFFFF",
-            fontSize: "11px",
-            fontWeight: "bold",
-            className: "marker-label",
-          },
-          icon: result.photo
-            ? {
-                url: result.photo.getUrl({ maxWidth: 50, maxHeight: 50 }),
-                size: new google.maps.Size(50, 50),
-                scaledSize: new google.maps.Size(50, 50),
-                anchor: new google.maps.Point(25, 25),
-                labelOrigin: new google.maps.Point(25, -10),
-              }
-            : {
-                path: google.maps.SymbolPath.CIRCLE,
-                fillColor: getDayColor(dayIndex),
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#FFFFFF",
-                scale: 15,
-                labelOrigin: new google.maps.Point(0, -20),
-              },
-          placeInfo: {
-            name: result.name || `Place ${i + 1}`,
-            address: result.address || "",
-            photo: result.photo,
-            dayIndex: dayIndex,
-            orderIndex: i,
-            placeId: result.placeId,
-          },
-        };
+        const markerOptions = createMarkerOptions(result, dayIndex, i);
 
         const marker = new google.maps.Marker(markerOptions);
 

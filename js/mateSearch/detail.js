@@ -227,7 +227,7 @@ function displayDetails(posting) {
   document.querySelector(
     "#detail-date"
   ).textContent = `기간: ${posting.start_date} - ${posting.end_date}`;
-  document.querySelector("#detail-content").textContent = posting.content;
+  document.querySelector("#detail-content").innerHTML = posting.content.replace(/\n/g, "<br>");
 
   const styleTags = document.querySelector("#detail-styles-tags");
   if (posting.styles && posting.styles.length > 0) {

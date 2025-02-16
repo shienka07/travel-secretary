@@ -121,7 +121,6 @@ async function logout() {
   await supabase.auth.signOut();
   localStorage.removeItem("username");
   localStorage.removeItem("profile_img");
-  alert("로그아웃되었습니다.");
 }
 
 async function createPost(title, content) {

@@ -23,9 +23,7 @@ function initMap() {
 function setupMapEventListeners() {
   const addDayBtn = document.getElementById("addDayBtn");
   if (addDayBtn) {
-    addDayBtn.addEventListener("click", function () {
-      // ... 나머지 코드
-    });
+    addDayBtn.addEventListener("click", function () {});
   }
 
   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
@@ -56,13 +54,21 @@ function setupRouteSaveButton() {
 
 // DOM 로드 시 이벤트 리스너 등록
 document.addEventListener("DOMContentLoaded", function () {
+  let dayCount = document.getElementsByClassName("day-section").length || 0;
+
   const addDayBtn = document.getElementById("addDayBtn");
   if (addDayBtn) {
     addDayBtn.addEventListener("click", function () {
       dayCount++;
       const daysContainer = document.getElementById("daysContainer");
+
+      while (document.getElementById(`day${dayCount}`)) {
+        dayCount++;
+      }
       const newDaySection = document.createElement("div");
       newDaySection.className = "day-section";
+      const dayId = `day${dayCount}`;
+
       newDaySection.innerHTML = `
         <h3 onclick="toggleSection('day${dayCount}')">Day ${dayCount}</h3>
         <div id="day${dayCount}" class="day-inputs">
@@ -76,48 +82,6 @@ document.addEventListener("DOMContentLoaded", function () {
       daysContainer.appendChild(newDaySection);
     });
   }
-
-  // const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  // const routeSection = document.getElementById("routeSection");
-
-  // if (toggleBtn) {
-  //   toggleBtn.addEventListener("click", function () {
-  //     routeSection.style.display =
-  //       routeSection.style.display === "none" ? "block" : "none";
-  //   });
-  // }
-
-  // document.addEventListener("DOMContentLoaded", function () {
-  //   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  //   if (toggleBtn) {
-  //     toggleBtn.addEventListener("click", function () {
-  //       if (
-  //         routeSection.style.display === "none" ||
-  //         routeSection.style.display === ""
-  //       ) {
-  //         routeSection.style.display = "block";
-  //       } else {
-  //         routeSection.style.display = "none";
-  //       }
-  //     });
-  //   }
-  // });
-
-  // document.addEventListener("DOMContentLoaded", function () {
-  //   const toggleBtn = document.getElementById("toggleRouteSectionBtn");
-  //   if (toggleBtn) {
-  //     toggleBtn.addEventListener("click", function () {
-  //       if (
-  //         routeSection.style.display === "none" ||
-  //         routeSection.style.display === ""
-  //       ) {
-  //         routeSection.style.display = "block";
-  //       } else {
-  //         routeSection.style.display = "none";
-  //       }
-  //     });
-  //   }
-  // });
 });
 
 function toggleSection(dayId) {
@@ -127,13 +91,22 @@ function toggleSection(dayId) {
 
 function addPlaceInput(dayId) {
   const dayInputs = document.getElementById(dayId);
+  if (!dayInputs) {
+    console.error(`Day element with id ${dayId} not found`);
+    return;
+  }
+
   const newInputContainer = document.createElement("div");
   newInputContainer.className = "place-input-container";
   newInputContainer.innerHTML = `
     <input type="text" class="place-input" placeholder="장소를 입력하세요" />
     <button class="delete-place-btn" onclick="deletePlaceInput(this)">삭제</button>
   `;
-  dayInputs.insertBefore(newInputContainer, dayInputs.lastElementChild);
+
+  const addPlaceBtn = dayInputs.querySelector(".add-place-btn");
+  if (addPlaceBtn) {
+    dayInputs.insertBefore(newInputContainer, addPlaceBtn);
+  }
 }
 
 function deletePlaceInput(button) {

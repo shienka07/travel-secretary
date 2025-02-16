@@ -303,7 +303,7 @@ async function initializePage() {
   document.getElementById("logout").addEventListener("click", async (event) => {
     event.preventDefault();
     await logout();
-    window.location.href = "../index.html";
+    window.location.href = "../../index.html";
   });
 
   const urlParams = new URLSearchParams(window.location.search);

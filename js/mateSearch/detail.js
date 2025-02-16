@@ -226,7 +226,7 @@ function displayDetails(posting) {
 
   document.querySelector(
     "#detail-date"
-  ).textContent = `기간: ${posting.start_date} - ${posting.end_date}`;
+  ).textContent = `${posting.start_date} - ${posting.end_date}`;
   document.querySelector("#detail-content").innerHTML = posting.content.replace(
     /\n/g,
     "<br>"

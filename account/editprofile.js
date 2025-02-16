@@ -201,15 +201,14 @@ for (let i = 0; i < questionItems.length; i++) {
 
     if(bool === true){
         Swal.fire({
-            position: "top-end",
+            position: "center",
             icon: "success",
             title: "프로필 저장 성공!\n메인 페이지로 이동합니다.",
             showConfirmButton: false,
             timer: 1500
-          });
-          setTimeout(() => {
+          }).then(() => {
             window.location.href = "../index.html";
-          }, 1500);
+          });
     }
 
     })

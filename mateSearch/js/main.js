@@ -412,3 +412,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     displayPostings(allPostings);
   });
 });
+
+window.addEventListener("popstate", function (event) {
+  location.reload();  // 페이지 강제 새로고침
+});

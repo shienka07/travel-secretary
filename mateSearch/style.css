@@ -92,6 +92,27 @@
   transition: all 0.2s ease;
 }
 
+/* 체크박스 */
+.write-form .form-check-inline {
+  display: flex;
+  align-items: center;
+}
+
+.write-form .form-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.write-form .form-check-input {
+  margin: 0;
+  order: -1;
+}
+
+.write-form .form-check-label {
+  margin: 0;
+}
+
 .write-form .form-check-inline .form-check-input:checked + .form-check-label {
   background: linear-gradient(45deg, #4a90e2, #357abd);
   color: white;

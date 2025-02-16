@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Bootstrap Icons가 없는 경우 추가
   if (!document.querySelector("link[href*='bootstrap-icons']")) {
     const bootstrapIcons = document.createElement("link");
     bootstrapIcons.rel = "stylesheet";
@@ -7,22 +6,22 @@ document.addEventListener("DOMContentLoaded", function () {
       "https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css";
     document.head.appendChild(bootstrapIcons);
     bootstrapIcons.onload = function () {
-      console.log("Bootstrap Icons가 로드된 후 footer가 추가됩니다.");
-      addFooter(); // Bootstrap Icons 로딩 후 footer 추가
+      addFooter();
     };
   } else {
-    addFooter(); // 이미 있으면 바로 footer 추가
+    addFooter();
   }
 });
 
 function addFooter() {
   const currentPath = window.location.pathname;
   const assetsPath =
-    currentPath.includes("/mateSearch/") || currentPath.includes("/aiPlanner/") || currentPath.includes("/account/")
+    currentPath.includes("/mateSearch/") ||
+    currentPath.includes("/aiPlanner/") ||
+    currentPath.includes("/account/")
       ? "../../assets/"
       : "./assets/";
 
-  // favicon 추가
   const favicons = `
         <link rel="icon" type="image/png" href="${assetsPath}favicon/favicon-96x96.png" sizes="96x96">
         <link rel="icon" type="image/svg+xml" href="${assetsPath}favicon/favicon.svg">
@@ -32,7 +31,6 @@ function addFooter() {
     `;
   document.head.insertAdjacentHTML("beforeend", favicons);
 
-  // footer 추가
   if (!document.querySelector("footer.custom-footer")) {
     const footer = `
             <footer class="custom-footer py-5">
@@ -69,11 +67,9 @@ function addFooter() {
     document.body.insertAdjacentHTML("beforeend", footer);
   }
 
-  // 버튼 스타일을 동적으로 추가
   addScrollToTopButtonStyle();
 }
 
-// JavaScript에서 버튼 스타일 동적으로 추가
 function addScrollToTopButtonStyle() {
   const style = document.createElement("style");
   style.innerHTML = `

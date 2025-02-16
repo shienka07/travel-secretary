@@ -7,7 +7,11 @@ loginBtn.addEventListener("click", async (event) => {
     const username = document.querySelector("#username").value;
     const password = document.querySelector("#password").value;
 
-    await login(username, password);
+    const bool =  await login(username, password);
+    if(bool === false){
+        document.querySelector("#username").classList.add("is-invalid");
+        document.querySelector("#password").classList.add("is-invalid");
+    }
 });
 
 const islogined = await checkLogin()
@@ -29,6 +33,9 @@ reset.addEventListener("click", async (event) => {
                     <div class="mb-3">
                         <label for="username" class="form-label">아이디</label>
                         <input type="email" class="form-control" id="username" placeholder="이메일">
+                        <div style="font-size: 13px; color: #dc3545" id="error" class="invalid-feedback">
+                            이메일을 입력해주세요.
+                        </div>
                     </div>
                     <div class="d-grid" style="margin-top: 20px;">
                         <button id="resetBtn"  type="submit" class="btn btn-dark">이메일 보내기</button>
@@ -48,7 +55,7 @@ reset.addEventListener("click", async (event) => {
         event.preventDefault();
         const email = document.querySelector("#username").value;
         if(!email){
-            alert("이메일을 입력해주세요")
+            document.querySelector("#username").classList.add("is-invalid");
             return;
         }
         resetPassword(email);

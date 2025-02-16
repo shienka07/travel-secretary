@@ -3,9 +3,13 @@ import { checkLogin, logout, getProfile } from "../auth.js";
 
 const islogined = await checkLogin();
   if (!islogined) {
-    window.location.href =
-      "https://aibe-chill-team.github.io/travel-secretary/";
-    alert("로그인이 필요합니다");
+    Swal.fire({
+      icon: "warning",
+      text: "로그인이 필요합니다.",
+      confirmButtonText: "확인",
+      }).then(() => {
+      window.location.href = "../../index.html"; // 확인 버튼 클릭 시 페이지 이동
+      });
   }
 
 const username = localStorage.getItem("username") || "Guest";

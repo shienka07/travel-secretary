@@ -48,11 +48,10 @@ async function saveRouteToSupabase() {
 
     if (error) throw error;
 
-    alert("여행 경로가 성공적으로 저장되었습니다.");
     return data;
   } catch (error) {
     console.error("경로 저장 중 오류 발생:", error);
-    alert("경로 저장 중 오류가 발생했습니다.");
+
     throw error;
   }
 }

@@ -513,7 +513,7 @@ function drawRouteForDay(section, dayIndex) {
       }
     })
     .catch((error) => {
-      alert(error);
+      console.log(error);
     });
 }
 function createMarkerIcon(photo) {

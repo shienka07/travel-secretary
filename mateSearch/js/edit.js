@@ -209,8 +209,6 @@ async function handleSubmit(event, postId) {
       postData.image_url = await postingService.uploadImage(imageFile);
     } else if (isImageDeleted) {
       postData.image_url = DEFAULT_IMAGE_PATH; // 삭제가 확정될 때만 디폴트 이미지로
-    } else {
-      postData.image_url = posting.image_url; // 기존 이미지 유지
     }
 
     // 게시글 수정
@@ -222,11 +220,24 @@ async function handleSubmit(event, postId) {
       await postingService.updateStyles(postId, styles);
     }
 
-    alert("게시글 수정 완료!");
-    window.location.href = `./detail.html?id=${postId}`; // TODO
+    // alert("게시글 수정 완료!");
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      // title: "게시글 수정이 완료되었습니다.",
+      text: "게시글 수정이 완료되었습니다.",
+      showConfirmButton: false,
+      timer: 1500,
+    }).then(() => {
+      window.location.href = `./detail.html?id=${postId}`; // TODO
+    });
   } catch (error) {
     console.error("게시글 수정 중 오류:", error);
-    alert("게시글 수정 중 오류가 발생했습니다.");
+    // alert("게시글 수정 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "게시글 수정 중 오류가 발생했습니다.",
+    });
   }
 }
 
@@ -247,9 +258,13 @@ async function initializeEdit(postId) {
   try {
     const islogined = await checkLogin();
     if (!islogined) {
-      window.location.href =
-        "https://aibe-chill-team.github.io/travel-secretary/";
-      alert("로그인이 필요합니다");
+      Swal.fire({
+        icon: "warning",
+        text: "로그인이 필요합니다.",
+        confirmButtonText: "확인",
+      }).then(() => {
+        window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+      });
     }
 
     const username = localStorage.getItem("username") || "Guest";
@@ -302,8 +317,13 @@ async function initializeEdit(postId) {
     imageInput?.addEventListener("change", handleImageChange);
   } catch (error) {
     console.error("초기화 오류:", error);
-    alert("페이지 로드 중 오류가 발생했습니다.");
-    window.location.href = "./index.html"; // TODO
+    // alert("페이지 로드 중 오류가 발생했습니다.");
+    Swal.fire({
+      icon: "error",
+      text: "페이지 로드 중 오류가 발생했습니다.",
+    }).then(() => {
+      window.location.href = "./index.html"; // TODO
+    });
   }
 }
 
@@ -312,8 +332,15 @@ const urlParams = new URLSearchParams(window.location.search);
 const postId = urlParams.get("id");
 
 if (!postId) {
-  alert("게시글 ID가 필요합니다.");
-  window.location.href = "./index.html";
+  // alert("게시글 ID가 필요합니다.");
+  // window.location.href = "./index.html";
+  Swal.fire({
+    icon: "warning",
+    title: "잘못된 접근입니다",
+    onfirmButtonText: "확인",
+  }).then(() => {
+    window.location.href = "./index.html"; // 확인 버튼 클릭 시 페이지 이동
+  });
 } else {
   document.addEventListener("DOMContentLoaded", () => initializeEdit(postId));
 }

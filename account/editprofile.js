@@ -13,8 +13,8 @@ async function setDefault() {
 
 setDefault();
 
-const nextBtn = document.querySelector("#nextBtn");
-nextBtn.addEventListener("click", async (event) => {
+const nextBtn = document.querySelector("#formData");
+nextBtn.addEventListener("submit", async (event) => {
     event.preventDefault();
     await setProfile();
 } )
@@ -33,7 +33,7 @@ const questionItems = [
     { question: "당신은 어떻게 여행하나요?", answer1: "혼자", answer2: "단체" },
     { question: "당신의 여행 스타일은?", answer1: "자연", answer2: "도시" },
     { question: "당신의 여행 계획 스타일은?", answer1: "계획적", answer2: "즉흥적" },
-    { question: "당신의 여행 속도는?", answer1: "느긋하게", answer2: "빠르게" },
+    { question: "당신의 여행 속도는?", answer1: "여유롭게", answer2: "빠르게" },
     { question: "어떤 종류의 활동을 선호하시나요?", answer1: "휴식", answer2: "액티비티" },
 ];
 
@@ -52,6 +52,7 @@ questionItems.forEach((item, index) => {
     const radio_check1 = document.createElement("input");
     radio_check1.type = "radio";
     radio_check1.className = "btn-check";
+    radio_check1.required = true;
     radio_check1.name = `vbtn-radio-${index}`;  
     radio_check1.value = item.answer1;
     radio_check1.id = `vbtn-radio1-${index}`;
@@ -100,17 +101,17 @@ skipBtn.href = "../index.html";
 skipBtn.textContent = "건너뛰기"
 
 const sumbitBtn = document.createElement("button");
-sumbitBtn.type = "button";
+sumbitBtn.type = "submit";
 sumbitBtn.className = "btn btn-light";
 sumbitBtn.textContent = "생성"
 
-sumbitBtn.addEventListener("click", async (event) => {
+newForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
     const selectedValues = [];
 
 for (let i = 0; i < questionItems.length; i++) {
     const selectedRadio = document.querySelector(`input[name="vbtn-radio-${i}"]:checked`);
     if (!selectedRadio) {
-        alert(`"${questionItems[i].question}"에 대한 선택지를 선택해주세요.`);
         return; // 선택하지 않은 항목이 있으면 함수 종료
     }
     selectedValues.push(selectedRadio.value);
@@ -119,9 +120,6 @@ for (let i = 0; i < questionItems.length; i++) {
     const text = `${selectedValues.join(" ")}`;
 
     const error = await setAnswer(text);
-    if(error){
-        alert(error);
-    }
 
     form_container.removeChild(newForm);
     const spinnerdiv = document.createElement("div");
@@ -199,8 +197,20 @@ for (let i = 0; i < questionItems.length; i++) {
     event.preventDefault();
     const file = new File([imageBlob], `profile/${Date.now()}_profile.jpg`, { type: "image/jpeg" });
     const filePath = `profile/${Date.now()}_profile.jpg`;
-    await uploadImage_auth(filePath,file);
-    window.location.href = "../index.html"
+    const bool = await uploadImage_auth(filePath,file);
+
+    if(bool === true){
+        Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "프로필 저장 성공!\n메인 페이지로 이동합니다.",
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.href = "../index.html";
+          });
+    }
+
     })
 
     form_container.appendChild(buttondiv2)
@@ -230,14 +240,7 @@ async function setProfile() {
 
     phone_number = (phone_number === "") ? null : phone_number;
     live = (live === "") ? null : live;
-    if (!gender){
-    alert("성별을 선택해주세요")
-    return
-    }
-    else if(!age){
-    alert("나이를 작성해주세요")
-    return
-    }
+
     addQuestion();
     await setProfile_auth(gender, phone_number,age,live);
 }
@@ -259,8 +262,13 @@ document.getElementById('phone_number').addEventListener('input', function(e) {
 document.addEventListener("DOMContentLoaded", async () => {
     const islogined = await checkLogin()
     if (!islogined){
-        window.location.href = "https://aibe-chill-team.github.io/travel-secretary/"
-        alert("로그인이 필요합니다");
+        Swal.fire({
+            icon: "warning",
+            text: "로그인이 필요합니다.",
+            confirmButtonText: "확인",
+            }).then(() => {
+            window.location.href = "../index.html"; // 확인 버튼 클릭 시 페이지 이동
+        });
     }
 
     const username = localStorage.getItem("username") || "Guest";

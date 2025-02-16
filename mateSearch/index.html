@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link rel="stylesheet" href="../font.css" />
     <link rel="stylesheet" href="style.css" />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
@@ -107,7 +107,7 @@
       <div class="row gx-md-5">
         <div class="col-md-3">
           <div class="filter-area p-3 border bg-light rounded">
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <div class="form-check">
                 <input
                   class="form-check-input"
@@ -145,6 +145,18 @@
                   >국외</label
                 >
               </div>
+            </div> -->
+            <div class="mb-3">
+              <label class="form-label">국내/해외</label>
+              <select
+                class="form-select"
+                name="locationTypeFilter"
+                id="locationTypeFilter"
+              >
+                <option value="">전체</option>
+                <option value="domestic">국내</option>
+                <option value="international">해외</option>
+              </select>
             </div>
 
             <div class="mb-3">
@@ -183,7 +195,7 @@
               </div>
             </div>
 
-            <div class="mb-3">
+            <!-- <div class="mb-3">
               <label class="form-label">성별</label>
               <div class="form-check">
                 <input
@@ -216,6 +228,15 @@
                 />
                 <label class="form-check-label" for="genderFemale">여성</label>
               </div>
+            </div> -->
+
+            <div class="mb-3">
+              <label class="form-label">성별</label>
+              <select class="form-select" name="genderFilter" id="genderFilter">
+                <option value="" selected>전체</option>
+                <option value="1">남성</option>
+                <option value="2">여성</option>
+              </select>
             </div>
 
             <div class="mb-3">
@@ -233,32 +254,13 @@
 
             <div class="mb-3">
               <label class="form-label">모집 상태</label>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  value="true"
-                  id="statusOpenFilter"
-                  name="stateFilter"
-                  checked
-                />
-                <label class="form-check-label" for="statusOpenFilter">
-                  모집중
-                </label>
-              </div>
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  value="false"
-                  name="stateFilter"
-                  id="statusClosedFilter"
-                />
-                <label class="form-check-label" for="statusClosedFilter">
-                  모집 완료
-                </label>
-              </div>
+              <select class="form-select" name="stateFilter" id="stateFilter">
+                <option value="all" selected>전체 보기</option>
+                <option value="true">모집중</option>
+                <option value="false">모집 완료</option>
+              </select>
             </div>
+
             <button type="button" class="btn btn-primary" id="applyFiltersBtn">
               필터 적용
             </button>
@@ -276,7 +278,7 @@
             글작성
           </button>
           <button type="button" class="btn btn-secondary" id="testBtn">
-            테스트
+            AI 매칭
           </button>
           <div id="box" class="row"></div>
         </div>
@@ -286,7 +288,7 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"
       ></script>
-
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script type="module" src="./js/main.js"></script>
       <script type="module" src="./js/recommend_test.js"></script>
     </div>

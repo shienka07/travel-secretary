@@ -4,9 +4,9 @@ import { addDBData, getDBDataByUserId, getId, deleteDBData } from "./db.js";
 // 구글맵 API 키
 const googlemapAPiKey = "AIzaSyAg8Mizg_fmz1cMBS3UDFLxOOOzlb0dujw";
 // 구글맵 장소 탐색
-// 비동기 textSearch, 좌표 지정하고 거리로 검색범위, 입력값 정확도(LLM으로 영문으로 된 지역명을 추가시킨 장소명 생성)
+// 비동기 findPlaceFromQuery, 좌표 지정하고 거리로 검색범위
 let map;
-let infoWindow; // 하나의 InfoWindow만 사용
+let infoWindow;
 
 async function initMap(
   places = ["Googleplex"],
@@ -31,7 +31,7 @@ async function initMap(
   });
 
   const service = new PlacesService(map);
-  infoWindow = new google.maps.InfoWindow(); // 하나의 InfoWindow만 생성
+  infoWindow = new google.maps.InfoWindow();
 
   if (!places || !Array.isArray(places) || places.length === 0) {
     console.error("장소 데이터가 없거나 올바르지 않습니다.");
@@ -39,17 +39,21 @@ async function initMap(
   }
 
   let bounds = new google.maps.LatLngBounds();
+  let completedSearches = 0;
 
   for (const place of places) {
     try {
       const request = {
         query: place,
-        location: latLng,
-        radius: 50000, // 50km
+        fields: ["name", "geometry", "formatted_address", "place_id", "photos"],
+        locationBias: {
+          center: latLng,
+          radius: 50000,
+        },
       };
 
       await new Promise((resolve) => {
-        service.textSearch(request, (results, status) => {
+        service.findPlaceFromQuery(request, (results, status) => {
           if (
             status === google.maps.places.PlacesServiceStatus.OK &&
             results &&
@@ -58,63 +62,99 @@ async function initMap(
             const result = results[0];
             const location = result.geometry.location;
             const placeId = result.place_id;
-            const address = result.formatted_address || "주소 정보 없음";
-            const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
 
-            // 사진 가져오기 (없으면 기본 이미지)
-            let photoUrl =
-              result.photos?.[0]?.getUrl() ||
-              "https://via.placeholder.com/250x150?text=No+Image";
+            service.getDetails(
+              {
+                placeId: placeId,
+                fields: ["name", "formatted_address", "photos"],
+              },
+              (placeResult, detailStatus) => {
+                if (
+                  detailStatus === google.maps.places.PlacesServiceStatus.OK
+                ) {
+                  const address =
+                    placeResult.formatted_address || "주소 정보 없음";
+                  const googleMapsUrl = `https://www.google.com/maps/place/?q=place_id:${placeId}`;
+                  const hasPhotos =
+                    placeResult.photos && placeResult.photos.length > 0;
 
-            const marker = new google.maps.Marker({
-              map,
-              position: location,
-              title: result.name,
-            });
+                  const marker = new google.maps.Marker({
+                    map,
+                    position: location,
+                    title: placeResult.name,
+                  });
 
-            marker.addListener("click", () => {
-              infoWindow.setContent(`
-                <div class="card" style="width: 100%; border-radius: 8px; overflow: hidden;">
-                  <img src="${photoUrl}" class="card-img-top" alt="${
-                result.name
-              }" style="height: 150px; object-fit: cover;">
-                  <div class="card-body p-2">
-                    <h6 class="card-title text-center mb-1">${result.name}</h6>
-                    <p class="card-text text-muted small text-center">${address.replace(
-                      /, /g,
-                      "<br>"
-                    )}</p>
-                    <div class="text-center">
-                      <a href="${googleMapsUrl}" target="_blank" class="btn btn-primary btn-sm">Google 지도에서 보기</a>
-                    </div>
-                  </div>
-                </div>
-              `);
-              infoWindow.open(map, marker);
-            });
+                  marker.addListener("click", () => {
+                    const photoSection = hasPhotos
+                      ? `
+                      <div class="card-img-top" style="height: 150px; overflow: hidden;">
+                        <img src="${placeResult.photos[0].getUrl()}" 
+                          alt="${placeResult.name}" 
+                          style="width: 100%; height: 100%; object-fit: cover;">
+                      </div>
+                    `
+                      : "";
 
-            bounds.extend(location);
-            console.log(
-              `Found place: ${result.name} for search term: ${place}`
+                    infoWindow.setContent(`
+                      <div class="card" style="width: 100%; border-radius: 8px; overflow: hidden;">
+                        ${photoSection}
+                        <div class="card-body p-2">
+                          <h6 class="card-title text-center mb-1" style="font-size: 14px; margin-top: ${
+                            hasPhotos ? "0" : "8px"
+                          }">
+                            ${placeResult.name}
+                          </h6>
+                          <p class="card-text text-muted small text-center" style="font-size: 12px; margin: 8px 0">
+                            ${address.replace(/, /g, "<br>")}
+                          </p>
+                          <div class="text-center" style="margin-bottom: 8px">
+                            <a href="${googleMapsUrl}" target="_blank" 
+                              class="btn btn-primary btn-sm" style="font-size: 12px">
+                              Google 지도에서 보기
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    `);
+                    infoWindow.open(map, marker);
+                  });
+
+                  bounds.extend(location);
+                  completedSearches++;
+
+                  if (completedSearches === places.length) {
+                    if (!bounds.isEmpty()) {
+                      map.fitBounds(bounds);
+
+                      if (places.length === 1) {
+                        google.maps.event.addListenerOnce(
+                          map,
+                          "bounds_changed",
+                          () => {
+                            map.setZoom(15);
+                          }
+                        );
+                      }
+                    }
+                  }
+
+                  console.log(
+                    `Found place: ${placeResult.name} for search term: ${place}`
+                  );
+                }
+              }
             );
           } else {
             console.warn(`검색 실패 - 장소: ${place}, 상태: ${status}`);
+            completedSearches++;
           }
           resolve();
         });
       });
     } catch (error) {
       console.error(`Error searching for ${place}:`, error);
+      completedSearches++;
     }
-  }
-
-  if (!bounds.isEmpty()) {
-    map.fitBounds(bounds);
-    setTimeout(() => {
-      if (places.length == 1) {
-        map.setZoom(15);
-      }
-    }, 300);
   }
 }
 
@@ -205,19 +245,23 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("유저 ID 조회 실패:", error);
       }
     } else {
-      showToast("저장할 내용이 없습니다.", "danger");
+      // showToast("저장할 내용이 없습니다.", "danger");
+      Swal.fire({
+        icon: "error",
+        title: "저장 실패",
+        text: "저장할 내용이 없습니다",
+      });
     }
   }
 
   listModal.addEventListener("shown.bs.modal", () => {
-    listItems.innerHTML = ""; // 기존 리스트 초기화
-
     getId()
       .then((Id) => {
         if (Id) {
           getDBDataByUserId(Id)
             .then((items) => {
               console.log(items);
+              const fragment = document.createDocumentFragment(); // 저장할 fragment
               items.forEach((item) => {
                 const li = document.createElement("li");
                 li.style.display = "flex"; // flexbox 사용
@@ -241,9 +285,16 @@ document.addEventListener("DOMContentLoaded", function () {
                   localStorage.setItem("array", item.list_daily_places);
                   localStorage.setItem("location", item.list_location);
                   localStorage.setItem("markdown", item.list_content);
-                  box.innerHTML = "";
+                  // box.innerHTML = "";
                   // addMsg(불러온 마크다운)
                   addMsg(item.list_content);
+                  Swal.fire({
+                    title: "불러오기 완료",
+                    text: `제목: ${item.list_name}`,
+                    icon: "success",
+                    showConfirmButton: false,
+                    timer: 1500,
+                  });
                 });
 
                 const deleteButton = document.createElement("button");
@@ -254,15 +305,37 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 삭제 버튼 클릭 시
                 deleteButton.addEventListener("click", () => {
                   // DB 내 해당 데이터 삭제
-                  listItems.removeChild(li);
-                  deleteDBData(item.id);
+                  Swal.fire({
+                    title: "정말 지우시겠습니까?",
+                    text: `제목: ${item.list_name}`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "네",
+                    cancelButtonText: "아니오",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      Swal.fire({
+                        title: "삭제 완료",
+                        text: "삭제 되었습니다",
+                        icon: "success",
+                        showConfirmButton: false,
+                        timer: 1500,
+                      });
+                      listItems.removeChild(li);
+                      deleteDBData(item.id);
+                    }
+                  });
                 });
 
                 li.appendChild(span);
                 li.appendChild(loadButton);
                 li.appendChild(deleteButton);
-                listItems.appendChild(li);
+                fragment.appendChild(li); // fragment에 저장
               });
+              listItems.innerHTML = ""; // 기존 리스트 초기화
+              listItems.appendChild(fragment);
             })
             .catch((error) => {
               console.error("데이터 가져오기 실패:", error); // 오류 처리
@@ -279,45 +352,45 @@ document.addEventListener("DOMContentLoaded", function () {
   saveBtn.addEventListener("click", saveMarkdown);
 
   // Toast 메시지 표시 함수
-  function showToast(message, type) {
-    const toastContainer = document.querySelector(".toast-container");
+  // function showToast(message, type) {
+  //   const toastContainer = document.querySelector(".toast-container");
 
-    // 새로운 toast 생성
-    const toast = document.createElement("div");
-    toast.classList.add(
-      "toast",
-      "align-items-center",
-      "text-white",
-      "border-0",
-      "show"
-    );
+  //   // 새로운 toast 생성
+  //   const toast = document.createElement("div");
+  //   toast.classList.add(
+  //     "toast",
+  //     "align-items-center",
+  //     "text-white",
+  //     "border-0",
+  //     "show"
+  //   );
 
-    // 메시지의 유형에 따라 클래스 추가
-    if (type === "success") {
-      toast.classList.add("bg-success");
-    } else if (type === "danger") {
-      toast.classList.add("bg-danger");
-    } else if (type === "info") {
-      toast.classList.add("bg-info");
-    } else {
-      toast.classList.add("bg-warning");
-    }
+  //   // 메시지의 유형에 따라 클래스 추가
+  //   if (type === "success") {
+  //     toast.classList.add("bg-success");
+  //   } else if (type === "danger") {
+  //     toast.classList.add("bg-danger");
+  //   } else if (type === "info") {
+  //     toast.classList.add("bg-info");
+  //   } else {
+  //     toast.classList.add("bg-warning");
+  //   }
 
-    // Toast 내용 추가
-    toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      `;
+  //   // Toast 내용 추가
+  //   toast.innerHTML = `
+  //       <div class="d-flex">
+  //         <div class="toast-body">${message}</div>
+  //         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  //       </div>
+  //     `;
 
-    // Toast를 Toast container에 추가
-    toastContainer.appendChild(toast);
+  //   // Toast를 Toast container에 추가
+  //   toastContainer.appendChild(toast);
 
-    // Bootstrap의 Toast 객체 생성 후, 3초 후에 자동으로 사라지게 설정
-    const bootstrapToast = new bootstrap.Toast(toast, { delay: 3000 });
-    bootstrapToast.show();
-  }
+  //   // Bootstrap의 Toast 객체 생성 후, 3초 후에 자동으로 사라지게 설정
+  //   const bootstrapToast = new bootstrap.Toast(toast, { delay: 3000 });
+  //   bootstrapToast.show();
+  // }
 
   // 폼 제출 이벤트 처리
   controllerForm.addEventListener("submit", (event) => {
@@ -331,7 +404,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const inputData = inputField.value.trim();
     if (!inputData) {
-      showToast("입력 필드를 채워주세요!", "danger");
+      // showToast("입력 필드를 채워주세요!", "danger");
+      Swal.fire({
+        icon: "error",
+        title: "제출 실패",
+        text: "입력 필드를 채워주세요",
+      });
       return;
     }
 
@@ -339,7 +417,8 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.disabled = true;
 
     setTimeout(() => {
-      showToast("생성중이니 잠시만 기다려주십시오.", "success");
+      // showToast("생성중이니 잠시만 기다려주십시오.", "success");
+
       submitBtn.disabled = false; // 버튼 다시 활성화
     }, 3000); // 3초 딜레이
   });
@@ -355,6 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // 두 번째 기능 (마크다운 파싱 + 로컬 스토리지 활용)
   const addMsg = (msg) => {
     const p = document.createElement("p");
+    box.innerHTML = "";
     p.innerHTML = `<pre>${marked.parse(msg)}</pre>`; // 마크다운 파싱
     box.appendChild(p);
     // 팝업
@@ -381,7 +461,17 @@ document.addEventListener("DOMContentLoaded", function () {
           const locationsArray = JSON.parse(localStorage.getItem("array"));
           console.log(locationsArray);
           locationsOpenPopup(locationsArray[mapUrl]);
-          showToast("로딩중입니다. 잠시 기다려주십요.", "success");
+          Swal.fire({
+            title: "로딩중",
+            html: "잠시 기다려주십요... <b></b>",
+            timer: 3000,
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
         });
       } else {
         link.addEventListener("click", (e) => {
@@ -467,27 +557,23 @@ document.addEventListener("DOMContentLoaded", function () {
   // controllerForm 제출 이벤트
   controllerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    box.innerHTML = `<span id="spinner" class="spinner-border spinner-border-sm"></span>`;
 
-    // 제출 데이터를 변수에 저장
-    const formData = new FormData(controllerForm);
-    const [
-      destination,
-      travelDays,
-      travelTheme,
-      travelStart,
-      travelEnd,
-      companion,
-      budget,
-      age,
-      gender,
-      others,
-    ] = [...formData.keys()].map((key) => formData.get(key));
+    Swal.fire({
+      title: "AI 여행 플래너 생성 중입니다.",
+      html: "생성 이후 자동으로 닫힙니다... <b></b>",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
-    // 로컬 스토리지에 저장
-    localStorage.setItem(
-      "submitData",
-      JSON.stringify([
+    try {
+      box.innerHTML = `<span id="spinner" class="spinner-border spinner-border-sm"></span>`;
+
+      // 제출 데이터를 변수에 저장
+      const formData = new FormData(controllerForm);
+      const [
         destination,
         travelDays,
         travelTheme,
@@ -498,68 +584,84 @@ document.addEventListener("DOMContentLoaded", function () {
         age,
         gender,
         others,
-      ])
-    );
+      ] = [...formData.keys()].map((key) => formData.get(key));
 
-    // Gemini 2.0
-    const callModel = async (prompt) => {
-      try {
-        const response = await axios.post(
-          "https://quartz-ruddy-cry.glitch.me/0",
-          {
-            text: prompt,
-          }
-        );
-        return response.data.reply;
-      } catch (error) {
-        console.error("Error: ", error);
-      }
-    };
+      // 로컬 스토리지에 저장
+      localStorage.setItem(
+        "submitData",
+        JSON.stringify([
+          destination,
+          travelDays,
+          travelTheme,
+          travelStart,
+          travelEnd,
+          companion,
+          budget,
+          age,
+          gender,
+          others,
+        ])
+      );
 
-    // Gemini 2.0 thinking
-    const callModel000 = async (prompt) => {
-      try {
-        const response = await axios.post(
-          "https://quartz-ruddy-cry.glitch.me/000",
-          {
-            text: prompt,
-          }
-        );
-        return response.data.reply;
-      } catch (error) {
-        console.error("Error: ", error);
-      }
-    };
+      // Gemini 2.0
+      const callModel = async (prompt) => {
+        try {
+          const response = await axios.post(
+            "https://quartz-ruddy-cry.glitch.me/0",
+            {
+              text: prompt,
+            }
+          );
+          return response.data.reply;
+        } catch (error) {
+          console.error("Error: ", error);
+        }
+      };
 
-    const thirdAI = async (destination) => {
-      const prompt = `${destination}의 latitude, longitude 를 작성하세요. 출력 형식은 설명 없이 { "lat": latitude, "lng": longitude } 로 출력하십시오. 다른 내용을 추가하지마십시오.
+      // Gemini 2.0 thinking
+      const callModel000 = async (prompt) => {
+        try {
+          const response = await axios.post(
+            "https://quartz-ruddy-cry.glitch.me/000",
+            {
+              text: prompt,
+            }
+          );
+          return response.data.reply;
+        } catch (error) {
+          console.error("Error: ", error);
+        }
+      };
+
+      const thirdAI = async (destination) => {
+        const prompt = `${destination}의 latitude, longitude 를 작성하세요. 출력 형식은 설명 없이 { "lat": latitude, "lng": longitude } 로 출력하십시오. 다른 내용을 추가하지마십시오.
       예시: { "lat": 48.858, "lng": 2.294 }
       예시: { "lat": 37.422, "lng": 122.084 }
       다른 내용 추가하지말고
       { "lat": latitude, "lng": longitude }
       마크다운을 사용하지 않고 제시된 형식으로만 출력하십시오.
       `;
-      return await callModel(prompt);
-    };
+        return await callModel(prompt);
+      };
 
-    const thirdResponse = await thirdAI(destination);
-    console.log("- **위경도**: " + thirdResponse);
-    localStorage.setItem("location", JSON.stringify(thirdResponse));
+      const thirdResponse = await thirdAI(destination);
+      console.log("- **위경도**: " + thirdResponse);
+      localStorage.setItem("location", JSON.stringify(thirdResponse));
 
-    // 플래너 생성
-    const fourthAI = async (
-      destination,
-      travelDays,
-      travelTheme,
-      travelStart,
-      travelEnd,
-      companion,
-      budget,
-      age,
-      gender,
-      others
-    ) => {
-      const prompt = `당신은 세계 최고의 여행플래너입니다. 아래 여행 정보와 출력 형식입니다. 이에 맞게 최적화하여 여행 계획을 작성해주세요.
+      // 플래너 생성
+      const fourthAI = async (
+        destination,
+        travelDays,
+        travelTheme,
+        travelStart,
+        travelEnd,
+        companion,
+        budget,
+        age,
+        gender,
+        others
+      ) => {
+        const prompt = `당신은 세계 최고의 여행플래너입니다. 아래 여행 정보와 출력 형식입니다. 이에 맞게 최적화하여 여행 계획을 작성해주세요.
 여행 정보:
 여행지: ${destination}
 여행 일수: ${travelDays}
@@ -577,6 +679,7 @@ document.addEventListener("DOMContentLoaded", function () {
 장소는 HTML a 태그 형식을 사용하여 href에 URL을 작성하지 않고 href에 장소명을 영문으로 표기
 예시: **<a href="장소명 영문">장소명</a>**
 예시: **<a href="Eiffel Tower">에펠탑</a>**
+href에 들어가는 장소명은 구글맵에 검색할 수 있도록 구체적으로 작성
 장소가 아닌 경우 URL으로 제공
 상세 일정에 Day 1, Day 2, Day 3, ... 또한 HTML a 태그 형식을 사용하여 href에 URL을 작성하지 않고 href에 Day 1, Day 2, Day 3, ... 을 표기
 예시: **<a href="Day 1">Day 1</a>**
@@ -680,53 +783,58 @@ document.addEventListener("DOMContentLoaded", function () {
 - ✨ 와이파이 & 데이터 로밍 옵션
 
 `;
-      return await callModel000(prompt);
-    };
+        return await callModel000(prompt);
+      };
 
-    const fourthResponse = await fourthAI(
-      destination,
-      travelDays,
-      travelTheme,
-      travelStart,
-      travelEnd,
-      companion,
-      budget,
-      age,
-      gender,
-      others
-    );
+      const fourthResponse = await fourthAI(
+        destination,
+        travelDays,
+        travelTheme,
+        travelStart,
+        travelEnd,
+        companion,
+        budget,
+        age,
+        gender,
+        others
+      );
 
-    localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
+      localStorage.setItem("markdown", fourthResponse); // 로컬 스토리지에 저장
 
-    const fifthAI = async (fourthResponse) => {
-      const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마세요. 장소명에 지역명을 포함하세요.
-      예시:["첫날장소1 지역", "첫날장소2 지역", "첫날장소3 지역"]|["둘째날장소1 지역", "둘째날장소2 지역", "둘째날장소3 지역", "둘째날장소4 지역"]|["셋째날장소1 지역", "셋째날장소2 지역"]
-      마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마세요.
+      const fifthAI = async (fourthResponse) => {
+        const prompt = `당신은 최고의 데이터 수집가입니다. 단어만 나열하고 다른 설명 **없이** 출력하세요. 아래의 여행 플래너에서 방문 장소를 수집하여 나열해주세요. 장소는 구글에 검색하면 해당 장소가 나오도록 지역명 포함 **영어로** 작성해야합니다. 날짜 별로 중복되는 장소없이 나열하세요. 출력 형태는 방문 장소를 날짜 별로 정리하여 Javascript array 형태로 작성하세요. 날짜 별 구분자는 | 입니다. 다른 내용을 추가하지마세요. 장소명은 구글맵에 검색할 수 있도록 구체적으로 작성하세요.
+예시:["첫날장소1", "첫날장소2", "첫날장소3"]|["둘째날장소1", "둘째날장소2", "둘째날장소3", "둘째날장소4"]|["셋째날장소1", "셋째날장소2"]
+마크다운을 사용하지 않고 예시와 같은 형식으로만 출력하고 다른 내용을 추가하지 마세요.
 ${fourthResponse}`;
-      return await callModel000(prompt);
-    };
+        return await callModel000(prompt);
+      };
 
-    // array 형태의 구분자 | 인 문자열
-    const fifthResponse = await fifthAI(fourthResponse);
-    console.log(`방문 장소: ${fifthResponse}`);
-    const dailyArray = {};
-    try {
-      // array 형태의 구분자 | 인 문자열 분해
-      const placeArray = fifthResponse.split("|");
-      console.log("추출 성공");
-      placeArray.forEach((e, index) => {
-        dailyArray[`Day ${index + 1}`] = JSON.parse(e);
-      });
-      console.log(dailyArray);
-    } catch {
-      console.log("추출 실패");
+      // array 형태의 구분자 | 인 문자열
+      const fifthResponse = await fifthAI(fourthResponse);
+      console.log(`방문 장소: ${fifthResponse}`);
+      const dailyArray = {};
+      try {
+        // array 형태의 구분자 | 인 문자열 분해
+        const placeArray = fifthResponse.split("|");
+        console.log("추출 성공");
+        placeArray.forEach((e, index) => {
+          dailyArray[`Day ${index + 1}`] = JSON.parse(e);
+        });
+        console.log(dailyArray);
+      } catch {
+        console.log("추출 실패");
+      }
+
+      const spinner = document.getElementById("spinner");
+      spinner.classList.add("d-none"); // 스피너 숨기기
+
+      addMsg(`${fourthResponse}`); // 출력
+
+      localStorage.setItem("array", JSON.stringify(dailyArray));
+      Swal.close(); // 작업 완료 시 수동 종료
+    } catch (error) {
+      console.error("오류 발생:", error);
+      Swal.fire("오류 발생!");
     }
-
-    const spinner = document.getElementById("spinner");
-    spinner.classList.add("d-none"); // 스피너 숨기기
-
-    addMsg(`${fourthResponse}`); // 출력
-
-    localStorage.setItem("array", JSON.stringify(dailyArray));
   });
 });

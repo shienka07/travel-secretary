@@ -64,26 +64,6 @@ body {
   align-self: flex-start; /* p 태그는 왼쪽 정렬 */
 }
 
-#submitBtn {
-  background-color: lightgray;
-  color: black;
-  border-color: black;
-}
-
-#saveBtn {
-  background-color: lightgray;
-  color: black;
-  border-color: black;
-  width: 100%;
-}
-
-#listBtn {
-  background-color: lightgray;
-  color: black;
-  border-color: black;
-  width: 100%;
-}
-
 pre {
   border-radius: 5px;
   white-space: pre-wrap; /* 줄바꿈 가능 */
@@ -143,7 +123,6 @@ pre {
 
 /* #closePopupBtn {
   display: flex;
-  justify-content: center;
   align-items: center;
 } */
 
@@ -161,14 +140,11 @@ pre {
   cursor: pointer;
 } */
 
+/* 닫기 버튼 */
 #locationsClosePopupBtn {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-/* 닫기 버튼 */
-#locationsClosePopupBtn {
   position: absolute; /* 절대 위치로 설정 */
   top: 100%; /* 팝업의 수직 중앙 */
   left: 50%; /* 팝업의 수평 중앙 */
@@ -210,4 +186,99 @@ pre {
 .btn-primary {
   font-size: 12px;
   padding: 5px 10px;
+}
+
+.btn.btn-success {
+  display: inline-block;
+  border-radius: 5px;
+  border: 1px solid rgba(74, 144, 226, 0.2) !important;
+}
+
+a.btn.btn-links,
+.btn.btn-links,
+a.btn-links {
+  display: inline-block;
+  background: rgba(74, 144, 226, 0.1) !important;
+  color: #4a90e2 !important;
+  border-radius: 5px;
+  border: 1px solid rgba(74, 144, 226, 0.2) !important;
+}
+
+.btn.btn-links:hover {
+  background: rgba(74, 144, 226, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+}
+
+.btn-success {
+  border: 1.5px solid #4a90e2 !important;
+  color: #4a90e2 !important;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  background-color: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+  background: rgba(74, 144, 226, 0.05) !important;
+  border-color: #357abd !important;
+  color: #357abd !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+}
+
+#submitBtn {
+  width: 100%;
+  margin-bottom: 1rem;
+  background-color: #4a90e2 !important;
+  color: white !important;
+  border: none !important;
+}
+
+#submitBtn:hover {
+  background-color: #357abd !important;
+  color: white !important;
+}
+
+#saveBtn,
+#listBtn {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+}
+
+.form-label {
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+select.form-control {
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  border-radius: 8px;
+}
+
+select.form-control:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+}
+
+#controller {
+  padding: 2rem;
+  border-radius: 15px;
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  background: white;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
 }

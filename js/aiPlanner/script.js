@@ -439,9 +439,17 @@ document.addEventListener("DOMContentLoaded", function () {
     box.appendChild(p);
     // 팝업
     const links = p.querySelectorAll("a");
+    links.className = "btn-links";
     links.forEach((link) => {
       // 버튼 형식
-      link.classList.add("btn", "btn-secondary", "btn-sm", "px-1", "py-0");
+      link.classList.add(
+        "btn",
+        "btn-links",
+        "btn-secondary",
+        "btn-sm",
+        "px-1",
+        "py-0"
+      );
       link.style.fontSize = "inherit";
       if (link.getAttribute("href").includes("https://")) {
         // https://이 포함되면 새 창으로 열기

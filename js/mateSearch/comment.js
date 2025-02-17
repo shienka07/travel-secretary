@@ -19,13 +19,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("comment-content")
         .value.trim();
       if (!commentContent) {
-        alert("댓글 내용을 입력해주세요!");
+        Swal.fire({
+          icon: "warning",
+          text: "댓글 내용을 입력해주세요!",
+          confirmButtonText: "확인",
+        });
         return;
       }
-
       const { data } = await supabase.auth.getUser();
       if (!data.user || !data.user.id) {
-        alert("로그인이 필요합니다!");
+        Swal.fire({
+          icon: "warning",
+          text: "로그인이 필요합니다!",
+          confirmButtonText: "확인",
+        });
         return;
       }
 

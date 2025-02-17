@@ -44,7 +44,6 @@ async function updateLoginUI(isLoggedIn) {
       profileImg.src = await getImagePath(data.image_url);
     }
 
-    profileImg.alt = "Profile Image";
     profileImg.width = 32;
     profileImg.height = 32;
     profileImg.className = "rounded-circle";
@@ -60,7 +59,7 @@ async function updateLoginUI(isLoggedIn) {
       "user",
       "divider",
       { text: "마이 프로필", href: "./html/account/myprofile.html" },
-      { text: "작성 글", href: "#" },
+      { text: "AI 캐릭터 생성", href: "./html/account/characterai.html" },
       "divider",
       { text: "로그아웃", href: "#" },
     ];
@@ -74,7 +73,6 @@ async function updateLoginUI(isLoggedIn) {
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.className = "dropdown-item";
-        a.href = "#";
         a.textContent = localStorage.getItem("username") + " 님";
         li.appendChild(a);
         dropdownMenu.appendChild(li);
@@ -88,7 +86,15 @@ async function updateLoginUI(isLoggedIn) {
           a.addEventListener("click", async (event) => {
             event.preventDefault();
             await logout();
-            location.reload();
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "로그아웃!\n메인 페이지로 이동합니다.",
+              showConfirmButton: false,
+              timer: 1500
+            }).then(() => {
+              window.location.reload();
+            });
           });
         }
         li.appendChild(a);
@@ -226,7 +232,7 @@ async function load() {
   if (bool) {
     if (!localStorage.getItem("username")) {
       localStorage.setItem("username", data.username);
-      localStorage.setItem("profile_img", data.image_url);
+      //localStorage.setItem("profile_img", data.image_url);
     }
 
     if (data.gender == null) {

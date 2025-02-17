@@ -121,7 +121,6 @@ async function logout() {
   await supabase.auth.signOut();
   localStorage.removeItem("username");
   localStorage.removeItem("profile_img");
-  alert("로그아웃되었습니다.");
 }
 
 async function createPost(title, content) {
@@ -253,7 +252,7 @@ async function fetchLatestPosts_auth() {
     const response = await supabase
       .from("MATE_POSTING")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(9);
 
     if (response.error) {

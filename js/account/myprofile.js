@@ -115,7 +115,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("logout").addEventListener("click", async (event) => {
         event.preventDefault();
         await logout();
-        window.location.href = "../../index.html"
+        Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "로그아웃!\n메인 페이지로 이동합니다.",
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            window.location.href = "../../index.html";
+          });
     });
 });
 

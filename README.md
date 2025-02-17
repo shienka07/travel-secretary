@@ -64,7 +64,7 @@
 
 ## 기술 스택
 
-- **프론트엔드:** React, Tailwind CSS
+- **프론트엔드:** <img src="https://img.shields.io/badge/html5-E34F26?style=for-the-badge&logo=html5&logoColor=white">
 - **백엔드:** Node.js, Express
 - **데이터베이스:** Firebase
 - **지도 API:** Google Maps API

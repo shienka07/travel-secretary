@@ -1,0 +1,196 @@
+/* 헤더 영역 */
+#subtitle {
+  margin-top: 1.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* 컨테이너 */
+.login-container {
+  width: 450px;
+  margin: auto;
+  padding: 0 1rem;
+}
+
+/* 카드 스타일 */
+.login-box {
+  padding: 2rem;
+  margin-top: 2rem;
+  border-radius: 15px !important;
+  border: none !important;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+/* 입력 폼 */
+.form-label {
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1.5px solid rgba(74, 144, 226, 0.2);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.1);
+}
+
+#locationsClosePopupBtn {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #dee2e6;
+  padding: 8px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+#locationsClosePopupBtn:hover {
+  background-color: #e9ecef;
+}
+
+hr {
+  color: #357abd;
+}
+
+/* 버튼 스타일 */
+.btn-group .btn-outline,
+.btn-outline-secondary {
+  color: #4a90e2;
+  border-color: rgba(74, 144, 226, 0.3);
+  padding: 0.5rem 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-group .btn-outline:hover {
+  background-color: rgba(74, 144, 226, 0.05);
+  border-color: #4a90e2;
+  color: #4a90e2;
+}
+
+.btn-check:checked + .btn-outline {
+  background-color: #4a90e2 !important;
+  border-color: #4a90e2 !important;
+  color: white !important;
+}
+
+/* 선택 버튼 스타일 */
+/* #formData .btn-outline-secondary,
+#formData .choiceContainer .btn-outline-secondary {
+  color: #4a90e2 !important;
+  border-color: rgba(74, 144, 226, 0.3);
+  padding: 0.5rem 1.5rem;
+  transition: all 0.2s ease;
+}
+
+#formData .btn-outline-secondary:hover,
+#formData .choiceContainer .btn-outline-secondary:hover {
+  background-color: rgba(74, 144, 226, 0.05) !important;
+  border-color: #4a90e2 !important;
+  color: #4a90e2 !important;
+} */
+
+.btn-outline-secondary {
+  color: #4a90e2 !important;
+  border-color: rgba(74, 144, 226, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgb(147, 198, 255) !important;
+  border-color: #4a90e2 !important;
+  color: #4a90e2 !important;
+}
+
+.btn-check:checked + .btn-outline-secondary {
+  background-color: #4a90e2 !important;
+  border-color: #4a90e2 !important;
+  color: white !important;
+}
+
+.btn-check:checked + .btn-outline-secondary:hover {
+  background-color: #357abd !important;
+  color: white !important; /* 호버시에도 글자색 유지 */
+}
+
+/* 메인 버튼 */
+.btn-light {
+  background-color: #4a90e2 !important;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-light:hover {
+  background-color: #357abd !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+}
+
+/* AI 캐릭터 결과 */
+.img-fluid {
+  border-radius: 10px;
+  margin: 1rem 0;
+}
+
+.card-title {
+  color: #2c3e50;
+  margin: 1rem 0;
+  text-align: center;
+  word-break: keep-all;
+  font-size: 1.5rem;
+}
+
+.card-text {
+  color: #628eb5;
+  word-break: keep-all;
+  text-align: center;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+/* 링크 스타일 */
+.btn-skip {
+  border: 1.3px solid #9ea3a8;
+  color: #8e939a;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-skip:hover {
+  background: rgba(108, 117, 125, 0.05);
+  border-color: #495057;
+  color: #495057;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.1);
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .login-container {
+    width: 100%;
+  }
+
+  .login-box {
+    padding: 1.5rem;
+  }
+
+  .btn-group .btn-outline {
+    padding: 0.5rem 1rem;
+  }
+}

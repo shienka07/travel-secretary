@@ -62,13 +62,7 @@
 | 여행 동행 구하기 기능 개발 | 조다미 |
 | 생성형 AI 기반 여행 일정 생성 | 한정호 |
 
-## 기술 스택
-
-- **프론트엔드:** <img src="https://img.shields.io/badge/html5-E34F26?style=for-the-badge&logo=html5&logoColor=white">
-- **백엔드:** Node.js, Express
-- **데이터베이스:** Firebase
-- **지도 API:** Google Maps API
-- **AI 기술:** OpenAI API
+![기술 스택](https://via.placeholder.com/600x300?text=Frontend%3A+HTML%2C+JS%2C+CSS%0ABackend%3A+Node.js%2C+Express%0ADatabase%3A+Supabase%0AMap+API%3A+Google+Maps+API%0AAI%3A+OpenAI+API)
 
 ## 프로젝트 일정
 

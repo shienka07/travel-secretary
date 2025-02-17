@@ -275,7 +275,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const loadButton = document.createElement("button");
                 loadButton.textContent = "불러오기";
-                loadButton.classList.add("btn", "btn-sm", "btn-success"); // 부트스트랩 버튼 스타일 추가 및 클래스
+                loadButton.classList.add(
+                  "btn",
+                  "btn-sm",
+                  "btn-success",
+                  "btn-call"
+                ); // 부트스트랩 버튼 스타일 추가 및 클래스
                 loadButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
                 loadButton.style.border = "3px";
 
@@ -299,7 +304,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "삭제";
-                deleteButton.classList.add("btn", "btn-sm", "btn-danger"); // 부트스트랩 버튼 스타일 추가 및 클래스
+                deleteButton.classList.add(
+                  "btn",
+                  "btn-sm",
+                  "btn-danger",
+                  "btn-outline-primary",
+                  "btn-delete"
+                ); // 부트스트랩 버튼 스타일 추가 및 클래스
                 deleteButton.style.marginLeft = "10px"; // 버튼 왼쪽 여백
 
                 // 삭제 버튼 클릭 시

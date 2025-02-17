@@ -232,7 +232,7 @@ async function load() {
   if (bool) {
     if (!localStorage.getItem("username")) {
       localStorage.setItem("username", data.username);
-      localStorage.setItem("profile_img", data.image_url);
+      //localStorage.setItem("profile_img", data.image_url);
     }
 
     if (data.gender == null) {

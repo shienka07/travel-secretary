@@ -252,7 +252,7 @@ async function fetchLatestPosts_auth() {
     const response = await supabase
       .from("MATE_POSTING")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(9);
 
     if (response.error) {

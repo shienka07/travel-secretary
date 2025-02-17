@@ -187,11 +187,14 @@
 #style-checkboxes .form-check-label:hover {
   cursor: pointer;
 }
-
+/* 
 .write-form .form-check-input[type="radio"],
 #style-checkboxes .form-check-input {
-  opacity: 0;
+   -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
+ */
 
 /*
 #style-checkboxes {

@@ -1,4 +1,4 @@
-import { supabase, cmtTable } from "./config.js";
+import { supabase, cmtTable } from "../supabase.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);

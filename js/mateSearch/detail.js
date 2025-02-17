@@ -1,4 +1,4 @@
-import { supabase, mateTable, ptsTable, matebucketName } from "./config.js";
+import { supabase, mateTable, ptsTable, matebucketName } from "../supabase.js";
 
 import { checkLogin, getProfile, logout } from "../auth.js";
 
@@ -226,8 +226,11 @@ function displayDetails(posting) {
 
   document.querySelector(
     "#detail-date"
-  ).textContent = `기간: ${posting.start_date} - ${posting.end_date}`;
-  document.querySelector("#detail-content").innerHTML = posting.content.replace(/\n/g, "<br>");
+  ).textContent = `${posting.start_date} - ${posting.end_date}`;
+  document.querySelector("#detail-content").innerHTML = posting.content.replace(
+    /\n/g,
+    "<br>"
+  );
 
   const styleTags = document.querySelector("#detail-styles-tags");
   if (posting.styles && posting.styles.length > 0) {
@@ -308,7 +311,7 @@ async function initializePage() {
       icon: "success",
       title: "로그아웃!\n메인 페이지로 이동합니다.",
       showConfirmButton: false,
-      timer: 1500
+      timer: 1500,
     }).then(() => {
       window.location.href = "../../index.html";
     });

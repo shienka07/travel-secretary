@@ -1,10 +1,4 @@
-import {
-  supabase,
-  mateTable,
-  tsTable,
-  ptsTable,
-  matebucketName,
-} from "./config.js";
+import { supabase, mateTable, ptsTable, matebucketName } from "../supabase.js";
 import { fetchTravelStylesAndDisplayCheckboxes } from "./func.js";
 
 import { checkLogin, getProfile, logout } from "../auth.js";
@@ -57,21 +51,19 @@ async function fetchMatePostingsWithStyles() {
     allPostings = postings || [];
 
     const urlParams = new URLSearchParams(window.location.search);
-    const postIdsParam = urlParams.get('postIds');
-  
+    const postIdsParam = urlParams.get("postIds");
+
     let postArrayFromUrl = [];
 
     if (postIdsParam) {
-        postArrayFromUrl = postIdsParam.split(',').map(item => item.trim());
-        const sortedPostings = postArrayFromUrl.map(id =>
-          postings.find(post => Number(post.id) === Number(id))
-        );
-        displayPostings(sortedPostings);
-    }
-    else{
+      postArrayFromUrl = postIdsParam.split(",").map((item) => item.trim());
+      const sortedPostings = postArrayFromUrl.map((id) =>
+        postings.find((post) => Number(post.id) === Number(id))
+      );
+      displayPostings(sortedPostings);
+    } else {
       displayPostings(allPostings); // 최초 게시글 목록 표시 (필터링 전 전체 목록)
     }
-    
   } catch (error) {
     console.error("게시글 목록 및 스타일 조회 중 오류:", error);
     // alert("게시글 목록을 불러오는 중 오류가 발생했습니다.");
@@ -81,6 +73,48 @@ async function fetchMatePostingsWithStyles() {
     });
   }
 }
+
+async function getPostCommentsCount(postId) {
+  try {
+    const { count, error } = await supabase
+      .from("POSTING_COMMENTS")
+      .select("*", { count: "exact", head: true }) // head: true로 실제 데이터는 가져오지 않음
+      .eq("post_id", postId);
+
+    if (error) {
+      console.error("Error fetching comments count:", error);
+      return 0;
+    }
+
+    // console.log(`${postId} : ${count}`);
+    return count || 0;
+  } catch (err) {
+    console.error("Error in getPostCommentsCount:", err);
+    return 0;
+  }
+}
+
+const channel = supabase
+  .channel("public:POSTING_COMMENTS")
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "POSTING_COMMENTS" },
+    (payload) => {
+      const changedPostId = payload.new?.post_id || payload.old?.post_id;
+
+      if (changedPostId) {
+        getPostCommentsCount(changedPostId).then((count) => {
+          const commentCountElement = document.getElementById(
+            `comment-count-${changedPostId}`
+          );
+          if (commentCountElement) {
+            commentCountElement.textContent = count;
+          }
+        });
+      }
+    }
+  )
+  .subscribe();
 
 function displayPostings(postings) {
   const box = document.querySelector("#box");
@@ -146,11 +180,16 @@ function displayPostings(postings) {
 
       const MAX_LENGTH = 15;
       const titleElement = document.createElement("p");
-      titleElement.style.fontWeight = 300;
-      titleElement.textContent =
-        posting.title.length > MAX_LENGTH
-          ? posting.title.substring(0, MAX_LENGTH) + "..."
-          : posting.title;
+
+      // 댓글 수 추가
+      getPostCommentsCount(posting.id).then((count) => {
+        // console.log(`display ${posting.id}_comm:${count}`);
+        titleElement.style.fontWeight = 300;
+        titleElement.textContent =
+          posting.title.length > MAX_LENGTH
+            ? posting.title.substring(0, MAX_LENGTH) + "..." + ` [${count}]`
+            : posting.title + `  [${count}]`;
+      });
       titleLink.appendChild(titleFullElement);
       titleLink.appendChild(titleElement);
       cardFooter.appendChild(titleLink);
@@ -342,7 +381,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       icon: "success",
       title: "로그아웃!\n메인 페이지로 이동합니다.",
       showConfirmButton: false,
-      timer: 1500
+      timer: 1500,
     }).then(() => {
       window.location.href = "../../index.html";
     });
@@ -359,8 +398,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyFiltersBtn = document.querySelector("#applyFiltersBtn");
   applyFiltersBtn.addEventListener("click", () => {
     const baseUrl = "./index.html";
-    history.pushState({}, '', baseUrl);
-    
+    history.pushState({}, "", baseUrl);
+
     const locationTypeFilter = document.querySelector(
       "#locationTypeFilter"
     ).value;
@@ -398,7 +437,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resetFiltersBtn = document.querySelector("#resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", () => {
     const baseUrl = "./index.html";
-    history.pushState({}, '', baseUrl);
+    history.pushState({}, "", baseUrl);
 
     // document.querySelector(
     //   'input[name="locationTypeFilter"][value=""]'
@@ -422,5 +461,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 window.addEventListener("popstate", function (event) {
-  location.reload();  // 페이지 강제 새로고침
+  location.reload(); // 페이지 강제 새로고침
 });

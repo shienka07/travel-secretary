@@ -1,10 +1,4 @@
-import {
-  supabase,
-  mateTable,
-  tsTable,
-  ptsTable,
-  matebucketName,
-} from "./config.js";
+import { supabase, tsTable } from "../supabase.js";
 
 // 여행 스타일 목록 불러오기
 export async function fetchTravelStylesAndDisplayCheckboxes(id) {

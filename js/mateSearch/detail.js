@@ -5,6 +5,7 @@ import { checkLogin, getProfile, logout } from "../auth.js";
 const editBtn = document.querySelector("#edit-btn");
 const deleteBtn = document.querySelector("#delete-btn");
 const completeBtn = document.querySelector("#complete-btn");
+const toggleBtn = document.querySelector("#toggleRouteSectionBtn");
 
 async function getUserInfo() {
   const { data: userInfo, error } = await supabase.auth.getUser();
@@ -148,6 +149,7 @@ async function fetchPostingDetail(postingId, userId) {
     if (posting.user_id === userId) {
       editBtn.removeAttribute("hidden");
       deleteBtn.removeAttribute("hidden");
+      toggleBtn.removeAttribute("hidden");
 
       if (posting.state) {
         completeBtn.removeAttribute("hidden");
